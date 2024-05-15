@@ -7,7 +7,7 @@ class BaseProcessor:
     def __str__(self):
         return f"{self.__class__.__name__}({self.__dict})"
 
-    def __dict(self):
+    def __dict__(self):
         return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
 
     def __call__(self, *args, **kwargs):
@@ -46,9 +46,40 @@ class BaseProcessor:
                         ), f"{arg} must be in {self.calc_input[arg]}, got {arg_value}"
 
 
-# class AggregatedProcessor:
-#     def __init__(self, data_path, *args, **kwargs):
-#         """Define the base class for the processor"""
-#         self.load(data_path, *args, **kwargs)
 
-#     def load(self, data_path, )
+class AggregatedProcessor:
+    def __init__(self, data_path, *args, **kwargs):
+        """Define the base class for the processor"""
+        self.load(data_path, *args, **kwargs)
+
+    def __str__(self):
+        return f"{self.__class__.__name__}({self.__dict})"
+    
+    def __dict__(self):
+        return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
+    
+    def __call__(self, *args, **kwargs):
+        """Call the calc function"""
+        return self.calc(*args, **kwargs)
+    
+    @property
+    def calc_input(self):
+        """Return a dict of inputs for the detailed_calc function.
+
+        For categorical inputs, the value is a list of valid inputs.
+        For numerical inputs, the value is "num"
+
+        """
+        return {}
+
+    def load(self, data_path):
+        """This time, directly loads leaf processor to perform computations"""
+        pass
+
+    def calc(self, args, kwargs):
+        """Based on variable, compute the value of the variable"""
+        pass
+
+    def detailed_calc(self, args, kwargs):
+        """Based on variable, compute the value of the variable and output the final value as well as the intermediate values into a dictionary"""
+        pass

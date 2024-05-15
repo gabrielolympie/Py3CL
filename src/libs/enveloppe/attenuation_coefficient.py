@@ -34,6 +34,8 @@ class AttenuationCoefficient(BaseProcessor):
         aue_isole: float = None,
         zone_climatique: str = None,
         orientation: str = None,
+        *args,
+        **kwargs,
     ):
         """
         Get the coefficient for the given parameters

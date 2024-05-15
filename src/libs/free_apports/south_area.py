@@ -58,6 +58,8 @@ class SouthAreaProcessor(BaseProcessor):
         ombrage_obstacle_lointain_hauteurs: list = None,
         ombrage_obstacle_lointain_secteurs: list = None,
         ombrage_obstacle_lointain_orientations: list = None,
+        *args,
+        **kwargs,
     ) -> float:
         """
         Calculate the south area equivalent (Sse) for a given month.
@@ -220,9 +222,8 @@ class SouthAreaProcessor(BaseProcessor):
         rapport_l1_l2: str = None,
         beta_gama: str = None,
     ):
-        if orientation == "Nord" or orientation == "Sud":
-            orientation = "Sud ou Nord"
-        elif orientation == "Est" or orientation == "Ouest":
+
+        if orientation == "Est" or orientation == "Ouest":
             orientation = "Est ou Ouest"
 
         assert (
@@ -349,15 +350,15 @@ class SouthAreaProcessor(BaseProcessor):
 
         if orientation == "Sud ou Nord":
             assert secteur in [
-                "Facade Sud/Nord secteurs latéraux",
-                "Facade Sud/Nord secteurs centraux",
-                "Facade Est/Ouest secteur latéral vers le sud",
-            ], f"when orientation is nord or sud, secteur must be in ['Facade Sud/Nord secteurs latéraux', 'Facade Sud/Nord secteurs centraux', 'Facade Est/Ouest secteur latéral vers le sud'], got {secteur}"
+                "Sud/Nord secteurs latéraux",
+                "Sud/Nord secteurs centraux",
+            ], f"when orientation is nord or sud, secteur must be in ['Sud/Nord secteurs latéraux', 'Sud/Nord secteurs centraux'], got {secteur}"
         elif orientation == "Est ou Ouest":
             assert secteur in [
+                "Est/Ouest secteur latéral vers le sud",
                 "Est/Ouest secteur central vers le sud",
                 "Est/Ouest 2 autres secteurs",
-            ], f"when orientation is est or west, secteur must be in ['Est/Ouest secteur central vers le sud', 'Est/Ouest 2 autres secteurs'], got {secteur}"
+            ], f"when orientation is est or west, secteur must be in ['Est/Ouest secteur central vers le sud', 'Est/Ouest 2 autres secteurs', 'Est/Ouest secteur latéral vers le sud'], got {secteur}"
 
         return self.ombrage_obstacle_lointain[(hauteur, orientation, secteur)]
 

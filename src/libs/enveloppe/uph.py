@@ -37,6 +37,8 @@ class UParoiProcessorPh(BaseProcessor):
         annee_isolation=None,
         zone_climatique=None,
         effet_joule=None,
+        *args,
+        **kwargs,
     ) -> float:
         """Calcule l'uparoi en fonction des paramètres
 

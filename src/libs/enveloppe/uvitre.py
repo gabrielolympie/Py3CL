@@ -29,6 +29,8 @@ class UgProcessorVitrage(BaseProcessor):
         orientation: str,
         traitement_vitrage: str,
         epaisseur_lame: float,
+        *args,
+        **kwargs,
     ) -> float:
         """
         Get the coefficient for the given parameters

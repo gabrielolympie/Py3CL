@@ -32,6 +32,8 @@ class DRProcessor(BaseProcessor):
         menuiserie_has_join: bool = None,
         hauteur_sous_plafond: float = None,
         nb_facade_exposee: int = None,
+        *args,
+        **kwargs,
     ) -> float:
         """Calcule le débit de renouvellement d'air pour une habitation, W/K
 
@@ -47,6 +49,11 @@ class DRProcessor(BaseProcessor):
             - hauteur_sous_plafond (float): Hauteur sous plafond, in meters
             - nb_facade_exposee (int): Nombre de façades exposées
         """
+        self.validate(
+            type_ventilation=type_ventilation,
+            type_batiment=type_batiment,
+        )
+        
         h_vent = self._calc_h_vent(type_ventilation, surface_habitable)
         h_perm = self._calc_h_perm(
             q4paconv=q4paconv,

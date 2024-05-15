@@ -39,6 +39,8 @@ class UParoiProcessorMur(BaseProcessor):
         enduit: bool = False,
         doublage_with_lame_below_15mm=False,
         doublage_with_lame_above_15mm=False,
+        *args,
+        **kwargs,
     ) -> float:
         """Calcule l'uparoi en fonction des paramètres
 

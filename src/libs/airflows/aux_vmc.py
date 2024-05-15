@@ -27,10 +27,13 @@ class CauxProcessor(BaseProcessor):
         annee_construction: int = None,
         is_collective: bool = None,
         surface_habitable: float = None,
+        *args,
+        **kwargs,
     ) -> float:
-        assert (
-            type_ventilation in self.valid_type_ventilation
-        ), f"type_ventilation must be in {self.valid_type_ventilation}"
+        self.validate(
+            type_ventilation=type_ventilation,
+            type_batiment=type_batiment,
+        )
 
         if " df " in type_ventilation.lower():
             type_vmc = "Double Flux"

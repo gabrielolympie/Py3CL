@@ -31,6 +31,8 @@ class KProcessorPth(BaseProcessor):
         largeur_dormant: float = None,
         type_pose: str = None,
         retour_isolation: str = None,
+        *args,
+        **kwargs,
     ) -> float:
         """Calcule le coefficient de déperdition thermique pour un pont thermique, en W/(m.K)
 

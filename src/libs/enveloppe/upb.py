@@ -48,6 +48,8 @@ class UParoiProcessorPb(BaseProcessor):
         is_terre_plain=False,
         surface_immeuble=None,
         perimeter_immeuble=None,
+        *args,
+        **kwargs,
     ) -> float:
         """Calcule l'uparoi en fonction des paramètres
 
