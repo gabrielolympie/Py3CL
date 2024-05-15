@@ -34,6 +34,21 @@ class BaseProcessor:
         for arg, arg_value in kwargs.items():
             if arg_value is not None:
                 if arg in self.calc_input:
-                    assert (
-                        arg_value in self.calc_input[arg]
-                    ), f"{arg} must be in {self.calc_input[arg]}"
+                    if type(arg_value) == list:
+                        for value in arg_value:
+                            if value is not None:
+                                assert (
+                                    value in self.calc_input[arg]
+                                ), f"{arg} must be in {self.calc_input[arg]}, got {value}"
+                    else:
+                        assert (
+                            arg_value in self.calc_input[arg]
+                        ), f"{arg} must be in {self.calc_input[arg]}, got {arg_value}"
+
+
+# class AggregatedProcessor:
+#     def __init__(self, data_path, *args, **kwargs):
+#         """Define the base class for the processor"""
+#         self.load(data_path, *args, **kwargs)
+
+#     def load(self, data_path, )

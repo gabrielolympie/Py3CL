@@ -95,6 +95,26 @@ class SouthAreaProcessor(BaseProcessor):
         Returns:
             float: The calculated south area equivalent (Sse) for the given parameters.
         """
+        self.validate(
+            zone=zone,
+            mois=mois,
+            orientation_paroi=orientation_paroi,
+            inclinaison_paroi=inclinaison_paroi,
+            materiaux=materiaux,
+            type_baie=type_baie,
+            type_pose=type_pose,
+            type_vitrage=type_vitrage,
+            masque_proche_types=masque_proche_types,
+            masque_proche_avances=masque_proche_avances,
+            masque_proche_rapports_l1_l2=masque_proche_rapports_l1_l2,
+            masque_proche_beta_gamas=masque_proche_beta_gamas,
+            masque_lointain_homogene_orientation=masque_lointain_homogene_orientation,
+            masque_lointain_homogene_alpha=masque_lointain_homogene_alpha,
+            ombrage_obstacle_lointain_hauteurs=ombrage_obstacle_lointain_hauteurs,
+            ombrage_obstacle_lointain_secteurs=ombrage_obstacle_lointain_secteurs,
+            ombrage_obstacle_lointain_orientations=ombrage_obstacle_lointain_orientations,
+        )
+
         facteur_solaire = self._calc_facteur_solaire(
             materiaux=materiaux,
             type_baie=type_baie,
