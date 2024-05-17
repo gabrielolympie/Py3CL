@@ -5,6 +5,8 @@ import os
 from libs.utils import safe_divide
 from libs.base import BaseProcessor
 
+## Todo : refactor into several sub processor and one aggregated processor
+## Structure into a tree based hierarchical aggregation
 
 class SouthAreaProcessor(BaseProcessor):
     def __init__(
@@ -160,6 +162,12 @@ class SouthAreaProcessor(BaseProcessor):
             )
         Fe2 = min(Fe2_1, Fe2_2)
         Fe = Fe1 * Fe2
+
+        print("facteur_solaire", facteur_solaire)
+        print("coefficient_orientation", coefficient_orientation)
+        print("surface_baie", surface_baie)
+        print("Fe", Fe)
+        print('Fe1', 'Fe2: ', Fe1, Fe2)
 
         return surface_baie * facteur_solaire * coefficient_orientation * Fe
 
@@ -549,6 +557,7 @@ class SouthAreaProcessor(BaseProcessor):
         self.valid_facteur_solaire_type_vitrage = list(
             self.facteur_solaire_type_vitrage.values()
         ) + [None]
+    
 
     def _preprocess_facteur_solaire(self):
         self.facteur_solaire["facteur_solaire_materiaux"] = self.facteur_solaire[
@@ -570,7 +579,7 @@ class SouthAreaProcessor(BaseProcessor):
                 "facteur_solaire_type_pose",
                 "facteur_solaire_type_vitrage",
             ]
-        )["id"].to_dict()
+        )["fts"].to_dict()
 
     def _preprocess_coefficient_masques_proches_avance(self):
         self.coefficient_masques_proches_avance = (

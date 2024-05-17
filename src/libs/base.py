@@ -1,3 +1,5 @@
+import numpy as np
+
 class BaseProcessor:
     def __init__(self, data_path, *args, **kwargs):
         """Define the base class for the processor"""
@@ -32,11 +34,11 @@ class BaseProcessor:
     def validate(self, *args, **kwargs):
         """Validate the input of the calc function"""
         for arg, arg_value in kwargs.items():
-            if arg_value is not None:
+            if arg_value is not None and not(str(arg_value).lower() == "nan"):
                 if arg in self.calc_input:
                     if type(arg_value) == list:
                         for value in arg_value:
-                            if value is not None:
+                            if value is not None and not(str(value).lower() == "nan"):
                                 assert (
                                     value in self.calc_input[arg]
                                 ), f"{arg} must be in {self.calc_input[arg]}, got {value}"

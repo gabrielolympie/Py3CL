@@ -1,0 +1,349 @@
+- DPE
+  - Calculs initiaux et tools
+    - BVi - Besoin de chauffage mois i (W/K)
+      - $GV \cdot (1 - F_j)$
+        - GV - Déperdition d'enveloppe (W/K)
+          - DParoi - Déperdition des parois (W/K)
+            - DPmur (W/K) - deperdition murs
+              - $\sum_i(b_i \cdot Smuri \cdot Umuri)$
+                - bi
+                  - Calc - b
+                    - Variable = local_non_chauffe
+                    - Variable = aie
+                    - Variable = aue
+                    - Variable = aie_isole
+                    - Variable = aue_isole
+                    - Variable = orientation
+                    - Variable = departement
+                - Smuri - Surface du mur (m²)
+                  - Variable = s_mur
+                - Umuri - Coef de transmmission thermique (W/m²/K)
+                  - Calc - Umur
+                    - Variable = Umur
+                    - Variable = materiaux
+                    - Variable = epaisseur
+                    - Variable = annee_construction_ou_isolation
+                    - Variable = isolation
+                    - variable = r_isolant
+                    - variable = epaisseur_isolant
+                    - Variable = departement (zone)
+                    - Variable = effet_joule
+                    - variable = enduit
+                    - variable = doublage_with_lame_below_15mm
+                    - variable = doublage_with_lame_above_15mm
+            - DPpb (W/K) - deperdition plancher bas
+              - $\sum_i(b_i \cdot SPbi \cdot UPbi)$
+                - bi
+                  - Calc - b
+                    - Variable = local_non_chauffe
+                    - Variable = aie
+                    - Variable = aue
+                    - Variable = aie_isole
+                    - Variable = aue_isole
+                    - Variable = orientation
+                    - Variable = departement
+                - SPbi - Surface du plancher bas (m²)
+                  - Variable = s_pb
+                - UPbi - Coef de transmmission thermique (W/m²/K)
+                  - Calc - Upb
+                    - Variable = Upb
+                    - Variable = materiaux
+                    - Variable = epaisseur
+                    - Variable = annee_construction_ou_isolation
+                    - Variable = isolation
+                    - variable = r_isolant
+                    - variable = epaisseur_isolant
+                    - Variable = departement (zone)
+                    - Variable = effet_joule
+                    - variable = is_vide_sanitaire
+                    - variable = is_unheated_underground
+                    - variable = is_terre_plain
+                    - variable = surface_immeuble
+                    - variable = perimeter_immeuble
+            - DPph (W/K) - deperdition plancher haut
+              - $\sum_i(b_i \cdot SPhi \cdot UPhi)$
+                - bi
+                  - Calc - b
+                    - Variable = local_non_chauffe
+                    - Variable = aie
+                    - Variable = aue
+                    - Variable = aie_isole
+                    - Variable = aue_isole
+                    - Variable = orientation
+                    - Variable = departement
+                - SPhi - Surface du plancher haut (m²)
+                  - Variable = s_pb
+                - UPhi - Coef de transmmission thermique (W/m²/K)
+                  - Calc - Uph
+                    - Variable = Uph
+                    - Variable = materiaux
+                    - Variable = epaisseur
+                    - Variable = annee_construction_ou_isolation
+                    - Variable = isolation
+                    - variable = r_isolant
+                    - variable = epaisseur_isolant
+                    - Variable = departement (zone)
+                    - Variable = effet_joule
+            - DPvitrage (W/K) - deperdition plancher haut
+              - $\sum_i(b_i \cdot Sbaiei \cdot Ubaiei)$
+                - bi
+                  - Calc - b
+                    - Variable = local_non_chauffe
+                    - Variable = aie
+                    - Variable = aue
+                    - Variable = aie_isole
+                    - Variable = aue_isole
+                    - Variable = orientation
+                    - Variable = departement
+                - SBaie - Surface de la baie (m²)
+                  - Variable = s_baie
+                - Ubaie
+                  - Ujn - transmission en prenant en compte les volets
+                    - uw - coefficient de transmission de la paroi vitree et menuiserie
+                      - abaque tv 010
+                        - ug - coefficient de la paroi vitree
+                          - Abaque tv009
+                            - Variable = type_vitrage
+                            - Variable = remplissage
+                            - Variable = orientation
+                            - Variable = traitement_vitrage
+                            - Variable = epaisseur_lame
+                        - Variable = type_baie
+                        - Variable = type_materiaux
+                        - Variable = type_menuiserie
+                    - delta_r - résistance additionnelle des volets
+                      - abaque tv011
+                        - Variable = type_fermeture
+          - DR - Déperdition par renouvellement d'air (W/K)
+            - Hvent - Deperdition par renouvellement d'air de la ventilation (W/K)
+              - $0.34 \cdot Q_{\text{varepconv}} \cdot Sh$
+                - Q_varepconv
+                  - Abaque tv015_bis
+                    - Variable = type_ventilation
+                  - Sh
+                    - Variable = Surface Habitable
+            - Hperm - Deperditionpar renouvellement d'air du au vent (W/K)
+              - $0.34 \frac{H_{\text{sp}} \cdot Sh \cdot \eta_{50} \cdot e}{1 + \frac{f}{e} \cdot \left(\frac{Q_{\text{vasouf,conv}} - Q_{\text{varep,conv}}}{H_{\text{sp}} \cdot \eta_{50}}\right)^2}$
+                - Hsp - Hauteur moyenne sous plafond (m)
+                  - Variable = hauteur_sous_plafond
+                - Sh - Surface habitable (m²)
+                  - Variable = surface_habitable
+                - e - coefficient de protection
+                  - Abaque
+                    - Variable = nb_facade_exposee
+                - f - coefficient de protection
+                  - Abaque
+                    - Variable = nb_facade_exposee
+                - Q_varepconv débit volumique conventionnel à reprendre (m3/(h.m²))
+                  - Abaque tv015_bis
+                    - Variable = type_ventilation
+                - Q_vasoufconv débit volumique conventionnel à reprendre (m3/(h.m²))
+                  - Abaque tv015_bis
+                    - Variable = type_ventilation
+                - $\eta_{50}$ - renouvellement d'air sous 50 pascals (h-1)
+                  - $\eta_{50} = \frac{Q_{4pa}}{\left(\frac{4}{50}\right)^{\frac{2}{3}} \cdot H_{\text{sp}} \cdot Sh}$
+                    - Hsp - Hauteur moyenne sous plafond (m)
+                      - Variable = hauteur_sous_plafond
+                    - Sh - Surface habitable (m²)
+                      - Variable = surface_habitable
+                    - $Q_{4pa}$ - Permeabilité sous 4 pascal
+                      - $Q_{4pa} = Q_{4paenv} + 0.45 \cdot S_{\text{mea,conv}} \cdot Sh$
+                        - Sh - Surface habitable (m²)
+                          - Variable = surface_habitable
+                        - 𝑆𝑚𝑒𝑎𝑐𝑜𝑛v - somme des modules d'entrées d'air sous 20 pa
+                          - Abaque tv015_bis
+                            - Variable = type_ventilation
+                        - $Q_{4paenv}$
+                          -  𝑄4𝑃𝑎𝑐𝑜𝑛𝑣/𝑚² ∗ 𝑆𝑑𝑒p
+                            - 𝑄4𝑃𝑎𝑐𝑜𝑛𝑣/𝑚² - Valeur conventionnelle de permeabilité sous 4pa
+                              - Abaque tv_014_bis
+                                - Variable = type_batiment
+                                - Variable = annee_construction
+                            - Sdep - surface des parois déperditives hors plancher bas
+                              - $\sum_{\text{parois} \notin \text{plancher bas}} S_{\text{parois}}$
+              
+          - PT - Déperdition par pont thermique (W/K)
+            - $\sum(l_{pthi} \cdot k_{pthi})$
+              - lpthi - longueur lineaire du pont thermique (m)
+                - Variable = lpth
+              - kpthi - coeficient linéaire de déperdition du pont thermique i (W/m/K)
+                - abaque tv 013
+                  - Variable = type_liaison
+                  - Variable = isolation_mur
+                  - Variable = isolation_plancher
+                  - Variable = largeur_dormant
+                  - Variable = type_pose
+                  - Variable = retour_isolation
+        - Fj - fraction des besoins couverts par apports gratuits
+          - $\frac{X_j - X_j^I}{1 - X_j^I}$
+            - I - Coef de déperdition lié à l'Inertie du batiment
+              - Inertie
+                - Abaque page tv026
+                  - Inertie plancher haut
+                    - Variable = materiaux_plancher_haut
+                  - Inertie plancher Bas
+                    - Variable = materiaux_plancher_bas
+                  - Inertie mur
+                    - Variable = materiaux_plancher_mur
+            - Xj - Facteur d'apport
+              - $\frac{A_{sj} + A_{ij}}{GV \cdot DH_j}$
+                - Calc - GV - Déperdition d'enveloppes
+                - DHj - Degré heure de chauffage sur le mois
+                  - Abaque page 121
+                    - Calc zone
+                      - Variable = departement
+                    - Variable = mois
+                - Aij - Apports interne sur le mois (Wh)
+                  - $\left[ (3.18 + 0.34) \cdot Sh + 90 \cdot \frac{132}{168} \cdot N_{\text{adeq}} \right] \cdot N_{\text{refj}}$
+                    - Sh
+                      - Variable = surface_habitable
+                    - $N_adeq$ - npmbre adulte equivalents
+                      - Variable - N_adult_equivalent
+                    - $N_refi$ - Nombre heure chauffage / mois
+                      - Abaque page 122
+                        - Calc - Zone
+                          - Variable = departement
+                        - Variable = mois
+                        - Variable = usage (conventionnel / depensier)
+                  - Asj - apports solaires sur le mois j (Wh)
+                    - 1000 ∗ 𝑆𝑠𝑒𝑗 ∗ Ej
+                      - Ej - Ensoleillement eq surface sud mois j (Wh)
+                        - Abaque page 125
+                          - Calc - Zone
+                            - Variable = departement
+                          - Variable = mois
+                          - Variable = usage (conventionnel / depensier)
+                      - Ssej - Surface transparente sud équivalente
+                        - $\sum_i A_i \cdot Sw_i \cdot Fe_i \cdot C1_{i,j}$
+                          - A_i - Surface de la baie (m²)
+                            - Variable = surface_baie
+                          - Swi - Proportion d'énergie pénétrant par la paroi i
+                            - Abaque tv021
+                              - Variable = materiaux
+                              - Variable = type_baie
+                              - Variable = type_pose
+                              - Variable = type_vitrage
+                          - $F_ei$ - facteur de réduction par les masques
+                            - $F_e1i$ * $F_e2i$
+                              - $F_e1i$ - facteur réduction masques proches
+                                - min
+                                  - abaque tv022
+                                    - Variable = type_masque
+                                    - Variable = avancee
+                                    - Variable = orientation
+                                    - Variable = rapport_l1_l2
+                                    - Variable = beta_gamma
+                              - $F_e2i$ - facteur réduction masques lointain
+                                - Fe2_h - masques homogènes
+                                  - Abaque tv023
+                                    - Variable = hauteur_alpha
+                                    - Variable = orientation
+                                - Fe2_o - obstacles
+                                  - $1 - \frac{\sum Omb}{100}$
+                                    - Omb - ombrage sur la paroi
+                                      - Abaque tv024
+                                        - Variable = hauteur
+                                        - Variable = secteur
+                                        - Variable = orientation
+                          - $C1_ij$ - Facteur d'inclinaison et d'orientation
+                            - Abaque tv020_bis
+                              - Variable = zone
+                              - Variable = mois
+                              - Variable = orientation_paroi
+                              - Variable = inclinaison_paroi
+                    - As_veranda_j - Apport solaire liés à la véranda
+                      - $1000 \cdot S_{\text{severanda}, j} \cdot E_j$
+                        - Ej - Ensoleillement eq surface sud mois j (Wh)
+                          - Abaque page 125
+                            - Calc - Zone
+                              - Variable = departement
+                            - Variable = mois
+                            - Variable = usage (conventionnel / depensier)
+                        - $S_{\text{severanda}, j}$ - Surface sud equivalente
+                          - $S_{\text{sdj}} + S_{\text{sind}, j} \cdot b_{\text{ver}}$
+                            - $S_{\text{sdj}}$
+                              - Calc - $S_{\text{sdj}}$
+                              - T
+                                - Abaque page 51
+                                  - Variable = type_menuiserie
+                                  - Variable = type_vitrage
+                            - bver
+                              - Abaque tv002
+                                - Variable = zone
+                                - Variable = orientation
+                                - Variable = isolation
+                            - $S_{\text{sind}, j}$ - Surface d'entree apres reflexion multiples
+                              - $S_{\text{st}j} - S_{\text{sd}j}$
+                                - Ssdj - Calc
+                                - $S_{\text{st}j}$
+                                  - $\sum_k A_k \cdot (0.8 \cdot T + 0.024) \cdot Fe_k \cdot C1_{k,j}$
+                                    - Ak - Surface baie k séparant de l'exterieur (m²)
+                                      - Variable = surface_vitree
+                                    - T - Coef transparence
+                                      - Abaque page 51
+                                        - Variable = type_menuiserie
+                                        - Variable = type_vitrage
+                                    - Fek Facteur ensoleillement masques lointains = 1
+                                    - $C1_{k,j}$ - Coef d'orientations
+                                      - Abaque tv020_bis
+                                        - Variable = zone
+                                        - Variable = mois
+                                        - Variable = orientation_paroi
+                                        - Variable = inclinaison_paroi
+
+    - zone - zone du logement, été / hiver
+      - Abaque tv016, tv017, tv018
+        - Departement
+          - Variable = departement
+    - b - coefficient de réduction de déperdition local non chauffé
+      - if local_non_chauffe in ['Extérieur', 'Paroi enterré', 'Vide Sanitaire', 'Bâtiment adjacents', 'Terre-plein', 'Aue = 0']
+        - Abaque = tv001
+          - aiu_aue
+            - Variable = local_non_chauffe
+      - elif exterior_type in ['Véranda']
+        - Abaque tv002
+          - aie_isole - Paroi donnant sur la véranda
+            - Variable = isolation
+          - Orientation de la véranda
+            - Variable = orientation - "Nord" / "Sud" / "Est/Ouest"
+          - Zone climatique - (H1, H2, H3)
+            - Calc - zone
+              - Variable = departement
+      - else
+        - Abaque tv001
+          - uv_ue
+            - Abaque tv002
+              - local_non_chauffe
+                - Variable = local_non_chauffe
+          - aue_isole - isolation ou non de l'extérieur
+            - Variable = aue_isole
+          - aie_isole - isolation ou non de la surface mitoyenne
+          - aiu_aue_max - treshold
+            - aiu / aue
+              - aiu - area surface de contact
+                - Variable = aiu
+              - aue - area surface local non chauffé
+                - Variable = aue
+  - Ep - Energie Totale (kWh/m²/ans)
+    - Cch_p - Conso Totale Chauffage (kWh/ans)
+      - 
+    - Cecs_p - Conso Totale Ecs (kWh/ans)
+      - 
+    - Cfroids_p - Conso Totale refroidissement (kWh/ans)
+      - 
+    - Cecl_p - Conso Totale Eclairage (kWh/ans)
+      - $Sh \cdot C \cdot Pecl \cdot \sum_j(N_{hj})$ 
+      - Sh - Surface Habitable (m²)
+        - Variable = surface_habitable
+      - C - Coefficient Utilisation Eclairage
+        - Constant = 0.9
+      - Pecl - Puissance d'éclairage conventionnelle (W/m²)
+        - Constant = 1.4 W/m2
+      - Nhj - Nombre d'heure d'éclairage sur le mois
+        - Abaque Page 103
+          - Mois i
+          - zone - (H1a, H1b ...)
+            - Calc - zone
+              - Variable = departement
+    - Caux_p - Conso Totale Axilliaires (kWh/ans)
+
