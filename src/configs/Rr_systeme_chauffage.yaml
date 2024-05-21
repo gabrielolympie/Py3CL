@@ -1,0 +1,9 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv030_rendement_regulation_systeme_chauffage.csv
+keys:
+- key_name: type_installation
+  key_type: cat
+values:
+- rr

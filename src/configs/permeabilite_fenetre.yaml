@@ -1,0 +1,9 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv014_permeabilite.csv
+keys:
+- key_name: type_prise_air
+  key_type: cat
+values:
+- q4paconv

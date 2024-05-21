@@ -1,0 +1,34 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv026_classe_inertie.csv
+keys:
+- key_name: inertie_plancher_bas
+  key_type: cat
+- key_name: inertie_plancher_haut
+  key_type: cat
+- key_name: inertie_mur
+  key_type: cat
+refs:
+- col: tv026_classe_inertie_plancher_bas_id
+  file: tv026_classe_inertie_type.csv
+  key: id
+  new_col: inertie_plancher_bas
+  value: type
+- col: tv026_classe_inertie_plancher_haut_id
+  file: tv026_classe_inertie_type.csv
+  key: id
+  new_col: inertie_plancher_haut
+  value: type
+- col: tv026_classe_inertie_paroi_verticale_id
+  file: tv026_classe_inertie_type.csv
+  key: id
+  new_col: inertie_mur
+  value: type
+- col: tv026_classe_inertie_classe_inertie_id
+  file: tv026_classe_inertie_type.csv
+  key: id
+  new_col: classe_inertie_batiment
+  value: type
+values:
+- classe_inertie_batiment

@@ -1,0 +1,20 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv002_veranda.csv
+rename:
+  Zone climatique: zone_hiver
+  Orientation de la véranda: orientation_veranda
+  Paroi donnant sur la véranda: isolation_paroi
+keys:
+- key_name: zone_hiver
+  key_type: cat
+- key_name: orientation_veranda
+  key_type: cat
+- key_name: isolation_paroi
+  key_type: cat
+mapping:
+- col: isolation_paroi
+  function: 'lambda x: "yes" if x=="Isolé" else "no"'
+values:
+- bver

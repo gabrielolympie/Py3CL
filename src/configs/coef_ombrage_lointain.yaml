@@ -1,0 +1,29 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv024_ombrage_obstacle_lointain.csv
+keys:
+- key_name: hauteur
+  key_type: cat
+- key_name: orientation
+  key_type: cat
+- key_name: secteur
+  key_type: cat
+refs:
+- col: tv024_ombrage_obstacle_lointain_hauteur_id
+  file: tv024_ombrage_obstacle_lointain_hauteur.csv
+  key: id
+  new_col: hauteur
+  value: hauteur
+- col: tv0xx_orientation_id
+  file: tv0xx_orientation.csv
+  key: id
+  new_col: orientation
+  value: orientation
+- col: tv024_ombrage_obstacle_lointain_secteur_id
+  file: tv024_ombrage_obstacle_lointain_secteur.csv
+  key: id
+  new_col: secteur
+  value: secteur
+values:
+- omb

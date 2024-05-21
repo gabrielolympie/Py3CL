@@ -1,0 +1,24 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv044_conversion_kwh_energies_relevees.csv
+keys:
+- key_name: type_energie
+  key_type: cat
+- key_name: forme_physique
+  key_type: cat
+- key_name: unite
+  key_type: cat
+refs:
+- col: tv044_conversion_kwh_energies_relevees_type_energie_id
+  file: tv044_conversion_kwh_energies_relevees_type_energie.csv
+  key: id
+  new_col: type_energie
+  value: type_energie
+- col: tv044_conversion_kwh_energies_relevees_unite_id
+  file: tv044_conversion_kwh_energies_relevees_unite.csv
+  key: id
+  new_col: unite
+  value: relevees_unite
+values:
+- taux_conversion

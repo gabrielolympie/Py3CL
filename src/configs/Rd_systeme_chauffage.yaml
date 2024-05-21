@@ -1,0 +1,14 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv029_rendement_distribution_systeme_chauffage.csv
+keys:
+- key_name: type_distribution
+  key_type: cat
+- key_name: isole
+  key_type: cat
+mapping:
+- col: isole
+  function: "lambda x: 'yes' if x == 1 else 'no'"
+values:
+- rd

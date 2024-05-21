@@ -1,0 +1,20 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv004_umur0.csv
+keys:
+- key_name: umur0_materiaux
+  key_type: cat
+- key_name: epaisseur
+  key_type: num
+mapping:
+- col: epaisseur
+  function: 'lambda x: float(x.replace(" et -", "").replace("Sans objet", "100"))'
+refs:
+- col: tv004_umur0_materiaux_id
+  file: tv004_umur0_materiaux.csv
+  key: id
+  new_col: umur0_materiaux
+  value: materiaux
+values:
+- umur

@@ -1,0 +1,32 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv007_uph.csv
+filters:
+- col: ph_isole
+  function: "lambda x: x == 0"
+keys:
+- key_name: type_toit
+  key_type: cat
+- key_name: annee_construction_max
+  key_type: num
+- key_name: zone_hiver
+  key_type: cat
+- key_name: effet_joule
+  key_type: cat
+mapping:
+- col: effet_joule
+  function: 'lambda x: "yes" if x == 1 else "no"' # Always no when computing isolation
+refs:
+- col: tv017_zone_hiver_id
+  file: tv017_zone_hiver.csv
+  key: id
+  new_col: zone_hiver
+  value: code
+- col: tv007_uph_type_toit_id
+  file: tv007_uph_type_toit.csv
+  key: id
+  new_col: type_toit
+  value: type_toit
+values:
+- uph

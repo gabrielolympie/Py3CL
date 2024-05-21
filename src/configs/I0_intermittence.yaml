@@ -1,0 +1,64 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv025_intermittence.csv
+keys:
+- key_name: type_batiment
+  key_type: cat
+- key_name: type_installation
+  key_type: cat
+- key_name: type_chauffage
+  key_type: cat
+- key_name: type_regulation
+  key_type: cat
+- key_name: type_emetteur
+  key_type: cat
+- key_name: inertie
+  key_type: cat
+- key_name: equipement_intermittence
+  key_type: cat
+- key_name: comptage_individuel
+  key_type: cat
+refs:
+- col: tv025_type_batiment_id
+  file: tv025_intermittence_type_batiment.csv
+  key: id
+  new_col: type_batiment
+  value: type_batiment
+- col: tv025_intermittence_type_installation_id
+  file: tv025_intermittence_type_installation.csv
+  key: id
+  new_col: type_installation
+  value: type_installation
+- col: tv025_intermittence_type_chauffage_id
+  file: tv025_intermittence_type_chauffage.csv
+  key: id
+  new_col: type_chauffage
+  value: type_chauffage
+- col: tv025_intermittence_type_regulation_id
+  file: tv025_intermittence_type_regulation.csv
+  key: id
+  new_col: type_regulation
+  value: type_regulation
+- col: tv025_type_emetteur_id
+  file: tv025_intermittence_type_emetteur.csv
+  key: id
+  new_col: type_emetteur
+  value: type_emetteur
+- col: tv025_intermittence_inertie_id
+  file: tv025_intermittence_inertie.csv
+  key: id
+  new_col: inertie
+  value: inertie
+- col: tv025_equipement_intermittence_id
+  file: tv025_intermittence_equipement_intermittence.csv
+  key: id
+  new_col: equipement_intermittence
+  value: equipement_intermittence
+- col: tv025_intermittence_comptage_individuel_id
+  file: tv025_intermittence_comptage_individuel.csv
+  key: id
+  new_col: comptage_individuel
+  value: comptage_individuel
+values:
+- I0

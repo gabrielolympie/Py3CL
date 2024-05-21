@@ -1,0 +1,27 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv005_upb.csv
+filters:
+- col: pb_isole
+  function: "lambda x: x in ['Non', 'Inconnu']"
+keys:
+- key_name: pb_isole
+  key_type: cat
+- key_name: annee_construction_max
+  key_type: num
+- key_name: zone_hiver
+  key_type: cat
+- key_name: effet_joule
+  key_type: cat
+mapping:
+- col: effet_joule
+  function: 'lambda x: "yes" if x == 1 else "no"' # Always no when computing isolation
+refs:
+- col: tv017_zone_hiver_id
+  file: tv017_zone_hiver.csv
+  key: id
+  new_col: zone_hiver
+  value: code
+values:
+- upb

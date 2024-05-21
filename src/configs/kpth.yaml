@@ -1,0 +1,45 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv013_valeur_pont_thermique.csv
+keys:
+- key_name: type_liaison
+  key_type: cat
+- key_name: isolation_mur
+  key_type: cat
+- key_name: isolation_plancher_bas
+  key_type: cat
+- key_name: type_pose
+  key_type: cat
+- key_name: retour_isolation
+  key_type: cat
+- key_name: largeur_dormant
+  key_type: cat
+refs:
+- col: tv013_valeur_pont_thermique_type_liaison_id
+  file: tv013_valeur_pont_thermique_type_liaison.csv
+  key: id
+  new_col: type_liaison
+  value: type_liaison
+- col: tv013_valeur_pont_thermique_isolation_mur_id
+  file: tv013_valeur_pont_thermique_isolation_mur.csv
+  key: id
+  new_col: isolation_mur
+  value: isolation_mur
+- col: tv013_valeur_pont_thermique_isolation_plancher_bas_id
+  file: tv013_valeur_pont_thermique_isolation_plancher_bas.csv
+  key: id
+  new_col: isolation_plancher_bas
+  value: plancher_bas
+- col: tv013_valeur_pont_thermique_type_pose_id
+  file: tv013_valeur_pont_thermique_type_pose.csv
+  key: id
+  new_col: type_pose
+  value: type_pose
+- col: tv013_valeur_pont_thermique_retour_isolation_id
+  file: tv013_valeur_pont_thermique_retour_isolation.csv
+  key: id
+  new_col: retour_isolation
+  value: retour_isolation
+values:
+- k

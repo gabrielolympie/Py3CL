@@ -1,0 +1,26 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv040_rendement_distribution_ecs.csv
+keys:
+- key_name: type_installation
+  key_type: cat
+- key_name: type_generateur
+  key_type: cat
+- key_name: production_volume_habitable
+  key_type: cat
+- key_name: pieces_alimentees_contigues
+  key_type: cat
+refs:
+- col: tv040_rendement_distribution_ecs_type_installation_id
+  file: tv040_rendement_distribution_ecs_type_installation.csv
+  key: id
+  new_col: type_installation
+  value: type_installation
+- col: tv040_rendement_distribution_ecs_type_generateur_id
+  file: tv040_rendement_distribution_ecs_type_generateur.csv
+  key: id
+  new_col: type_generateur
+  value: type_generateur
+values:
+- rd

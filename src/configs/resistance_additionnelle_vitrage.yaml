@@ -1,0 +1,9 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv011_resistance_additionnelle.csv
+keys:
+- key_name: fermetures
+  key_type: cat
+values:
+- resistance_additionnelle

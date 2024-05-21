@@ -1,0 +1,11 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv012_coefficient_transmission_thermique_baie_protection_solaire.csv
+keys:
+- key_name: uw
+  key_type: num
+- key_name: deltar
+  key_type: num
+values:
+- ujn

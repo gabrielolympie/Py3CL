@@ -1,0 +1,35 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv022_coefficient_masques_proches.csv
+keys:
+- key_name: type_masque
+  key_type: cat
+- key_name: avance
+  key_type: cat
+- key_name: orientation
+  key_type: cat
+- key_name: rapport_l1_l2
+  key_type: cat
+- key_name: beta_gama
+  key_type: cat
+- key_name: angle_superieur_30
+  key_type: cat
+refs:
+- col: tv022_coefficient_masques_proches_type_masque_id
+  file: tv022_coefficient_masques_proches_type_masque.csv
+  key: id
+  new_col: type_masque
+  value: type_masque
+- col: tv022_coefficient_masques_proches_avance_id
+  file: tv022_coefficient_masques_proches_avance.csv
+  key: id
+  new_col: avance
+  value: avance
+- col: tv0xx_orientation_id
+  file: tv0xx_orientation.csv
+  key: id
+  new_col: orientation
+  value: orientation
+values:
+- fe1

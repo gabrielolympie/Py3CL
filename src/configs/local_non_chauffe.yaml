@@ -1,0 +1,17 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv002_local_non_chauffe.csv
+keys:
+- key_name: type_batiment
+  key_type: cat
+- key_name: local_non_chauffe
+  key_type: cat
+refs:
+- col: tv002_local_non_chauffe_type_batiment_id
+  file: tv002_local_non_chauffe_type_batiment.csv
+  key: id
+  new_col: type_batiment
+  value: type_batiment
+values:
+- uvue

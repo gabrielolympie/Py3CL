@@ -1,0 +1,12 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv001_coefficient_reduction_deperditions.csv
+filters:
+- col: aiu_aue
+  function: "lambda x: not('<' in str(x) or '?' in str(x))"
+keys:
+- key_name: aiu_aue
+  key_type: cat
+values:
+- valeur

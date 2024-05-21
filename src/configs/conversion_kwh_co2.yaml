@@ -1,0 +1,14 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv045_conversion_kwh_co2.csv
+keys:
+- key_name: energie
+  key_type: cat
+- key_name: type_production
+  key_type: cat
+rename:
+  taux_conversion: ratio_co2_kwh
+values:
+- ratio_co2_kwh
+- conversion_pci_pcs

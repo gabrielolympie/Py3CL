@@ -1,0 +1,45 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv016_departement.csv
+keys:
+- key_name: id
+  key_type: cat
+mapping:
+- col: zone_ete
+  function: 'lambda x: x[-1]'
+reduce:
+- cols:
+  - zone_hiver
+  - zone_ete
+  function: 'lambda x: x[0] + x[1]'
+  new_col: zone_climatique
+refs:
+- col: tv017_zone_hiver_id
+  file: tv017_zone_hiver.csv
+  key: id
+  new_col: zone_hiver
+  value: code
+- col: tv018_zone_ete_id
+  file: tv018_zone_ete.csv
+  key: id
+  new_col: zone_ete
+  value: code
+values:
+- altmin
+- altmax
+- nref
+- dhref
+- pref
+- c2
+- c3
+- c4
+- t_ext_basse
+- e
+- fch
+- fecs_ancienne_m_i
+- fecs_recente_m_i
+- fecs_solaire_m_i
+- fecs_ancienne_i_c
+- fecs_recente_i_c
+- zone_climatique

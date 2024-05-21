@@ -1,0 +1,31 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv010_coefficient_transmission_thermique_baie.csv
+keys:
+- key_name: type_materiaux
+  key_type: cat
+- key_name: type_menuiserie
+  key_type: cat
+- key_name: type_baie
+  key_type: cat
+- key_name: ug
+  key_type: num
+refs:
+- col: tv010_uw_type_materiaux_id
+  file: tv010_uw_type_materiaux.csv
+  key: id
+  new_col: type_materiaux
+  value: type_materiaux
+- col: tv010_uw_type_menuiserie_id
+  file: tv010_uw_type_menuiserie.csv
+  key: id
+  new_col: type_menuiserie
+  value: type_menuiserie
+- col: tv010_uw_type_baie_id
+  file: tv010_uw_type_baie.csv
+  key: id
+  new_col: type_baie
+  value: type_baie
+values:
+- uw

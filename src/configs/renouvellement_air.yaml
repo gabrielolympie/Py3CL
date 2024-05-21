@@ -1,0 +1,11 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv015_bis_valeur_conventionnelle_renouvellement_air.csv
+keys:
+- key_name: type_ventilation
+  key_type: cat
+values:
+- Qvarepconv
+- Qvasoufconv
+- Smeaconv

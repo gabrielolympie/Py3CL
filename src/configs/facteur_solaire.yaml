@@ -1,0 +1,36 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv021_facteur_solaire.csv
+keys:
+- key_name: type_pose
+  key_type: cat
+- key_name: materiaux
+  key_type: cat
+- key_name: type_baie
+  key_type: cat
+- key_name: type_vitrage 
+  key_type: cat
+refs:
+- col: tv021_facteur_solaire_type_pose_id
+  file: tv021_facteur_solaire_type_pose.csv
+  key: id
+  new_col: type_pose
+  value: type_pose
+- col: tv021_facteur_solaire_materiaux_id
+  file: tv021_facteur_solaire_materiaux.csv
+  key: id
+  new_col: materiaux
+  value: materiaux
+- col: tv021_facteur_solaire_type_baie_id
+  file: tv021_facteur_solaire_type_baie.csv
+  key: id
+  new_col: type_baie
+  value: type_baie
+- col: tv021_facteur_solaire_type_vitrage_id
+  file: tv021_facteur_solaire_type_vitrage.csv
+  key: id
+  new_col: type_vitrage
+  value: type_vitrage
+values:
+- fts

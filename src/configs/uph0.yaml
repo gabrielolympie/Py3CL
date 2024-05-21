@@ -1,0 +1,9 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv008_uph0.csv
+keys:
+- key_name: materiaux
+  key_type: cat
+values:
+- uph0

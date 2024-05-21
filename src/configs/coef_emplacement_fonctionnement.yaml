@@ -1,0 +1,15 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv041_coefficient_emplacement_fonctionnement.csv
+keys:
+- key_name: alimentation
+  key_type: cat
+refs:
+- col: tv041_coefficient_emplacement_fonctionnement_alimentation_id
+  file: tv041_coefficient_emplacement_fonctionnement_alimentation.csv
+  key: id
+  new_col: alimentation
+  value: alimentation
+values:
+- cef

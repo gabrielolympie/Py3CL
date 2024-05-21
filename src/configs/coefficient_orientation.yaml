@@ -1,0 +1,15 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv020_bis_coefficient_orientation.csv
+rename:
+  area: zone_climatique
+keys:
+- key_name: zone_climatique
+  key_type: cat
+- key_name: orientation
+  key_type: cat
+- key_name: inclination
+  key_type: cat
+values:
+- c1

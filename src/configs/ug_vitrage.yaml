@@ -1,0 +1,38 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv009_coefficient_transmission_thermique_vitrage.csv
+keys:
+- key_name: type_vitrage
+  key_type: cat
+- key_name: orientation
+  key_type: cat
+- key_name: remplissage
+  key_type: cat
+- key_name: traitement_vitrage
+  key_type: cat
+- key_name: epaisseur_lame
+  key_type: num
+refs:
+- col: tv009_ug_type_vitrage_id
+  file: tv009_ug_type_vitrage.csv
+  key: id
+  new_col: type_vitrage
+  value: type_vitrage
+- col: tv009_ug_orientation_id
+  file: tv009_ug_orientation.csv
+  key: id
+  new_col: orientation
+  value: orientation
+- col: tv009_ug_remplissage_id
+  file: tv009_ug_remplissage.csv
+  key: id
+  new_col: remplissage
+  value: remplissage
+- col: tv009_ug_traitement_vitrage_id
+  file: tv009_ug_traitement_vitrage.csv
+  key: id
+  new_col: traitement_vitrage
+  value: traitement_vitrage
+values:
+- ug

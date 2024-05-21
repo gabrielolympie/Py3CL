@@ -1,0 +1,36 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv027_pertes_recuperees_ecs.csv
+keys:
+- key_name: type_installation
+  key_type: cat
+- key_name: type_production
+  key_type: cat
+- key_name: type_systeme
+  key_type: cat
+- key_name: zone_hiver
+  key_type: cat
+refs:
+- col: tv027_pertes_recuperees_ecs_type_installation_id
+  file: tv040_rendement_distribution_ecs_type_installation.csv
+  key: id
+  new_col: type_installation
+  value: type_installation
+- col: tv027_pertes_recuperees_ecs_type_production_id
+  file: tv027_pertes_recuperees_ecs_type_production.csv
+  key: id
+  new_col: type_production
+  value: type_production
+- col: tv027_pertes_recuperees_ecs_type_systeme_id
+  file: tv027_pertes_recuperees_ecs_type_systeme.csv
+  key: id
+  new_col: type_systeme
+  value: type_systeme
+- col: tv017_zone_hiver_id
+  file: tv017_zone_hiver.csv
+  key: id
+  new_col: zone_hiver
+  value: code
+values:
+- prs2

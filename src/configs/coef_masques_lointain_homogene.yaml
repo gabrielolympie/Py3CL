@@ -1,0 +1,22 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv023_coefficient_masques_lointains_homogenes.csv
+keys:
+- key_name: hauteur_alpha
+  key_type: cat
+- key_name: orientation
+  key_type: cat
+refs:
+- col: tv023_coefficient_masques_lointains_homogenes_hauteur_alpha_id
+  file: tv023_coefficient_masques_lointains_homogenes_hauteur_alpha.csv
+  key: id
+  new_col: hauteur_alpha
+  value: hauteur_alpha
+- col: tv0xx_orientation_id
+  file: tv0xx_orientation.csv
+  key: id
+  new_col: orientation
+  value: orientation
+values:
+- fe2
