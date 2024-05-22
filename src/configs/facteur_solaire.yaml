@@ -11,6 +11,11 @@ keys:
   key_type: cat
 - key_name: type_vitrage 
   key_type: cat
+mapping:
+- col: materiaux
+  function: "lambda x: 'Bois ou bois/métal' if x == 'Bois' else x"
+- col: materiaux
+  function: "lambda x: 'Parois en Polycarbonnate' if x == 'Polycarbonate' else x"
 refs:
 - col: tv021_facteur_solaire_type_pose_id
   file: tv021_facteur_solaire_type_pose.csv

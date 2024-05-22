@@ -7,6 +7,8 @@ rename:
 keys:
 - key_name: zone_climatique
   key_type: cat
+- key_name: month
+  key_type: cat
 - key_name: orientation
   key_type: cat
 - key_name: inclination

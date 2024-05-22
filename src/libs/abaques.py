@@ -125,18 +125,22 @@ Values: {self.values()}
             cat_keys = [k['key_name'] for k in self.config['keys'] if k['key_type'] == 'cat']
             num_keys = [k['key_name'] for k in self.config['keys'] if k['key_type'] == 'num']
 
-            for key in self.abaque.index.names:
-                if key in self.key_characteristics:
-                    if key in cat_keys:
-                        key_mask = self.abaque.index.get_level_values(key) == processed_input[key]
-                    elif key in num_keys:
-                        # For numerical keys, handle threshold checks
-                        key_values = self.abaque.index.get_level_values(key).astype(float)
-                        key_mask = key_values >= processed_input[key]
-                    else:
-                        # Default behavior for unrecognized keys
-                        key_mask = self.abaque.index.get_level_values(key) == processed_input[key]
-                    mask &= key_mask
+            for key in cat_keys:
+                key_mask = self.abaque.index.get_level_values(key) == processed_input[key]
+                mask &= key_mask
+
+                if not mask.any():
+                    raise KeyError(f"No entries found for keys: {processed_input}")
+            
+
+
+            for key in num_keys:
+                key_values = self.abaque.index.get_level_values(key).astype(float)
+                key_mask = key_values >= processed_input[key]
+                if not key_mask.any():
+                    key_mask[-1] = True
+                mask &= key_mask
+
             if not mask.any():
                 raise KeyError(f"No entries found for keys: {processed_input}")
             
