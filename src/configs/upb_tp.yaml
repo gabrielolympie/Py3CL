@@ -3,7 +3,7 @@
 data_path: ../data/raw
 file: tv005bis_upb_terre_plein.csv
 keys:
-- key_name: type
+- key_name: type_tp
   key_type: cat
 - key_name: 2S/P
   key_type: num

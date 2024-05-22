@@ -14,7 +14,7 @@ keys:
   key_type: cat
 mapping:
 - col: effet_joule
-  function: 'lambda x: "yes" if x == 1 else "no"' # Always no when computing isolation
+  function: 'lambda x: True if x == 1 else False' # Always no when computing isolation
 refs:
 - col: tv017_zone_hiver_id
   file: tv017_zone_hiver.csv

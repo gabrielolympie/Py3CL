@@ -9,6 +9,6 @@ keys:
   key_type: cat
 mapping:
 - col: isole
-  function: "lambda x: 'yes' if x == 1 else 'no'"
+  function: "lambda x: True if x == 1 else False"
 values:
 - rd

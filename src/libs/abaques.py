@@ -60,6 +60,7 @@ class Abaque:
         self.abaque = None
         self.upper_thresholds = {}
         self.key_characteristics = {}
+        
         self.valid_cat_combinations = {}
         self.config = load_config(config)
         self.load_abaques(**self.config)
@@ -72,13 +73,19 @@ class Abaque:
     def __str__(self):
         """Returns a string representation of the Abaque object."""
         return f"""Abaque({self.config['file']})
-Keys: {self.abaque.index.names}
-Values: {self.config['values']}
+Keys: {self.keys()}
+Values: {self.values()}
         """
 
     def __repr__(self):
         return self.__str__()
     
+    def keys(self):
+        return self.abaque.index.names
+
+    def values(self):
+        return self.config['values']
+
     def __call__(self, keys, value=None):
         """
         Allows the Abaque object to be called as a function to retrieve specific values.
@@ -100,29 +107,46 @@ Values: {self.config['values']}
         return self.forward(keys)[value]
 
     def forward(self, keys):
-        """
-        Processes input keys and retrieves corresponding values from the abaque.
-
-        Parameters:
-        -----------
-        keys : dict
-            Dictionary of keys to be used for lookup.
-
-        Returns:
-        --------
-        result : pd.Series
-            The retrieved row from the abaque based on the processed keys.
-        """
         processed_input = {}
         for key, val in keys.items():
             if key in self.upper_thresholds:
-                closest_threshold = min(self.upper_thresholds[key], key=lambda t: abs(t - val) if t >= val else float('inf'))
-                processed_input[key] = closest_threshold
+                thresholds = self.upper_thresholds[key]
+                idx = np.searchsorted(thresholds, val, side='right') - 1
+                processed_input[key] = thresholds[max(0, idx)]
             else:
                 processed_input[key] = val
 
-        result = self.abaque.loc[tuple(processed_input[k] for k in self.abaque.index.names)]
+        try:
+            inputs = tuple(processed_input[k] for k in self.abaque.index.names)
+            result = self.abaque.loc[inputs]
+        except KeyError:
+            # Construct a boolean mask instead of filtering DataFrame repeatedly
+            mask = np.ones(len(self.abaque), dtype=bool)
+            cat_keys = [k['key_name'] for k in self.config['keys'] if k['key_type'] == 'cat']
+            num_keys = [k['key_name'] for k in self.config['keys'] if k['key_type'] == 'num']
+
+            for key in self.abaque.index.names:
+                if key in self.key_characteristics:
+                    if key in cat_keys:
+                        key_mask = self.abaque.index.get_level_values(key) == processed_input[key]
+                    elif key in num_keys:
+                        # For numerical keys, handle threshold checks
+                        key_values = self.abaque.index.get_level_values(key).astype(float)
+                        key_mask = key_values >= processed_input[key]
+                    else:
+                        # Default behavior for unrecognized keys
+                        key_mask = self.abaque.index.get_level_values(key) == processed_input[key]
+                    mask &= key_mask
+            if not mask.any():
+                raise KeyError(f"No entries found for keys: {processed_input}")
+            
+            # Use the first valid index that matches the mask
+            valid_index = mask.argmax()
+            inputs = self.abaque.index[valid_index]
+            result = self.abaque.loc[inputs]
+
         return result
+
 
     def load_abaques(self, data_path, file, refs=None, keys=list[dict], values=list, rename:dict=None, mapping=None, filters:list[dict]=None, reduce=None):
         """
@@ -165,6 +189,7 @@ Values: {self.config['values']}
                 self.abaque = self.abaque.fillna('NULL')
                 self.get_key_characteristics(keys)
                 self.initialize_valid_cat_combinations()
+                self.initialize_upper_tresholds()
                 self.abaque = self.abaque.set_index([k["key_name"] for k in keys])
                 self.abaque = self.abaque[values].copy()
 
@@ -267,3 +292,12 @@ Values: {self.config['values']}
             cat_keys = [k['key_name'] for k in self.config.get('keys', []) if k['key_type'] == 'cat']
             unique_combinations = self.abaque[cat_keys].drop_duplicates()
             self.valid_cat_combinations = unique_combinations.to_dict(orient='records')
+
+    def initialize_upper_tresholds(self):
+        """
+        Initializes upper threshold values for numeric keys.
+        """
+        if self.abaque is not None:
+            num_keys = [k['key_name'] for k in self.config.get('keys', []) if k['key_type'] == 'num']
+            for key in num_keys:
+                self.upper_thresholds[key] = np.array(sorted(self.abaque[key].unique().astype(float)))

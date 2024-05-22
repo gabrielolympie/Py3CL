@@ -15,6 +15,6 @@ keys:
   key_type: cat
 mapping:
 - col: isolation_paroi
-  function: 'lambda x: "yes" if x=="Isolé" else "no"'
+  function: 'lambda x: True if x=="Isolé" else False'
 values:
 - bver
