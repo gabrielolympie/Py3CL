@@ -8,7 +8,10 @@ class VitrageInput(BaseModel):
     This class is used to store the input parameters for a window or glazing system.
 
     Args:
+        identifiant (str): The unique identifier for the window.
         surface_vitrage (float): The surface area of the window (m²).
+        hauteur_vitrage (float): The height of the window (m).
+        largeur_vitrage (float): The width of the window (m).
         type_vitrage (str): The type of glazing (e.g., single, double, triple). Must be one of the valid glazing types defined in the dataset.
         orientation (str, optional): The orientation of the wall. Must be one of the valid orientations defined in the dataset. Defaults to None.
         inclinaison (str, optional): The inclination of the wall. Must be one of the valid inclinations defined in the dataset. Defaults to None.
@@ -32,7 +35,15 @@ class VitrageInput(BaseModel):
         ombrage_lointain_orientation (str, optional): The orientation of the distant obstacle. Defaults to None.
         ombrage_lointain_secteur (str, optional): The sector of the distant obstacle. Defaults to None.
     """
+
+    ## Parois en contact
+    identifiant: str
+
+    ## Dimensions
     surface_vitrage: float
+    hauteur_vitrage: float
+    largeur_vitrage: float
+
     type_vitrage: str
     orientation: str = None # Sud, Nord, Est, Ouest, Horizontal
     inclinaison: str = None # >= 75, 75° >  >= 25°, < 25°, Paroi Horizontale, >= 75 = vertical
@@ -55,6 +66,11 @@ class VitrageInput(BaseModel):
     ombrage_lointain_hauteur: float = None
     ombrage_lointain_orientation: str = None
     ombrage_lointain_secteur: str = None
+
+    exterior_type_or_local_non_chauffe: str=None
+    surface_paroi_contact: float=None
+    surface_paroi_local_non_chauffe: float=None
+    local_non_chauffe_isole: bool=None
 
 class Vitrage:
     def __init__(self, abaques):
@@ -88,7 +104,18 @@ class Vitrage:
     def forward(self, dpe, kwargs: VitrageInput):
         vitrage = kwargs.dict()
         vitrage['zone_climatique'] = dpe['zone_climatique']
+        vitrage['zone_hiver'] = dpe['zone_hiver']
 
+        # Calc b : coefficient de reduction de deperdition
+        if vitrage['exterior_type_or_local_non_chauffe'] in self.abaques['coef_reduction_deperdition_exterieur'].key_characteristics['aiu_aue']:
+            vitrage['b'] = self.abaques['coef_reduction_deperdition_exterieur']({'aiu_aue': vitrage['exterior_type_or_local_non_chauffe']}, 'valeur')
+        elif vitrage['exterior_type_or_local_non_chauffe'] == 'Véranda':
+            vitrage['b'] = self.abaques['coef_reduction_veranda']({'zone_hiver': vitrage['zone_hiver'], 'orientation_veranda': vitrage['orientation'], 'isolation_paroi': vitrage['isolation']}, 'bver')
+        else:
+            vitrage['aiu_aue'] = safe_divide(vitrage['surface_paroi_contact'], vitrage['surface_paroi_local_non_chauffe'])
+            vitrage['uvue'] = self.abaques['local_non_chauffe']({'type_batiment': dpe['type_batiment'], 'local_non_chauffe': vitrage['exterior_type_or_local_non_chauffe']}, 'uvue')
+            vitrage['b'] = self.abaques['coef_reduction_deperdition_local']({'aiu_aue_max': vitrage['aiu_aue'], 'aue_isole': vitrage['isolation'], 'aiu_isole': vitrage['local_non_chauffe_isole'], 'uv_ue': vitrage['uvue']}, 'valeur')
+        
         # Calc Ug
         if vitrage['type_vitrage'] == 'Simple Vitrage':
             vitrage['Ug']=5.8

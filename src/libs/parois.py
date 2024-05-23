@@ -7,7 +7,13 @@ class ParoiInput(BaseModel):
     Represents the input data for a Paroi object.
 
     Attributes:
+        identifiant: The identifier of the wall.
+        identifiant_adjacents: The identifiers of the adjacent items, only for walls (used to compute pths). For plancher it can only reference an ouvrant.
+
         surface_paroi: The surface area of the wall in square meters.
+        hauteur: The height/plancher of the wall in meters. None for planchers
+        largeur: The width/plancher of the wall in meters. None for planchers
+
         type_paroi: The type of wall, which can be one of 'Mur', 'Plancher bas', or 'Plancher haut'.
         uparoi: The non-insulated thermal transmittance of the wall in W/(m²·K).
         materiaux: The materials used to construct the wall.
@@ -42,8 +48,13 @@ class ParoiInput(BaseModel):
         # Specifique aux verandas
         orientation: The orientation of the veranda, which can be one of 'Nord', 'Sud', 'Est', or 'Ouest'.
     """
-    # Surface
+    identifiant: str
+    identifiant_adjacents: list = None
+
+    # dimensions
     surface_paroi: float
+    largeur: float = None
+    hauteur: float = None
 
     # Coefficient de transmission surfacique
     type_paroi: str # ['Mur', 'Plancher bas', 'Plancher haut']

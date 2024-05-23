@@ -104,51 +104,44 @@ Values: {self.values()}
         """
         if value is None:
             return self.forward(keys)[self.config['values'][0]]
-        return self.forward(keys)[value]
+        out = self.forward(keys)
+        return out[value]
 
     def forward(self, keys):
         processed_input = {}
+        
         for key, val in keys.items():
-            if key in self.upper_thresholds:
+            if val is None:
+                processed_input[key] = "NULL"
+            elif key in self.upper_thresholds:
                 thresholds = self.upper_thresholds[key]
                 idx = np.searchsorted(thresholds, val, side='right') - 1
                 processed_input[key] = thresholds[max(0, idx)]
             else:
                 processed_input[key] = val
-
         try:
             inputs = tuple(processed_input[k] for k in self.abaque.index.names)
-            result = self.abaque.loc[inputs]
+            if len(inputs) == 1:
+                inputs = inputs[0]
+            result = self.abaque_dict[inputs]
         except KeyError:
-            # Construct a boolean mask instead of filtering DataFrame repeatedly
-            mask = np.ones(len(self.abaque), dtype=bool)
-            cat_keys = [k['key_name'] for k in self.config['keys'] if k['key_type'] == 'cat']
-            num_keys = [k['key_name'] for k in self.config['keys'] if k['key_type'] == 'num']
-
-            for key in cat_keys:
-                key_mask = self.abaque.index.get_level_values(key) == processed_input[key]
-                mask &= key_mask
-
-                if not mask.any():
-                    raise KeyError(f"No entries found for keys: {processed_input}")
+            if len(self.cat_columns) > 0:
+                cat_inputs = tuple(processed_input[k] for k in self.cat_columns)
+                if len(cat_inputs) == 1:
+                    cat_inputs = cat_inputs[0]
+                num_candidates=self.num_abaque[cat_inputs]
+            else:
+                num_candidates = self.index.values
             
-
-
-            for key in num_keys:
-                key_values = self.abaque.index.get_level_values(key).astype(float)
-                key_mask = key_values >= processed_input[key]
-                if not key_mask.any():
-                    key_mask[-1] = True
-                mask &= key_mask
-
-            if not mask.any():
-                raise KeyError(f"No entries found for keys: {processed_input}")
-            
-            # Use the first valid index that matches the mask
-            valid_index = mask.argmax()
-            inputs = self.abaque.index[valid_index]
-            result = self.abaque.loc[inputs]
-
+            num_values = np.array([processed_input[k] for k in self.num_columns])
+            idx = np.where(num_candidates >= num_values)[0]
+            for i, k in enumerate(self.num_columns):
+                if len(idx) == 0:
+                    processed_input[k] = self.key_characteristics[k]['max']
+                else:
+                    processed_input[k] = num_candidates[idx[0], i]
+            inputs = tuple(processed_input[k] for k in self.abaque.index.names)
+            result = self.abaque_dict[inputs]
         return result
 
 
@@ -194,8 +187,23 @@ Values: {self.values()}
                 self.get_key_characteristics(keys)
                 self.initialize_valid_cat_combinations()
                 self.initialize_upper_tresholds()
+                self.cat_columns = [k['key_name'] for k in keys if k['key_type'] == 'cat']
+                self.num_columns = [k['key_name'] for k in keys if k['key_type'] == 'num']
+                if len(self.num_columns) > 0 and len(self.cat_columns) > 0:
+                    ## Get list of possible num values for each cat combination
+                    self.num_abaque = self.abaque[self.cat_columns + self.num_columns].groupby(self.cat_columns).agg(lambda x: list(x)).to_dict(orient='index')
+
+                    ## for each cat combination, create a numpy array of possible values, with n column, n being the number of num columns
+                    for cat_comb, num_values in self.num_abaque.items():
+                        self.num_abaque[cat_comb] = np.array([np.array(v) for k, v in num_values.items()]).T
+
                 self.abaque = self.abaque.set_index([k["key_name"] for k in keys])
                 self.abaque = self.abaque[values].copy()
+            # if not self.abaque.index.is_lexsorted():
+
+            self.abaque.sort_index(inplace=True)
+            self.abaque = self.abaque.groupby(self.abaque.index).head(1)
+            self.abaque_dict = self.abaque.to_dict(orient='index')
 
         except Exception as e:
             print(f"An error occurred: {str(e)}")

@@ -1,6 +1,7 @@
 from libs.abaques import Abaque
 from libs.parois import ParoiInput, Paroi
-from libs.vitrages import VitrageInput, Vitrage
+from libs.ouvrants import VitrageInput, Vitrage
+from libs.ponts_thermiques import PontThermiqueInput, PontThermique
 from libs.utils import safe_divide
 from pydantic import BaseModel
 import os
@@ -241,9 +242,16 @@ class DPEInput(BaseModel):
     type_batiment: str = None # ['Maison individuelle', 'Logement collectif', 'Tous bâtiments']
     altitude: float = None
     surface_habitable: float = None
+    hauteur_sous_plafond: float = None
     annee_construction: int = None
-    parois: list = None
-    vitrages: list = None
+
+    ## Enveloppe
+    parois: dict = None
+    vitrages: dict = None
+    ponts_thermiques: dict = None
+
+    type_ventilation: str = None
+    q4paconv: float = None # permeabilite de l'enveloppe, si isolation faite récemment
 
 class DPE:
     def __init__(self, configs=abaques_configs):
@@ -252,6 +260,7 @@ class DPE:
 
         self.parois_processor = Paroi(self.abaques)
         self.vitrage_processor = Vitrage(self.abaques)
+        self.pont_thermique_processor = PontThermique(self.abaques)
     
     def forward(self, kwargs: DPEInput):
         dpe = kwargs.dict()  # Convert Pydantic model to dictionary
@@ -268,19 +277,44 @@ class DPE:
         dpe['t_ext_basse'] = self.abaques['department']({'id': dpe['department']}, 't_ext_basse')
 
         ## Calcul d'enveloppe
-        parois = []
-        for paroi in dpe['parois']:
-            paroi_input=ParoiInput(**paroi)
-            parois.append(self.parois_processor.forward(dpe, paroi_input))
-        dpe['parois'] = parois
 
-        ## Calcul de vitrages
-        vitrages = []
-        for vitrage in dpe['vitrages']:
-            print(vitrage)
+        for id, paroi in dpe['parois'].items():
+            paroi_input=ParoiInput(**paroi)
+            dpe['parois'][id] = self.parois_processor.forward(dpe, paroi_input)
+
+        ## Todo : add veranda
+
+        ## Calcul de vitrages / ouvrants
+        for id, vitrage in dpe['vitrages'].items():
             vitrage_input=VitrageInput(**vitrage)
-            vitrages.append(self.vitrage_processor.forward(dpe, vitrage_input))
-        dpe['vitrages'] = vitrages
+            dpe['vitrages'][id] = self.vitrage_processor.forward(dpe, vitrage_input)
+        
+        ## Calcul des deperditions par ponts thermiques
+
+        ### Determination des ponts thermiques liés aux parois
+
+        ponts_thermiques = []
+        for id, pont_thermique in dpe['ponts_thermiques'].items():
+            pont_thermique_input=PontThermiqueInput(**pont_thermique)
+            dpe['ponts_thermiques'][id] = self.pont_thermique_processor.forward(dpe, pont_thermique_input)
+
+        ## Calcul des deperditions par flux d'airs
+        dpe = self._calc_deperdition_flux_air(dpe)
+
+        ## Calcul des deperditions d'enveloppe
+        parois=[paroi for id, paroi in dpe['parois'].items()]
+        vitrages=[vitrage for id, vitrage in dpe['vitrages'].items()]
+        ponts_thermiques=[pont_thermique for id, pont_thermique in dpe['ponts_thermiques'].items()]
+
+        dpe['DP_mur']=sum([paroi['U'] * paroi['surface_paroi'] * paroi['b'] for paroi in parois if paroi['type_paroi']=='Mur'])
+        dpe['DP_pb']=sum([paroi['U'] * paroi['surface_paroi'] * paroi['b'] for paroi in parois if paroi['type_paroi']=='Plancher bas'])
+        dpe['DP_ph']=sum([paroi['U'] * paroi['surface_paroi'] * paroi['b'] for paroi in parois if paroi['type_paroi']=='Plancher haut'])
+        dpe['DP_vitrage']=sum([vitrage['U'] * vitrage['surface_vitrage'] * vitrage['b'] for vitrage in vitrages])
+        dpe['PT'] = sum([pont_thermique['d_pont'] for pont_thermique in ponts_thermiques])
+        dpe['DR'] = dpe['Hvent'] + dpe['Hperm']
+        dpe['GV'] = dpe['DP_mur'] + dpe['DP_pb'] + dpe['DP_ph'] + dpe['DP_vitrage'] + dpe['PT'] + dpe['DR']
+
+
         return dpe
 
     def load_abaques(self, configs):
@@ -296,3 +330,53 @@ class DPE:
     def get_valid_inputs(self):
         # Implementation for returning valid inputs
         pass
+
+    def _calc_deperdition_flux_air(self, dpe):
+        
+        if dpe['q4paconv'] is None:
+            q4paconv = self.abaques['permeabilite_batiment']({'type_batiment': dpe['type_batiment'], 'annee_construction_max': dpe['annee_construction']}, 'q4paconv')
+        else:
+            q4paconv = dpe['q4paconv']
+
+
+        sh = dpe['surface_habitable']
+        hsp = dpe['hauteur_sous_plafond']
+
+        nb_facade_exposee = len([paroi for id, paroi in dpe['parois'].items() if paroi['type_paroi']=='Mur'])
+        if nb_facade_exposee > 1:
+            e, f = 0.07, 15
+        else:
+            e, f = 0.02, 20
+
+        type_ventilation=dpe['type_ventilation']
+        qvarepconv = self.abaques['renouvellement_air']({'type_ventilation': type_ventilation}, 'Qvarepconv')
+        qvasoufconv = self.abaques['renouvellement_air']({'type_ventilation': type_ventilation}, 'Qvasoufconv')
+        smeaconv = self.abaques['renouvellement_air']({'type_ventilation': type_ventilation}, 'Smeaconv')
+
+        ## Somme des surfaces hors plancher bas
+        sdep = sum([paroi['surface_paroi'] for id, paroi in dpe['parois'].items() if paroi['type_paroi']!='Plancher bas'])
+
+        q4paenv = q4paconv * sh
+        q4pa = q4paenv + 0.45 * smeaconv * sh
+
+        nu_50_num = q4pa
+        nu_50_den = (4/50)**(2/3) * sh * hsp
+        nu_50 = safe_divide(nu_50_num, nu_50_den)
+
+        Hperm_num = 0.34 * hsp * sh * nu_50 * e
+        Hperm_den = 1 + (f / e) * ((qvasoufconv - qvarepconv) / (hsp * nu_50)) ** 2
+
+        dpe['nu_50'] = nu_50
+        dpe['nb_facade_exposee'] = nb_facade_exposee
+        dpe['surface_parois_exposees'] = sdep
+        dpe['q4paconv'] = q4paconv
+        dpe['q4paenv'] = q4paenv
+        dpe['q4pa'] = q4pa
+
+
+        dpe['Hvent'] = 0.34 * q4paconv * dpe['surface_habitable']
+        dpe['Hperm'] = safe_divide(Hperm_num, Hperm_den)
+        return dpe
+
+
+            
