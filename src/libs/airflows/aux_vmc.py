@@ -37,10 +37,7 @@ class CauxProcessor(BaseProcessor):
 
         if " df " in type_ventilation.lower():
             type_vmc = "Double Flux"
-        elif (
-            " hybride " in type_ventilation.lower()
-            or " mécanique " in type_ventilation.lower()
-        ):
+        elif " hybride " in type_ventilation.lower() or " mécanique " in type_ventilation.lower():
             type_vmc = "hybride"
         elif " hygro " in type_ventilation.lower():
             type_vmc = "Simple Flux hygro"
@@ -71,9 +68,7 @@ class CauxProcessor(BaseProcessor):
                 else:
                     raise ValueError(f"Type de VMC inconnu: {type_vmc}")
         else:
-            assert (
-                surface_habitable is not None
-            ), "surface_habitable must be provided for collective building"
+            assert surface_habitable is not None, "surface_habitable must be provided for collective building"
             if annee_construction < 2012:
                 if type_vmc == "Double Flux":
                     pvent = 1.1
@@ -139,9 +134,7 @@ class CauxProcessor(BaseProcessor):
         ]
 
     def _preprocess_valeur_conventionnelle_renouvellement_air(self):
-        self.valid_type_ventilation = list(
-            self.valeur_conventionnelle_renouvellement_air["type_ventilation"].unique()
-        )
-        self.qvarepconv = self.valeur_conventionnelle_renouvellement_air.set_index(
-            "type_ventilation"
-        )["Qvarepconv"].to_dict()
+        self.valid_type_ventilation = list(self.valeur_conventionnelle_renouvellement_air["type_ventilation"].unique())
+        self.qvarepconv = self.valeur_conventionnelle_renouvellement_air.set_index("type_ventilation")[
+            "Qvarepconv"
+        ].to_dict()

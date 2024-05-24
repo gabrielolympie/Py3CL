@@ -126,9 +126,7 @@ class UParoiProcessorPb(BaseProcessor):
             if is_vide_sanitaire or is_unheated_underground:
                 return self.abaque["other"]([ssp, uparoi])[0]
             elif is_terre_plain:
-                assert (
-                    annee_construction is not None
-                ), "annee_construction is required for terre plain"
+                assert annee_construction is not None, "annee_construction is required for terre plain"
                 if annee_construction < 2001:
                     return self.abaque["tp_pre_2001"]([ssp, uparoi])[0]
                 else:
@@ -194,12 +192,8 @@ class UParoiProcessorPb(BaseProcessor):
             assert (
                 zone_climatique is not None
             ), "zone_climatique is required in uparoi calculation if isolation is not known"
-            assert (
-                effet_joule is not None
-            ), "effet_joule is required in uparoi calculation if isolation is not known"
-            uparoi_table = self._calc_uparoi_table(
-                annee_construction, zone_climatique, effet_joule
-            )
+            assert effet_joule is not None, "effet_joule is required in uparoi calculation if isolation is not known"
+            uparoi_table = self._calc_uparoi_table(annee_construction, zone_climatique, effet_joule)
             return min(uparoi_nu, uparoi_table)
         elif isolation is False:
             return uparoi_nu
@@ -221,9 +215,7 @@ class UParoiProcessorPb(BaseProcessor):
                         annee_isolation = 76
                     else:
                         annee_isolation = annee_construction
-                uparoi_table = self._calc_uparoi_table(
-                    annee_isolation, zone_climatique, 1
-                )
+                uparoi_table = self._calc_uparoi_table(annee_isolation, zone_climatique, 1)
                 return min(uparoi_nu, uparoi_table)
 
     def _calc_uparoi_table(
@@ -254,32 +246,22 @@ class UParoiProcessorPb(BaseProcessor):
             "H2",
             "H3",
         ], "zone_climatique is required in uparoi table calculation and with a value in ['H1', 'H2', 'H3']"
-        assert (
-            effet_joule is not None
-        ), "effet_joule is required in uparoi table calculation"
+        assert effet_joule is not None, "effet_joule is required in uparoi table calculation"
 
-        idx_year = np.where(
-            annee_construction_isolation <= self.uparoi_table_max_years
-        )[0][0]
+        idx_year = np.where(annee_construction_isolation <= self.uparoi_table_max_years)[0][0]
         year = self.uparoi_table_max_years[idx_year]
         uparoi_0 = self.uparoi_table.loc[(year, zone_climatique, effet_joule)]
         return uparoi_0
 
-    def _calc_harmonic_mean(
-        self, uparoi_nu: float = None, r_isolant: float = None
-    ) -> float:
+    def _calc_harmonic_mean(self, uparoi_nu: float = None, r_isolant: float = None) -> float:
         """Calcule la moyenne harmonique entre l'uparoi nu et l'uparoi de l'isolant
 
         Args:
             - uparoi_nu (float): uparoi nu
             - r_isolant (float): R de l'isolant
         """
-        assert (
-            uparoi_nu is not None
-        ), "uparoi_nu is required in harmonic mean calculation"
-        assert (
-            r_isolant is not None
-        ), "r_isolant is required in harmonic mean calculation"
+        assert uparoi_nu is not None, "uparoi_nu is required in harmonic mean calculation"
+        assert r_isolant is not None, "r_isolant is required in harmonic mean calculation"
         return 1 / (1 / uparoi_nu + r_isolant)
 
     def _calc_uparoi_0(self, materiaux: str = None, epaisseur: float = None) -> float:
@@ -291,9 +273,7 @@ class UParoiProcessorPb(BaseProcessor):
         """
         assert materiaux is not None, "materiaux is required in uparoi0 calculation"
         assert epaisseur is not None, "epaisseur is required in uparoi0 calculation"
-        assert (
-            materiaux in self.valid_pb_materials
-        ), f"materiaux should be in {self.valid_pb_materials}"
+        assert materiaux in self.valid_pb_materials, f"materiaux should be in {self.valid_pb_materials}"
 
         tresholds = self.uparoi_tresholds[materiaux]
         idx = np.where(min(epaisseur, tresholds[-1]) <= tresholds)[0][0]
@@ -314,9 +294,7 @@ class UParoiProcessorPb(BaseProcessor):
         self.uparoi_table = pd.read_csv(os.path.join(data_path, uparoi_table))
         self.uparoi0 = pd.read_csv(os.path.join(data_path, uparoi0))
         self.abaque = {
-            elt: pd.read_excel(
-                os.path.join(data_path, abaque_file), sheet_name=elt, index_col=0
-            )
+            elt: pd.read_excel(os.path.join(data_path, abaque_file), sheet_name=elt, index_col=0)
             for elt in abaque_names
         }
 
@@ -348,26 +326,17 @@ class UParoiProcessorPb(BaseProcessor):
         self.valid_pb_materials = self.uparoi0["materiaux"].unique()
         self.uparoi0["epaisseur"] = 1
         self.uparoi_tresholds = (
-            self.uparoi0[["materiaux", "epaisseur"]]
-            .groupby("materiaux")
-            .agg(lambda x: list(x))["epaisseur"]
-            .to_dict()
+            self.uparoi0[["materiaux", "epaisseur"]].groupby("materiaux").agg(lambda x: list(x))["epaisseur"].to_dict()
         )
-        self.uparoi_tresholds = {
-            k: np.array(sorted(v)) for k, v in self.uparoi_tresholds.items()
-        }
-        self.uparoi0 = self.uparoi0.set_index(["materiaux", "epaisseur"], drop=True)[
-            "upb0"
-        ]
+        self.uparoi_tresholds = {k: np.array(sorted(v)) for k, v in self.uparoi_tresholds.items()}
+        self.uparoi0 = self.uparoi0.set_index(["materiaux", "epaisseur"], drop=True)["upb0"]
 
     def _preprocess_uparoi_table(self):
         self.uparoi_table = self.uparoi_table.dropna(subset="annee_construction")
-        self.uparoi_table["zone_climatique"] = self.uparoi_table[
-            "tv017_zone_hiver_id"
-        ].replace({1: "H1", 2: "H2", 3: "H3"})
-        self.uparoi_table_max_years = (
-            self.uparoi_table["annee_construction_max"].sort_values().unique()
+        self.uparoi_table["zone_climatique"] = self.uparoi_table["tv017_zone_hiver_id"].replace(
+            {1: "H1", 2: "H2", 3: "H3"}
         )
+        self.uparoi_table_max_years = self.uparoi_table["annee_construction_max"].sort_values().unique()
         self.uparoi_table = self.uparoi_table.set_index(
             ["annee_construction_max", "zone_climatique", "effet_joule"], drop=True
         )["upb"]

@@ -82,9 +82,7 @@ class UgProcessorVitrage(BaseProcessor):
         self.ug_orientation = pd.read_csv(os.path.join(data_path, ug_orientation))
         self.ug_remplissage = pd.read_csv(os.path.join(data_path, ug_remplissage))
         self.ug_type_vitrage = pd.read_csv(os.path.join(data_path, ug_type_vitrage))
-        self.ug_traitement_vitrage = pd.read_csv(
-            os.path.join(data_path, ug_traitement_vitrage)
-        )
+        self.ug_traitement_vitrage = pd.read_csv(os.path.join(data_path, ug_traitement_vitrage))
 
     def preprocess(
         self,
@@ -102,36 +100,28 @@ class UgProcessorVitrage(BaseProcessor):
         """
         Preprocess ug_orientation
         """
-        self.ug_orientation = self.ug_orientation.set_index("id")[
-            "orientation"
-        ].to_dict()
+        self.ug_orientation = self.ug_orientation.set_index("id")["orientation"].to_dict()
         self.valid_orientations = self.ug_orientation.values()
 
     def _preprocess_remplissage(self):
         """
         Preprocess ug_remplissage
         """
-        self.ug_remplissage = self.ug_remplissage.set_index("id")[
-            "remplissage"
-        ].to_dict()
+        self.ug_remplissage = self.ug_remplissage.set_index("id")["remplissage"].to_dict()
         self.valid_remplissages = self.ug_remplissage.values()
 
     def _preprocess_type_vitrage(self):
         """
         Preprocess ug_type_vitrage
         """
-        self.ug_type_vitrage = self.ug_type_vitrage.set_index("id")[
-            "type_vitrage"
-        ].to_dict()
+        self.ug_type_vitrage = self.ug_type_vitrage.set_index("id")["type_vitrage"].to_dict()
         self.valid_type_vitrages = self.ug_type_vitrage.values()
 
     def _preprocess_traitement_vitrage(self):
         """
         Preprocess ug_traitement_vitrage
         """
-        self.ug_traitement_vitrage = self.ug_traitement_vitrage.set_index("id")[
-            "traitement_vitrage"
-        ].to_dict()
+        self.ug_traitement_vitrage = self.ug_traitement_vitrage.set_index("id")["traitement_vitrage"].to_dict()
         self.valid_traitement_vitrages = self.ug_traitement_vitrage.values()
 
     def _preprocess_coefficient_transmission_thermique_vitrage(self):
@@ -139,30 +129,20 @@ class UgProcessorVitrage(BaseProcessor):
         Preprocess ug_coefficient_transmission_thermique_vitrage
         """
         self.ug_coefficient_transmission_thermique_vitrage["type_vitrage"] = (
-            self.ug_coefficient_transmission_thermique_vitrage[
-                "tv009_ug_type_vitrage_id"
-            ].replace(self.ug_type_vitrage)
+            self.ug_coefficient_transmission_thermique_vitrage["tv009_ug_type_vitrage_id"].replace(self.ug_type_vitrage)
         )
         self.ug_coefficient_transmission_thermique_vitrage["remplissage"] = (
-            self.ug_coefficient_transmission_thermique_vitrage[
-                "tv009_ug_remplissage_id"
-            ].replace(self.ug_remplissage)
+            self.ug_coefficient_transmission_thermique_vitrage["tv009_ug_remplissage_id"].replace(self.ug_remplissage)
         )
         self.ug_coefficient_transmission_thermique_vitrage["orientation"] = (
-            self.ug_coefficient_transmission_thermique_vitrage[
-                "tv009_ug_orientation_id"
-            ].replace(self.ug_orientation)
+            self.ug_coefficient_transmission_thermique_vitrage["tv009_ug_orientation_id"].replace(self.ug_orientation)
         )
         self.ug_coefficient_transmission_thermique_vitrage["traitement_vitrage"] = (
-            self.ug_coefficient_transmission_thermique_vitrage[
-                "tv009_ug_traitement_vitrage_id"
-            ].replace(self.ug_traitement_vitrage)
+            self.ug_coefficient_transmission_thermique_vitrage["tv009_ug_traitement_vitrage_id"].replace(
+                self.ug_traitement_vitrage
+            )
         )
-        self.tresholds = (
-            self.ug_coefficient_transmission_thermique_vitrage["epaisseur_lame"]
-            .sort_values()
-            .unique()
-        )
+        self.tresholds = self.ug_coefficient_transmission_thermique_vitrage["epaisseur_lame"].sort_values().unique()
         self.ug_coefficient_transmission_thermique_vitrage = (
             self.ug_coefficient_transmission_thermique_vitrage.set_index(
                 [
@@ -215,9 +195,7 @@ class UwProcessorVitrage(BaseProcessor):
             type_menuiserie=type_menuiserie,
         )
         ug = self._get_ug(ug, type_baie, type_materiaux, type_menuiserie)
-        return self.coefficient_transmission_thermique_baie.loc[
-            (type_baie, type_materiaux, type_menuiserie, ug)
-        ]
+        return self.coefficient_transmission_thermique_baie.loc[(type_baie, type_materiaux, type_menuiserie, ug)]
 
     def _get_ug(self, ug, type_baie, type_materiaux, type_menuiserie):
         ## get the tresholds based on the type of baie, materiaux and menuiserie
@@ -244,9 +222,7 @@ class UwProcessorVitrage(BaseProcessor):
         )
         self.uw_type_baie = pd.read_csv(os.path.join(data_path, uw_type_baie))
         self.uw_type_materiaux = pd.read_csv(os.path.join(data_path, uw_type_materiaux))
-        self.uw_type_menuiserie = pd.read_csv(
-            os.path.join(data_path, uw_type_menuiserie)
-        )
+        self.uw_type_menuiserie = pd.read_csv(os.path.join(data_path, uw_type_menuiserie))
 
     def preprocess(
         self,
@@ -270,61 +246,47 @@ class UwProcessorVitrage(BaseProcessor):
         """
         Preprocess uw_type_materiaux
         """
-        self.uw_type_materiaux = self.uw_type_materiaux.set_index("id")[
-            "type_materiaux"
-        ].to_dict()
+        self.uw_type_materiaux = self.uw_type_materiaux.set_index("id")["type_materiaux"].to_dict()
         self.valid_type_materiaux = self.uw_type_materiaux.values()
 
     def _preprocess_type_menuiserie(self):
         """
         Preprocess uw_type_menuiserie
         """
-        self.uw_type_menuiserie = self.uw_type_menuiserie.set_index("id")[
-            "type_menuiserie"
-        ].to_dict()
+        self.uw_type_menuiserie = self.uw_type_menuiserie.set_index("id")["type_menuiserie"].to_dict()
         self.valid_type_menuiseries = self.uw_type_menuiserie.values()
 
     def _preprocess_coefficient_transmission_thermique_baie(self):
         """
         Preprocess coefficient_transmission_thermique_baie
         """
-        self.coefficient_transmission_thermique_baie["type_baie"] = (
-            self.coefficient_transmission_thermique_baie[
-                "tv010_uw_type_baie_id"
-            ].replace(self.uw_type_baie)
+        self.coefficient_transmission_thermique_baie["type_baie"] = self.coefficient_transmission_thermique_baie[
+            "tv010_uw_type_baie_id"
+        ].replace(self.uw_type_baie)
+        self.coefficient_transmission_thermique_baie["type_materiaux"] = self.coefficient_transmission_thermique_baie[
+            "tv010_uw_type_materiaux_id"
+        ].replace(self.uw_type_materiaux)
+        self.coefficient_transmission_thermique_baie["type_menuiserie"] = self.coefficient_transmission_thermique_baie[
+            "tv010_uw_type_menuiserie_id"
+        ].replace(self.uw_type_menuiserie)
+        self.coefficient_transmission_thermique_baie["ug"] = self.coefficient_transmission_thermique_baie["ug"].apply(
+            self._nulify_non_numerical
         )
-        self.coefficient_transmission_thermique_baie["type_materiaux"] = (
-            self.coefficient_transmission_thermique_baie[
-                "tv010_uw_type_materiaux_id"
-            ].replace(self.uw_type_materiaux)
-        )
-        self.coefficient_transmission_thermique_baie["type_menuiserie"] = (
-            self.coefficient_transmission_thermique_baie[
-                "tv010_uw_type_menuiserie_id"
-            ].replace(self.uw_type_menuiserie)
-        )
-        self.coefficient_transmission_thermique_baie["ug"] = (
-            self.coefficient_transmission_thermique_baie["ug"].apply(
-                self._nulify_non_numerical
-            )
-        )
-        self.coefficient_transmission_thermique_baie = (
-            self.coefficient_transmission_thermique_baie.dropna(subset=["ug"])
+        self.coefficient_transmission_thermique_baie = self.coefficient_transmission_thermique_baie.dropna(
+            subset=["ug"]
         )
         # self.tresholds=self.coefficient_transmission_thermique_baie['ug'].sort_values().unique()
         # tresholds are adapted based on materiaux, menuiserie and baie
         self.tresholds = (
-            self.coefficient_transmission_thermique_baie.groupby(
-                ["type_baie", "type_materiaux", "type_menuiserie"]
-            )["ug"]
+            self.coefficient_transmission_thermique_baie.groupby(["type_baie", "type_materiaux", "type_menuiserie"])[
+                "ug"
+            ]
             .apply(lambda x: x.sort_values().unique())
             .to_dict()
         )
-        self.coefficient_transmission_thermique_baie = (
-            self.coefficient_transmission_thermique_baie.set_index(
-                ["type_baie", "type_materiaux", "type_menuiserie", "ug"], drop=True
-            )["uw"]
-        )
+        self.coefficient_transmission_thermique_baie = self.coefficient_transmission_thermique_baie.set_index(
+            ["type_baie", "type_materiaux", "type_menuiserie", "ug"], drop=True
+        )["uw"]
 
     def _nulify_non_numerical(self, x):
         try:
@@ -363,9 +325,7 @@ class UjnProcessorVitrage(BaseProcessor):
         self.validate(type_fermeture=type_fermeture)
         uw = self._get_uw(uw)
         deltar = self._get_deltar(type_fermeture)
-        return self.coefficient_transmission_thermique_baie_protection_solaire.loc[
-            (uw, deltar)
-        ]
+        return self.coefficient_transmission_thermique_baie_protection_solaire.loc[(uw, deltar)]
 
     def _get_uw(self, uw):
         try:
@@ -386,13 +346,9 @@ class UjnProcessorVitrage(BaseProcessor):
         """
         Load data from data_path
         """
-        self.resistance_additionnelle = pd.read_csv(
-            os.path.join(data_path, resistance_additionnelle)
-        )
+        self.resistance_additionnelle = pd.read_csv(os.path.join(data_path, resistance_additionnelle))
         self.coefficient_transmission_thermique_baie_protection_solaire = pd.read_csv(
-            os.path.join(
-                data_path, coefficient_transmission_thermique_baie_protection_solaire
-            )
+            os.path.join(data_path, coefficient_transmission_thermique_baie_protection_solaire)
         )
 
     def preprocess(
@@ -408,24 +364,20 @@ class UjnProcessorVitrage(BaseProcessor):
         """
         Preprocess resistance_additionnelle
         """
-        self.resistance_additionnelle = self.resistance_additionnelle.set_index(
-            "fermetures"
-        )["resistance_additionnelle"].to_dict()
+        self.resistance_additionnelle = self.resistance_additionnelle.set_index("fermetures")[
+            "resistance_additionnelle"
+        ].to_dict()
         self.valid_type_fermetures = self.resistance_additionnelle.keys()
 
     def _preprocess_coefficient_transmission_thermique_baie_protection_solaire(self):
         """
         Preprocess coefficient_transmission_thermique_baie_protection_solaire
         """
-        self.uw_tresholds = (
-            self.coefficient_transmission_thermique_baie_protection_solaire["uw"]
-            .sort_values()
-            .unique()
-        )
+        self.uw_tresholds = self.coefficient_transmission_thermique_baie_protection_solaire["uw"].sort_values().unique()
         self.coefficient_transmission_thermique_baie_protection_solaire = (
-            self.coefficient_transmission_thermique_baie_protection_solaire.set_index(
-                ["uw", "deltar"], drop=True
-            )["ujn"]
+            self.coefficient_transmission_thermique_baie_protection_solaire.set_index(["uw", "deltar"], drop=True)[
+                "ujn"
+            ]
         )
 
 
@@ -489,9 +441,7 @@ class UBaieProcessorVitrage(BaseProcessor):
             type_menuiserie=type_menuiserie,
             type_fermeture=type_fermeture,
         )
-        ug = self.ug_processor.calc(
-            type_vitrage, remplissage, orientation, traitement_vitrage, epaisseur_lame
-        )
+        ug = self.ug_processor.calc(type_vitrage, remplissage, orientation, traitement_vitrage, epaisseur_lame)
         uw = self.uw_processor.calc(ug, type_baie, type_materiaux, type_menuiserie)
 
         if type_fermeture:

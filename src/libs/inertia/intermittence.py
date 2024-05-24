@@ -22,7 +22,7 @@ class I0Processor(BaseProcessor):
             "type_installation": list(self.valid_intermittence_type_installation),
             "type_regulation": list(self.valid_intermittence_type_regulation),
         }
-    
+
     @property
     def valid_input_combinations(self):
         return self.valid_input_combination
@@ -51,18 +51,20 @@ class I0Processor(BaseProcessor):
             type_regulation=type_regulation,
         )
         if type_batiment != "Immeuble Collectif":
-            comptage_individuel=np.nan
+            comptage_individuel = np.nan
 
-        return self.intermittence[(
-            comptage_individuel,
-            equipement_intermittence,
-            inertie,
-            type_batiment,
-            type_chauffage,
-            type_emetteur,
-            type_installation,
-            type_regulation,
-        )]
+        return self.intermittence[
+            (
+                comptage_individuel,
+                equipement_intermittence,
+                inertie,
+                type_batiment,
+                type_chauffage,
+                type_emetteur,
+                type_installation,
+                type_regulation,
+            )
+        ]
 
     def load(
         self,
@@ -78,7 +80,9 @@ class I0Processor(BaseProcessor):
         intermittence="tv025_intermittence.csv",
     ):
         self.intermittence_comptage_individuel = pd.read_csv(os.path.join(data_path, intermittence_comptage_individuel))
-        self.intermittence_equipement_intermittence = pd.read_csv(os.path.join(data_path, intermittence_equipement_intermittence))
+        self.intermittence_equipement_intermittence = pd.read_csv(
+            os.path.join(data_path, intermittence_equipement_intermittence)
+        )
         self.intermittence_inertie = pd.read_csv(os.path.join(data_path, intermittence_inertie))
         self.intermittence_type_batiment = pd.read_csv(os.path.join(data_path, intermittence_type_batiment))
         self.intermittence_type_chauffage = pd.read_csv(os.path.join(data_path, intermittence_type_chauffage))
@@ -99,12 +103,20 @@ class I0Processor(BaseProcessor):
         self._preprocess_intermittence(*args, **kwargs)
 
     def _preprocess_intermittence_comptage_individuel(self, *args, **kwargs):
-        self.valid_intermittence_comptage_individuel = self.intermittence_comptage_individuel["comptage_individuel"].unique()
-        self.intermittence_comptage_individuel = self.intermittence_comptage_individuel.set_index("id")["comptage_individuel"].to_dict()
+        self.valid_intermittence_comptage_individuel = self.intermittence_comptage_individuel[
+            "comptage_individuel"
+        ].unique()
+        self.intermittence_comptage_individuel = self.intermittence_comptage_individuel.set_index("id")[
+            "comptage_individuel"
+        ].to_dict()
 
     def _preprocess_intermittence_equipement_intermittence(self, *args, **kwargs):
-        self.valid_intermittence_equipement_intermittence = self.intermittence_equipement_intermittence["equipement_intermittence"].unique()
-        self.intermittence_equipement_intermittence = self.intermittence_equipement_intermittence.set_index("id")["equipement_intermittence"].to_dict()
+        self.valid_intermittence_equipement_intermittence = self.intermittence_equipement_intermittence[
+            "equipement_intermittence"
+        ].unique()
+        self.intermittence_equipement_intermittence = self.intermittence_equipement_intermittence.set_index("id")[
+            "equipement_intermittence"
+        ].to_dict()
 
     def _preprocess_intermittence_inertie(self, *args, **kwargs):
         self.valid_intermittence_inertie = self.intermittence_inertie["inertie"].unique()
@@ -116,7 +128,9 @@ class I0Processor(BaseProcessor):
 
     def _preprocess_intermittence_type_chauffage(self, *args, **kwargs):
         self.valid_intermittence_type_chauffage = self.intermittence_type_chauffage["type_chauffage"].unique()
-        self.intermittence_type_chauffage = self.intermittence_type_chauffage.set_index("id")["type_chauffage"].to_dict()
+        self.intermittence_type_chauffage = self.intermittence_type_chauffage.set_index("id")[
+            "type_chauffage"
+        ].to_dict()
 
     def _preprocess_intermittence_type_emetteur(self, *args, **kwargs):
         self.valid_intermittence_type_emetteur = self.intermittence_type_emetteur["type_emetteur"].unique()
@@ -124,22 +138,68 @@ class I0Processor(BaseProcessor):
 
     def _preprocess_intermittence_type_installation(self, *args, **kwargs):
         self.valid_intermittence_type_installation = self.intermittence_type_installation["type_installation"].unique()
-        self.intermittence_type_installation = self.intermittence_type_installation.set_index("id")["type_installation"].to_dict()
+        self.intermittence_type_installation = self.intermittence_type_installation.set_index("id")[
+            "type_installation"
+        ].to_dict()
 
     def _preprocess_intermittence_type_regulation(self, *args, **kwargs):
         self.valid_intermittence_type_regulation = self.intermittence_type_regulation["type_regulation"].unique()
-        self.intermittence_type_regulation = self.intermittence_type_regulation.set_index("id")["type_regulation"].to_dict()
+        self.intermittence_type_regulation = self.intermittence_type_regulation.set_index("id")[
+            "type_regulation"
+        ].to_dict()
 
     # "id","code","tv025_type_batiment_id","tv025_intermittence_type_installation_id","tv025_intermittence_type_chauffage_id","tv025_intermittence_type_regulation_id","tv025_type_emetteur_id","tv025_intermittence_inertie_id","tv025_equipement_intermittence_id","tv025_intermittence_comptage_individuel_id","I0","est_efface"
     def _preprocess_intermittence(self, *args, **kwargs):
-        self.intermittence['comptage_individuel']=self.intermittence['tv025_intermittence_comptage_individuel_id'].replace(self.intermittence_comptage_individuel)
-        self.intermittence['equipement_intermittence']=self.intermittence['tv025_equipement_intermittence_id'].replace(self.intermittence_equipement_intermittence)
-        self.intermittence['inertie']=self.intermittence['tv025_intermittence_inertie_id'].replace(self.intermittence_inertie)
-        self.intermittence['type_batiment']=self.intermittence['tv025_type_batiment_id'].replace(self.intermittence_type_batiment)
-        self.intermittence['type_chauffage']=self.intermittence['tv025_intermittence_type_chauffage_id'].replace(self.intermittence_type_chauffage)
-        self.intermittence['type_emetteur']=self.intermittence['tv025_type_emetteur_id'].replace(self.intermittence_type_emetteur)
-        self.intermittence['type_installation']=self.intermittence['tv025_intermittence_type_installation_id'].replace(self.intermittence_type_installation)
-        self.intermittence['type_regulation']=self.intermittence['tv025_intermittence_type_regulation_id'].replace(self.intermittence_type_regulation)
+        self.intermittence["comptage_individuel"] = self.intermittence[
+            "tv025_intermittence_comptage_individuel_id"
+        ].replace(self.intermittence_comptage_individuel)
+        self.intermittence["equipement_intermittence"] = self.intermittence[
+            "tv025_equipement_intermittence_id"
+        ].replace(self.intermittence_equipement_intermittence)
+        self.intermittence["inertie"] = self.intermittence["tv025_intermittence_inertie_id"].replace(
+            self.intermittence_inertie
+        )
+        self.intermittence["type_batiment"] = self.intermittence["tv025_type_batiment_id"].replace(
+            self.intermittence_type_batiment
+        )
+        self.intermittence["type_chauffage"] = self.intermittence["tv025_intermittence_type_chauffage_id"].replace(
+            self.intermittence_type_chauffage
+        )
+        self.intermittence["type_emetteur"] = self.intermittence["tv025_type_emetteur_id"].replace(
+            self.intermittence_type_emetteur
+        )
+        self.intermittence["type_installation"] = self.intermittence[
+            "tv025_intermittence_type_installation_id"
+        ].replace(self.intermittence_type_installation)
+        self.intermittence["type_regulation"] = self.intermittence["tv025_intermittence_type_regulation_id"].replace(
+            self.intermittence_type_regulation
+        )
 
-        self.valid_input_combination=self.intermittence[['comptage_individuel', 'equipement_intermittence', 'inertie', 'type_batiment', 'type_chauffage', 'type_emetteur', 'type_installation', 'type_regulation']].drop_duplicates().to_dict(orient='records')
-        self.intermittence = self.intermittence.set_index(['comptage_individuel', 'equipement_intermittence', 'inertie', 'type_batiment', 'type_chauffage', 'type_emetteur', 'type_installation', 'type_regulation'])['I0'].to_dict()
+        self.valid_input_combination = (
+            self.intermittence[
+                [
+                    "comptage_individuel",
+                    "equipement_intermittence",
+                    "inertie",
+                    "type_batiment",
+                    "type_chauffage",
+                    "type_emetteur",
+                    "type_installation",
+                    "type_regulation",
+                ]
+            ]
+            .drop_duplicates()
+            .to_dict(orient="records")
+        )
+        self.intermittence = self.intermittence.set_index(
+            [
+                "comptage_individuel",
+                "equipement_intermittence",
+                "inertie",
+                "type_batiment",
+                "type_chauffage",
+                "type_emetteur",
+                "type_installation",
+                "type_regulation",
+            ]
+        )["I0"].to_dict()

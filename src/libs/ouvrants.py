@@ -3,6 +3,7 @@ from pydantic import BaseModel
 import os
 import numpy as np
 
+
 class VitrageInput(BaseModel):
     """
     This class is used to store the input parameters for a window or glazing system.
@@ -45,8 +46,8 @@ class VitrageInput(BaseModel):
     largeur_vitrage: float
 
     type_vitrage: str
-    orientation: str = None # Sud, Nord, Est, Ouest, Horizontal
-    inclinaison: str = None # >= 75, 75° >  >= 25°, < 25°, Paroi Horizontale, >= 75 = vertical
+    orientation: str = None  # Sud, Nord, Est, Ouest, Horizontal
+    inclinaison: str = None  # >= 75, 75° >  >= 25°, < 25°, Paroi Horizontale, >= 75 = vertical
     remplissage: str = None
     traitement_vitrage: str = None
     epaisseur_lame: float = None
@@ -67,10 +68,11 @@ class VitrageInput(BaseModel):
     ombrage_lointain_orientation: str = None
     ombrage_lointain_secteur: str = None
 
-    exterior_type_or_local_non_chauffe: str=None
-    surface_paroi_contact: float=None
-    surface_paroi_local_non_chauffe: float=None
-    local_non_chauffe_isole: bool=None
+    exterior_type_or_local_non_chauffe: str = None
+    surface_paroi_contact: float = None
+    surface_paroi_local_non_chauffe: float = None
+    local_non_chauffe_isole: bool = None
+
 
 class Vitrage:
     def __init__(self, abaques):
@@ -98,88 +100,187 @@ class Vitrage:
             "Fenêtres battante ou coulissantes",
             "Portes-fenêtres battantes  ou coulissantes sans soubassement",
             "Portes-fenêtres battantes  avec soubassement",
-            "Portes-fenêtres battantes  sans soubassement"
+            "Portes-fenêtres battantes  sans soubassement",
         ]
 
     def forward(self, dpe, kwargs: VitrageInput):
         vitrage = kwargs.dict()
-        vitrage['zone_climatique'] = dpe['zone_climatique']
-        vitrage['zone_hiver'] = dpe['zone_hiver']
+        vitrage["zone_climatique"] = dpe["zone_climatique"]
+        vitrage["zone_hiver"] = dpe["zone_hiver"]
 
         # Calc b : coefficient de reduction de deperdition
-        if vitrage['exterior_type_or_local_non_chauffe'] in self.abaques['coef_reduction_deperdition_exterieur'].key_characteristics['aiu_aue']:
-            vitrage['b'] = self.abaques['coef_reduction_deperdition_exterieur']({'aiu_aue': vitrage['exterior_type_or_local_non_chauffe']}, 'valeur')
-        elif vitrage['exterior_type_or_local_non_chauffe'] == 'Véranda':
-            vitrage['b'] = self.abaques['coef_reduction_veranda']({'zone_hiver': vitrage['zone_hiver'], 'orientation_veranda': vitrage['orientation'], 'isolation_paroi': vitrage['isolation']}, 'bver')
+        if (
+            vitrage["exterior_type_or_local_non_chauffe"]
+            in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics["aiu_aue"]
+        ):
+            vitrage["b"] = self.abaques["coef_reduction_deperdition_exterieur"](
+                {"aiu_aue": vitrage["exterior_type_or_local_non_chauffe"]}, "valeur"
+            )
+        elif vitrage["exterior_type_or_local_non_chauffe"] == "Véranda":
+            vitrage["b"] = self.abaques["coef_reduction_veranda"](
+                {
+                    "zone_hiver": vitrage["zone_hiver"],
+                    "orientation_veranda": vitrage["orientation"],
+                    "isolation_paroi": vitrage["isolation"],
+                },
+                "bver",
+            )
         else:
-            vitrage['aiu_aue'] = safe_divide(vitrage['surface_paroi_contact'], vitrage['surface_paroi_local_non_chauffe'])
-            vitrage['uvue'] = self.abaques['local_non_chauffe']({'type_batiment': dpe['type_batiment'], 'local_non_chauffe': vitrage['exterior_type_or_local_non_chauffe']}, 'uvue')
-            vitrage['b'] = self.abaques['coef_reduction_deperdition_local']({'aiu_aue_max': vitrage['aiu_aue'], 'aue_isole': vitrage['isolation'], 'aiu_isole': vitrage['local_non_chauffe_isole'], 'uv_ue': vitrage['uvue']}, 'valeur')
-        
+            vitrage["aiu_aue"] = safe_divide(
+                vitrage["surface_paroi_contact"], vitrage["surface_paroi_local_non_chauffe"]
+            )
+            vitrage["uvue"] = self.abaques["local_non_chauffe"](
+                {
+                    "type_batiment": dpe["type_batiment"],
+                    "local_non_chauffe": vitrage["exterior_type_or_local_non_chauffe"],
+                },
+                "uvue",
+            )
+            vitrage["b"] = self.abaques["coef_reduction_deperdition_local"](
+                {
+                    "aiu_aue_max": vitrage["aiu_aue"],
+                    "aue_isole": vitrage["isolation"],
+                    "aiu_isole": vitrage["local_non_chauffe_isole"],
+                    "uv_ue": vitrage["uvue"],
+                },
+                "valeur",
+            )
+
         # Calc Ug
-        if vitrage['type_vitrage'] == 'Simple Vitrage':
-            vitrage['Ug']=5.8
+        if vitrage["type_vitrage"] == "Simple Vitrage":
+            vitrage["Ug"] = 5.8
         else:
-            if vitrage['orientation'] == 'Horizontal':
-                orientation = 'Horizontale'
-                vitrage['orientation'] = vitrage['orientation']
+            if vitrage["orientation"] == "Horizontal":
+                orientation = "Horizontale"
+                vitrage["orientation"] = vitrage["orientation"]
             else:
                 orientation = "Verticale"
-            vitrage['Ug']=self.abaques['ug_vitrage']({'type_vitrage': vitrage['type_vitrage'], 'orientation': orientation, 'remplissage': vitrage['remplissage'], 'traitement_vitrage': vitrage['traitement_vitrage'], 'epaisseur_lame': vitrage['epaisseur_lame']}, 'ug')
+            vitrage["Ug"] = self.abaques["ug_vitrage"](
+                {
+                    "type_vitrage": vitrage["type_vitrage"],
+                    "orientation": orientation,
+                    "remplissage": vitrage["remplissage"],
+                    "traitement_vitrage": vitrage["traitement_vitrage"],
+                    "epaisseur_lame": vitrage["epaisseur_lame"],
+                },
+                "ug",
+            )
 
         # Calc Uw
-        if vitrage['type_baie'] in self.valid_sub_type_fenetres:
-            type_baie="Fenêtres / Porte-fenêtres"
+        if vitrage["type_baie"] in self.valid_sub_type_fenetres:
+            type_baie = "Fenêtres / Porte-fenêtres"
         else:
-            type_baie=vitrage['type_baie']
-        vitrage['Uw']=self.abaques['uw_vitrage']({'type_materiaux': vitrage['type_materiaux'], 'type_menuiserie': vitrage['type_menuiserie'], 'type_baie': type_baie, 'ug': vitrage['Ug']}, 'uw')
+            type_baie = vitrage["type_baie"]
+        vitrage["Uw"] = self.abaques["uw_vitrage"](
+            {
+                "type_materiaux": vitrage["type_materiaux"],
+                "type_menuiserie": vitrage["type_menuiserie"],
+                "type_baie": type_baie,
+                "ug": vitrage["Ug"],
+            },
+            "uw",
+        )
 
-        if vitrage['fermetures']:
+        if vitrage["fermetures"]:
             # Calc DeltaR
-            vitrage['DeltaR']=self.abaques['resistance_additionnelle_vitrage']({'fermetures': vitrage['fermetures']}, 'resistance_additionnelle')
-            vitrage['Ujn']=self.abaques['transmission_thermique_baie']({'uw': vitrage['Uw'], 'deltar': vitrage['DeltaR']}, 'ujn')
-            vitrage['U']=vitrage['Ujn']
+            vitrage["DeltaR"] = self.abaques["resistance_additionnelle_vitrage"](
+                {"fermetures": vitrage["fermetures"]}, "resistance_additionnelle"
+            )
+            vitrage["Ujn"] = self.abaques["transmission_thermique_baie"](
+                {"uw": vitrage["Uw"], "deltar": vitrage["DeltaR"]}, "ujn"
+            )
+            vitrage["U"] = vitrage["Ujn"]
         else:
-            vitrage['U']=vitrage['Uw']
+            vitrage["U"] = vitrage["Uw"]
 
         ## Calcul facteur solaire
 
-        if vitrage['type_baie'] != "Portes":
-            if vitrage['traitement_vitrage'] != 'Non Traités':
-                if "Double" in vitrage['type_vitrage'] or "Triple" in vitrage['type_vitrage']:
-                    vitrage['type_vitrage'] = vitrage['type_vitrage'] + " V.I.R"
+        if vitrage["type_baie"] != "Portes":
+            if vitrage["traitement_vitrage"] != "Non Traités":
+                if "Double" in vitrage["type_vitrage"] or "Triple" in vitrage["type_vitrage"]:
+                    vitrage["type_vitrage"] = vitrage["type_vitrage"] + " V.I.R"
 
-            vitrage['facteur_solaire']=self.abaques['facteur_solaire']({'type_pose': vitrage['type_pose'], 'materiaux': vitrage['type_materiaux'], 'type_baie': vitrage['type_baie'], 'type_vitrage': vitrage['type_vitrage']}, 'fts')
-            
+            vitrage["facteur_solaire"] = self.abaques["facteur_solaire"](
+                {
+                    "type_pose": vitrage["type_pose"],
+                    "materiaux": vitrage["type_materiaux"],
+                    "type_baie": vitrage["type_baie"],
+                    "type_vitrage": vitrage["type_vitrage"],
+                },
+                "fts",
+            )
+
             ## Calcul facteur d'orientation
-            if vitrage['orientation'] == 'Horizontal':
-                orientation = 'Horizontal'
-                inclinaison="NULL"
+            if vitrage["orientation"] == "Horizontal":
+                orientation = "Horizontal"
+                inclinaison = "NULL"
             else:
-                inclinaison = vitrage['inclinaison']
-                orientation = vitrage['orientation']
-            
-            vitrage['c1j']= np.array([self.abaques['coefficient_orientation']({'zone_climatique': vitrage['zone_climatique'], 'month':month, 'orientation': orientation, 'inclination': inclinaison}, 'c1') for month in self.months])
+                inclinaison = vitrage["inclinaison"]
+                orientation = vitrage["orientation"]
+
+            vitrage["c1j"] = np.array(
+                [
+                    self.abaques["coefficient_orientation"](
+                        {
+                            "zone_climatique": vitrage["zone_climatique"],
+                            "month": month,
+                            "orientation": orientation,
+                            "inclination": inclinaison,
+                        },
+                        "c1",
+                    )
+                    for month in self.months
+                ]
+            )
 
             ## Calcul coefficient de masques proches
-            Fe1=1.0
-            if vitrage['masque_proche_type_masque'] and vitrage['masque_proche_type_masque']!="Absence de masque proche":
-                Fe1=self.abaques['coef_masques_proches']({'type_masque': vitrage['masque_proche_type_masque'], 'avance': vitrage['masque_proche_avance'], 'orientation': vitrage['masque_proche_orientation'], 'rapport_l1_l2': vitrage['masque_proche_rapport_l1_l2'], 'beta_gama': vitrage['masque_proche_beta_gama'], 'angle_superieur_30': vitrage['masque_proche_angle_superieur_30']}, 'fe1')
+            Fe1 = 1.0
+            if (
+                vitrage["masque_proche_type_masque"]
+                and vitrage["masque_proche_type_masque"] != "Absence de masque proche"
+            ):
+                Fe1 = self.abaques["coef_masques_proches"](
+                    {
+                        "type_masque": vitrage["masque_proche_type_masque"],
+                        "avance": vitrage["masque_proche_avance"],
+                        "orientation": vitrage["masque_proche_orientation"],
+                        "rapport_l1_l2": vitrage["masque_proche_rapport_l1_l2"],
+                        "beta_gama": vitrage["masque_proche_beta_gama"],
+                        "angle_superieur_30": vitrage["masque_proche_angle_superieur_30"],
+                    },
+                    "fe1",
+                )
 
-            Fe2_1=1.0
-            if vitrage['masque_lointain_hauteur_alpha'] and vitrage['masque_lointain_orientation']:
-                Fe2_1=self.abaques['coef_masques_lointain_homogene']({'hauteur_alpha': vitrage['masque_lointain_hauteur_alpha'], 'orientation': vitrage['masque_lointain_orientation']}, 'fe2')
+            Fe2_1 = 1.0
+            if vitrage["masque_lointain_hauteur_alpha"] and vitrage["masque_lointain_orientation"]:
+                Fe2_1 = self.abaques["coef_masques_lointain_homogene"](
+                    {
+                        "hauteur_alpha": vitrage["masque_lointain_hauteur_alpha"],
+                        "orientation": vitrage["masque_lointain_orientation"],
+                    },
+                    "fe2",
+                )
 
-            Fe2_2=1.0
-            if vitrage['ombrage_lointain_hauteur'] and vitrage['ombrage_lointain_orientation'] and vitrage['ombrage_lointain_secteur']:
-                Fe2_2=1 - 0.01 * self.abaques['coef_ombrage_lointain']({'hauteur': vitrage['ombrage_lointain_hauteur'], 'orientation': vitrage['ombrage_lointain_orientation'], 'secteur': vitrage['ombrage_lointain_secteur']}, 'omb')
+            Fe2_2 = 1.0
+            if (
+                vitrage["ombrage_lointain_hauteur"]
+                and vitrage["ombrage_lointain_orientation"]
+                and vitrage["ombrage_lointain_secteur"]
+            ):
+                Fe2_2 = 1 - 0.01 * self.abaques["coef_ombrage_lointain"](
+                    {
+                        "hauteur": vitrage["ombrage_lointain_hauteur"],
+                        "orientation": vitrage["ombrage_lointain_orientation"],
+                        "secteur": vitrage["ombrage_lointain_secteur"],
+                    },
+                    "omb",
+                )
 
-            Fe2=min(Fe2_1, Fe2_2)
-            Fe=Fe1*Fe2
-            vitrage['Fe']=Fe
-            vitrage['Fe1']=Fe1
-            vitrage['Fe2']=Fe2
+            Fe2 = min(Fe2_1, Fe2_2)
+            Fe = Fe1 * Fe2
+            vitrage["Fe"] = Fe
+            vitrage["Fe1"] = Fe1
+            vitrage["Fe2"] = Fe2
 
-            vitrage['ssej']=vitrage['surface_vitrage']*vitrage['facteur_solaire']*vitrage['Fe']*vitrage['c1j']
+            vitrage["ssej"] = vitrage["surface_vitrage"] * vitrage["facteur_solaire"] * vitrage["Fe"] * vitrage["c1j"]
         return vitrage
-

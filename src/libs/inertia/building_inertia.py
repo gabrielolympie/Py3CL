@@ -5,6 +5,7 @@ import os
 from libs.utils import safe_divide
 from libs.base import BaseProcessor
 
+
 class InertiaProcessor(BaseProcessor):
     def __init__(
         self,
@@ -22,14 +23,14 @@ class InertiaProcessor(BaseProcessor):
 
     def calc(
         self,
-        classe_inertie_plancher_bas:str=None,
-        classe_inertie_paroi_verticale:str=None,
-        classe_inertie_plancher_haut:str=None,
+        classe_inertie_plancher_bas: str = None,
+        classe_inertie_paroi_verticale: str = None,
+        classe_inertie_plancher_haut: str = None,
         *args,
         **kwargs,
     ) -> float:
         """
-        Based on the classe_inertie_plancher_bas, classe_inertie_paroi_verticale, classe_inertie_plancher_haut, 
+        Based on the classe_inertie_plancher_bas, classe_inertie_paroi_verticale, classe_inertie_plancher_haut,
         computes the whole building inertia class
 
         Args:
@@ -55,9 +56,7 @@ class InertiaProcessor(BaseProcessor):
         """
         Load data from data_path
         """
-        self.classe_inertie_type = pd.read_csv(
-            os.path.join(data_path, classe_inertie_type)
-        )
+        self.classe_inertie_type = pd.read_csv(os.path.join(data_path, classe_inertie_type))
         self.classe_inerties = pd.read_csv(os.path.join(data_path, classe_inerties))
 
     def preprocess(
@@ -73,21 +72,29 @@ class InertiaProcessor(BaseProcessor):
         """
         Preprocess classe_inertie_type
         """
-        self.classe_inertie_type = self.classe_inertie_type.set_index(
-            "id"
-        )["type"].to_dict()
+        self.classe_inertie_type = self.classe_inertie_type.set_index("id")["type"].to_dict()
 
     def _preprocess_classe_inerties(self):
         """
         Preprocess classe_inerties
         """
-        self.classe_inerties["classe_inertie_plancher_bas"] = self.classe_inerties["tv026_classe_inertie_plancher_bas_id"].replace(self.classe_inertie_type)
-        self.classe_inerties["classe_inertie_paroi_verticale"] = self.classe_inerties["tv026_classe_inertie_paroi_verticale_id"].replace(self.classe_inertie_type)
-        self.classe_inerties["classe_inertie_plancher_haut"] = self.classe_inerties["tv026_classe_inertie_plancher_haut_id"].replace(self.classe_inertie_type)
-        self.classe_inerties["classe_inertie_classe_inertie"] = self.classe_inerties["tv026_classe_inertie_classe_inertie_id"].replace(self.classe_inertie_type)
+        self.classe_inerties["classe_inertie_plancher_bas"] = self.classe_inerties[
+            "tv026_classe_inertie_plancher_bas_id"
+        ].replace(self.classe_inertie_type)
+        self.classe_inerties["classe_inertie_paroi_verticale"] = self.classe_inerties[
+            "tv026_classe_inertie_paroi_verticale_id"
+        ].replace(self.classe_inertie_type)
+        self.classe_inerties["classe_inertie_plancher_haut"] = self.classe_inerties[
+            "tv026_classe_inertie_plancher_haut_id"
+        ].replace(self.classe_inertie_type)
+        self.classe_inerties["classe_inertie_classe_inertie"] = self.classe_inerties[
+            "tv026_classe_inertie_classe_inertie_id"
+        ].replace(self.classe_inertie_type)
 
-        self.valid_classe_inertie_plancher_bas = self.classe_inerties['classe_inertie_plancher_bas'].unique()
-        self.valid_classe_inertie_paroi_verticale = self.classe_inerties['classe_inertie_paroi_verticale'].unique()
-        self.valid_classe_inertie_plancher_haut = self.classe_inerties['classe_inertie_plancher_haut'].unique()
+        self.valid_classe_inertie_plancher_bas = self.classe_inerties["classe_inertie_plancher_bas"].unique()
+        self.valid_classe_inertie_paroi_verticale = self.classe_inerties["classe_inertie_paroi_verticale"].unique()
+        self.valid_classe_inertie_plancher_haut = self.classe_inerties["classe_inertie_plancher_haut"].unique()
 
-        self.classe_inerties = self.classe_inerties.set_index(['classe_inertie_plancher_bas', 'classe_inertie_paroi_verticale', 'classe_inertie_plancher_haut'])['classe_inertie_classe_inertie'].to_dict()
+        self.classe_inerties = self.classe_inerties.set_index(
+            ["classe_inertie_plancher_bas", "classe_inertie_paroi_verticale", "classe_inertie_plancher_haut"]
+        )["classe_inertie_classe_inertie"].to_dict()

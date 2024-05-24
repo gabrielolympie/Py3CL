@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import os
 
+
 class BaseProcessor:
     def __init__(self, data_path, *args, **kwargs):
         """Define the base class for the processor"""
@@ -36,11 +37,11 @@ class BaseProcessor:
     def validate(self, *args, **kwargs):
         """Validate the input of the calc function"""
         for arg, arg_value in kwargs.items():
-            if arg_value is not None and not(str(arg_value).lower() == "nan"):
+            if arg_value is not None and not (str(arg_value).lower() == "nan"):
                 if arg in self.calc_input:
                     if type(arg_value) == list:
                         for value in arg_value:
-                            if value is not None and not(str(value).lower() == "nan"):
+                            if value is not None and not (str(value).lower() == "nan"):
                                 assert (
                                     value in self.calc_input[arg]
                                 ), f"{arg} must be in {self.calc_input[arg]}, got {value}"
@@ -50,7 +51,6 @@ class BaseProcessor:
                         ), f"{arg} must be in {self.calc_input[arg]}, got {arg_value}"
 
 
-
 class AggregatedProcessor:
     def __init__(self, data_path, *args, **kwargs):
         """Define the base class for the processor"""
@@ -58,14 +58,14 @@ class AggregatedProcessor:
 
     def __str__(self):
         return f"{self.__class__.__name__}({self.__dict})"
-    
+
     def __dict__(self):
         return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
-    
+
     def __call__(self, *args, **kwargs):
         """Call the calc function"""
         return self.calc(*args, **kwargs)
-    
+
     @property
     def calc_input(self):
         """Return a dict of inputs for the detailed_calc function.

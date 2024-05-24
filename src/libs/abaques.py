@@ -5,6 +5,7 @@ from utils import save_config, load_config
 import json
 from itertools import product
 
+
 class Abaque:
     """
     A class to represent an Abaque object, which is a specialized data handling and transformation tool.
@@ -60,7 +61,7 @@ class Abaque:
         self.abaque = None
         self.upper_thresholds = {}
         self.key_characteristics = {}
-        
+
         self.valid_cat_combinations = {}
         self.config = load_config(config)
         self.load_abaques(**self.config)
@@ -79,12 +80,12 @@ Values: {self.values()}
 
     def __repr__(self):
         return self.__str__()
-    
+
     def keys(self):
         return self.abaque.index.names
 
     def values(self):
-        return self.config['values']
+        return self.config["values"]
 
     def __call__(self, keys, value=None):
         """
@@ -103,19 +104,19 @@ Values: {self.values()}
         The retrieved value from the abaque.
         """
         if value is None:
-            return self.forward(keys)[self.config['values'][0]]
+            return self.forward(keys)[self.config["values"][0]]
         out = self.forward(keys)
         return out[value]
 
     def forward(self, keys):
         processed_input = {}
-        
+
         for key, val in keys.items():
             if val is None:
                 processed_input[key] = "NULL"
             elif key in self.upper_thresholds:
                 thresholds = self.upper_thresholds[key]
-                idx = np.searchsorted(thresholds, val, side='right') - 1
+                idx = np.searchsorted(thresholds, val, side="right") - 1
                 processed_input[key] = thresholds[max(0, idx)]
             else:
                 processed_input[key] = val
@@ -129,23 +130,33 @@ Values: {self.values()}
                 cat_inputs = tuple(processed_input[k] for k in self.cat_columns)
                 if len(cat_inputs) == 1:
                     cat_inputs = cat_inputs[0]
-                num_candidates=self.num_abaque[cat_inputs]
+                num_candidates = self.num_abaque[cat_inputs]
             else:
                 num_candidates = self.index.values
-            
+
             num_values = np.array([processed_input[k] for k in self.num_columns])
             idx = np.where(num_candidates >= num_values)[0]
             for i, k in enumerate(self.num_columns):
                 if len(idx) == 0:
-                    processed_input[k] = self.key_characteristics[k]['max']
+                    processed_input[k] = self.key_characteristics[k]["max"]
                 else:
                     processed_input[k] = num_candidates[idx[0], i]
             inputs = tuple(processed_input[k] for k in self.abaque.index.names)
             result = self.abaque_dict[inputs]
         return result
 
-
-    def load_abaques(self, data_path, file, refs=None, keys=list[dict], values=list, rename:dict=None, mapping=None, filters:list[dict]=None, reduce=None):
+    def load_abaques(
+        self,
+        data_path,
+        file,
+        refs=None,
+        keys=list[dict],
+        values=list,
+        rename: dict = None,
+        mapping=None,
+        filters: list[dict] = None,
+        reduce=None,
+    ):
         """
         Loads the abaque from a CSV file and applies various transformations.
 
@@ -183,15 +194,20 @@ Values: {self.values()}
             if reduce:
                 self.apply_reduction(reduce)
             if keys:
-                self.abaque = self.abaque.fillna('NULL')
+                self.abaque = self.abaque.fillna("NULL")
                 self.get_key_characteristics(keys)
                 self.initialize_valid_cat_combinations()
                 self.initialize_upper_tresholds()
-                self.cat_columns = [k['key_name'] for k in keys if k['key_type'] == 'cat']
-                self.num_columns = [k['key_name'] for k in keys if k['key_type'] == 'num']
+                self.cat_columns = [k["key_name"] for k in keys if k["key_type"] == "cat"]
+                self.num_columns = [k["key_name"] for k in keys if k["key_type"] == "num"]
                 if len(self.num_columns) > 0 and len(self.cat_columns) > 0:
                     ## Get list of possible num values for each cat combination
-                    self.num_abaque = self.abaque[self.cat_columns + self.num_columns].groupby(self.cat_columns).agg(lambda x: list(x)).to_dict(orient='index')
+                    self.num_abaque = (
+                        self.abaque[self.cat_columns + self.num_columns]
+                        .groupby(self.cat_columns)
+                        .agg(lambda x: list(x))
+                        .to_dict(orient="index")
+                    )
 
                     ## for each cat combination, create a numpy array of possible values, with n column, n being the number of num columns
                     for cat_comb, num_values in self.num_abaque.items():
@@ -203,7 +219,7 @@ Values: {self.values()}
 
             self.abaque.sort_index(inplace=True)
             self.abaque = self.abaque.groupby(self.abaque.index).head(1)
-            self.abaque_dict = self.abaque.to_dict(orient='index')
+            self.abaque_dict = self.abaque.to_dict(orient="index")
 
         except Exception as e:
             print(f"An error occurred: {str(e)}")
@@ -218,13 +234,13 @@ Values: {self.values()}
             List of dictionaries specifying the keys and their characteristics.
         """
         for key in keys:
-            if key['key_type'] == 'num':
-                self.key_characteristics[key['key_name']] = {
-                    'min': self.abaque[key['key_name']].min(),
-                    'max': self.abaque[key['key_name']].max()
+            if key["key_type"] == "num":
+                self.key_characteristics[key["key_name"]] = {
+                    "min": self.abaque[key["key_name"]].min(),
+                    "max": self.abaque[key["key_name"]].max(),
                 }
-            elif key['key_type'] == 'cat':
-                self.key_characteristics[key['key_name']] = self.abaque[key['key_name']].unique()
+            elif key["key_type"] == "cat":
+                self.key_characteristics[key["key_name"]] = self.abaque[key["key_name"]].unique()
 
     def process_references(self, refs, data_path):
         """
@@ -239,8 +255,10 @@ Values: {self.values()}
         """
         for ref in refs:
             try:
-                replacement_dict = pd.read_csv(os.path.join(data_path, ref['file'])).set_index(ref['key'])[ref['value']].to_dict()
-                self.abaque[ref['new_col']] = self.abaque[ref['col']].replace(replacement_dict)
+                replacement_dict = (
+                    pd.read_csv(os.path.join(data_path, ref["file"])).set_index(ref["key"])[ref["value"]].to_dict()
+                )
+                self.abaque[ref["new_col"]] = self.abaque[ref["col"]].replace(replacement_dict)
             except Exception as e:
                 print(f"Error processing references: {str(e)}")
 
@@ -262,7 +280,7 @@ Values: {self.values()}
         """
         for m in mapping:
             try:
-                self.abaque[m['col']] = self.abaque[m['col']].apply(eval(m['function']))
+                self.abaque[m["col"]] = self.abaque[m["col"]].apply(eval(m["function"]))
             except Exception as e:
                 print(f"Error applying mapping: {str(e)}")
 
@@ -277,7 +295,7 @@ Values: {self.values()}
         """
         for f in filters:
             try:
-                self.abaque = self.abaque[self.abaque[f['col']].apply(eval(f['function']))]
+                self.abaque = self.abaque[self.abaque[f["col"]].apply(eval(f["function"]))]
             except Exception as e:
                 print(f"Error applying filter: {str(e)}")
 
@@ -292,7 +310,9 @@ Values: {self.values()}
         """
         for r in reduce:
             try:
-                self.abaque[r['new_col']] = self.abaque.apply(lambda row: eval(r['function'])([row[col] for col in r['cols']]), axis=1)
+                self.abaque[r["new_col"]] = self.abaque.apply(
+                    lambda row: eval(r["function"])([row[col] for col in r["cols"]]), axis=1
+                )
             except Exception as e:
                 print(f"Error applying reduction: {str(e)}")
 
@@ -301,15 +321,15 @@ Values: {self.values()}
         Initializes valid categorical combinations by filtering and deduplicating values.
         """
         if self.abaque is not None:
-            cat_keys = [k['key_name'] for k in self.config.get('keys', []) if k['key_type'] == 'cat']
+            cat_keys = [k["key_name"] for k in self.config.get("keys", []) if k["key_type"] == "cat"]
             unique_combinations = self.abaque[cat_keys].drop_duplicates()
-            self.valid_cat_combinations = unique_combinations.to_dict(orient='records')
+            self.valid_cat_combinations = unique_combinations.to_dict(orient="records")
 
     def initialize_upper_tresholds(self):
         """
         Initializes upper threshold values for numeric keys.
         """
         if self.abaque is not None:
-            num_keys = [k['key_name'] for k in self.config.get('keys', []) if k['key_type'] == 'num']
+            num_keys = [k["key_name"] for k in self.config.get("keys", []) if k["key_type"] == "num"]
             for key in num_keys:
                 self.upper_thresholds[key] = np.array(sorted(self.abaque[key].unique().astype(float)))
