@@ -55,6 +55,7 @@ class ParoiInput(BaseModel):
     surface_paroi: float
     largeur: float = None
     hauteur: float = None
+    inertie: str = None # Leger / Lourd
 
     # Coefficient de transmission surfacique
     type_paroi: str # ['Mur', 'Plancher bas', 'Plancher haut']

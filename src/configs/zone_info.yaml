@@ -1,0 +1,21 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv016bis_departement.csv
+keys:
+- key_name: altitude
+  key_type: num
+- key_name: month
+  key_type: cat
+- key_name: zone_climatique
+  key_type: cat
+
+# E(kWh/m²),Text(°C),Nref(19°C),DH19(°Ch),DH14(°Ch),Nref(21°C),DH21(°Ch)
+values:
+- E(kWh/m²)
+- Text(°C)
+- Nref(19°C)
+- Nref(21°C)
+- DH14(°Ch)
+- DH19(°Ch)
+- DH21(°Ch)
