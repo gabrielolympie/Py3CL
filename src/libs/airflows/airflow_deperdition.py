@@ -104,7 +104,12 @@ class DRProcessor(BaseProcessor):
         qvarepconv = self.qvarepconv[type_ventilation]
 
         qvinf_num = hauteur_sous_plafond * surface_habitable * nu_50 * e
-        qvinf_den = 1 + (f / e) * (qvasoufconv - qvarepconv) ** 2 / (hauteur_sous_plafond * nu_50) ** 2
+        qvinf_den = (
+            1
+            + (f / e)
+            * (qvasoufconv - qvarepconv) ** 2
+            / (hauteur_sous_plafond * nu_50) ** 2
+        )
         qvinf = qvinf_num / qvinf_den
         return 0.34 * qvinf
 
@@ -146,7 +151,11 @@ class DRProcessor(BaseProcessor):
         if q4paconv is None:
             if annee_construction < 1948 and ratio_isolated_surface > 0.5:
                 q4paconv = 2
-            elif annee_construction >= 1948 and annee_construction < 1974 and ratio_isolated_surface <= 0.5:
+            elif (
+                annee_construction >= 1948
+                and annee_construction < 1974
+                and ratio_isolated_surface <= 0.5
+            ):
                 q4paconv = 1.9
             elif annee_construction <= 1948 and menuiserie_has_join:
                 q4paconv = 2.5
@@ -156,7 +165,9 @@ class DRProcessor(BaseProcessor):
         return q4paconv + 0.45 * smeaconv * surface_paroir_deperditive_hors_ps
 
     def _calc_q4paconv(self, type_batiment, annee_construction):
-        assert type_batiment in self.valid_type_batiment, f"type_batiment must be in {self.valid_type_batiment}"
+        assert (
+            type_batiment in self.valid_type_batiment
+        ), f"type_batiment must be in {self.valid_type_batiment}"
         idx = np.where(annee_construction <= self.year_tresholds)[0][0]
         return self.permeabililte[(type_batiment, self.year_tresholds[idx])]
 
@@ -194,18 +205,20 @@ class DRProcessor(BaseProcessor):
     def _preprocess_permeabililte(self):
         self.valid_type_batiment = list(self.permeabililte["type_batiment"].unique())
         self.year_tresholds = self.permeabililte["annee_construction_max"].unique()
-        self.permeabililte = self.permeabililte.set_index(["type_batiment", "annee_construction_max"])[
-            "q4paconv"
-        ].to_dict()
+        self.permeabililte = self.permeabililte.set_index(
+            ["type_batiment", "annee_construction_max"]
+        )["q4paconv"].to_dict()
 
     def _preprocess_valeur_conventionnelle_renouvellement_air(self):
-        self.valid_type_ventilation = list(self.valeur_conventionnelle_renouvellement_air["type_ventilation"].unique())
-        self.qvarepconv = self.valeur_conventionnelle_renouvellement_air.set_index("type_ventilation")[
-            "Qvarepconv"
-        ].to_dict()
-        self.qvasoufconv = self.valeur_conventionnelle_renouvellement_air.set_index("type_ventilation")[
-            "Qvasoufconv"
-        ].to_dict()
-        self.smeaconv = self.valeur_conventionnelle_renouvellement_air.set_index("type_ventilation")[
-            "Smeaconv"
-        ].to_dict()
+        self.valid_type_ventilation = list(
+            self.valeur_conventionnelle_renouvellement_air["type_ventilation"].unique()
+        )
+        self.qvarepconv = self.valeur_conventionnelle_renouvellement_air.set_index(
+            "type_ventilation"
+        )["Qvarepconv"].to_dict()
+        self.qvasoufconv = self.valeur_conventionnelle_renouvellement_air.set_index(
+            "type_ventilation"
+        )["Qvasoufconv"].to_dict()
+        self.smeaconv = self.valeur_conventionnelle_renouvellement_air.set_index(
+            "type_ventilation"
+        )["Smeaconv"].to_dict()

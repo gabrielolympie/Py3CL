@@ -111,8 +111,12 @@ class KProcessorPth(BaseProcessor):
         Calcule le coefficient de transmission thermique pour une menuiserie
         """
         ## Check if largeur is closer to 5 or 10
-        largeur_dormant = 5 if abs(largeur_dormant - 5) < abs(largeur_dormant - 10) else 10
-        return self.valeur_pth_menuiserie[(type_liaison, isolation_mur, largeur_dormant, type_pose, retour_isolation)]
+        largeur_dormant = (
+            5 if abs(largeur_dormant - 5) < abs(largeur_dormant - 10) else 10
+        )
+        return self.valeur_pth_menuiserie[
+            (type_liaison, isolation_mur, largeur_dormant, type_pose, retour_isolation)
+        ]
 
     def load(
         self,
@@ -139,8 +143,12 @@ class KProcessorPth(BaseProcessor):
         self.valeur_pont_thermique_type_liaison = pd.read_csv(
             os.path.join(data_path, valeur_pont_thermique_type_liaison)
         )
-        self.valeur_pont_thermique_type_pose = pd.read_csv(os.path.join(data_path, valeur_pont_thermique_type_pose))
-        self.valeur_pont_thermique = pd.read_csv(os.path.join(data_path, valeur_pont_thermique))
+        self.valeur_pont_thermique_type_pose = pd.read_csv(
+            os.path.join(data_path, valeur_pont_thermique_type_pose)
+        )
+        self.valeur_pont_thermique = pd.read_csv(
+            os.path.join(data_path, valeur_pont_thermique)
+        )
 
     def preprocess(
         self,
@@ -156,42 +164,56 @@ class KProcessorPth(BaseProcessor):
         self._preprocess_valeur_pont_thermique()
 
     def _preprocess_valeur_pont_thermique_isolation_mur(self):
-        self.valeur_pont_thermique_isolation_mur = self.valeur_pont_thermique_isolation_mur.set_index("id")[
-            "isolation_mur"
-        ].to_dict()
-        self.valid_isolation_mur = list(self.valeur_pont_thermique_isolation_mur.values())
+        self.valeur_pont_thermique_isolation_mur = (
+            self.valeur_pont_thermique_isolation_mur.set_index("id")[
+                "isolation_mur"
+            ].to_dict()
+        )
+        self.valid_isolation_mur = list(
+            self.valeur_pont_thermique_isolation_mur.values()
+        )
 
     def _preprocess_valeur_pont_thermique_isolation_plancher(self):
-        self.valeur_pont_thermique_isolation_plancher = self.valeur_pont_thermique_isolation_plancher.set_index("id")[
-            "plancher_bas"
-        ].to_dict()
-        self.valid_isolation_plancher = list(self.valeur_pont_thermique_isolation_plancher.values())
+        self.valeur_pont_thermique_isolation_plancher = (
+            self.valeur_pont_thermique_isolation_plancher.set_index("id")[
+                "plancher_bas"
+            ].to_dict()
+        )
+        self.valid_isolation_plancher = list(
+            self.valeur_pont_thermique_isolation_plancher.values()
+        )
 
     def _preprocess_valeur_pont_thermique_retour_isolation(self):
-        self.valeur_pont_thermique_retour_isolation = self.valeur_pont_thermique_retour_isolation.set_index("id")[
-            "retour_isolation"
-        ].to_dict()
-        self.valid_retour_isolation = list(self.valeur_pont_thermique_retour_isolation.values())
+        self.valeur_pont_thermique_retour_isolation = (
+            self.valeur_pont_thermique_retour_isolation.set_index("id")[
+                "retour_isolation"
+            ].to_dict()
+        )
+        self.valid_retour_isolation = list(
+            self.valeur_pont_thermique_retour_isolation.values()
+        )
 
     def _preprocess_valeur_pont_thermique_type_liaison(self):
-        self.valeur_pont_thermique_type_liaison = self.valeur_pont_thermique_type_liaison.set_index("id")[
-            "type_liaison"
-        ].to_dict()
+        self.valeur_pont_thermique_type_liaison = (
+            self.valeur_pont_thermique_type_liaison.set_index("id")[
+                "type_liaison"
+            ].to_dict()
+        )
         self.valid_type_liaison = list(self.valeur_pont_thermique_type_liaison.values())
 
     def _preprocess_valeur_pont_thermique_type_pose(self):
-        self.valeur_pont_thermique_type_pose = self.valeur_pont_thermique_type_pose.set_index("id")[
-            "type_pose"
-        ].to_dict()
+        self.valeur_pont_thermique_type_pose = (
+            self.valeur_pont_thermique_type_pose.set_index("id")["type_pose"].to_dict()
+        )
         self.valid_type_pose = list(self.valeur_pont_thermique_type_pose.values())
 
     def _preprocess_valeur_pont_thermique(self):
         self.valeur_pont_thermique["type_liaison"] = self.valeur_pont_thermique[
             "tv013_valeur_pont_thermique_type_liaison_id"
         ].replace(self.valeur_pont_thermique_type_liaison)
-        self.valeur_pont_thermique["largeur_dormant"] = self.valeur_pont_thermique["largeur_dormant"].replace(
-            {"NULL": np.nan}
-        )
+        self.valeur_pont_thermique["largeur_dormant"] = self.valeur_pont_thermique[
+            "largeur_dormant"
+        ].replace({"NULL": np.nan})
 
         self.valeur_pont_thermique["isolation_mur"] = self.valeur_pont_thermique[
             "tv013_valeur_pont_thermique_isolation_mur_id"
@@ -204,15 +226,21 @@ class KProcessorPth(BaseProcessor):
         self.valeur_pth_menuiserie = self.valeur_pont_thermique[
             self.valeur_pont_thermique["largeur_dormant"].notna()
         ].copy()
-        self.valeur_pth = self.valeur_pont_thermique[self.valeur_pont_thermique["largeur_dormant"].isna()].copy()
+        self.valeur_pth = self.valeur_pont_thermique[
+            self.valeur_pont_thermique["largeur_dormant"].isna()
+        ].copy()
 
         ## Prepare general case:
-        self.valeur_pth = self.valeur_pth.set_index(["type_liaison", "isolation_mur", "plancher"], drop=True)[
-            "k"
-        ].to_dict()
+        self.valeur_pth = self.valeur_pth.set_index(
+            ["type_liaison", "isolation_mur", "plancher"], drop=True
+        )["k"].to_dict()
 
         ## Prepare menuiserie case:
-        print(self.valeur_pth_menuiserie["tv013_valeur_pont_thermique_type_pose_id"].unique())
+        print(
+            self.valeur_pth_menuiserie[
+                "tv013_valeur_pont_thermique_type_pose_id"
+            ].unique()
+        )
         self.valeur_pth_menuiserie["type_pose"] = (
             self.valeur_pth_menuiserie["tv013_valeur_pont_thermique_type_pose_id"]
             .astype(int)

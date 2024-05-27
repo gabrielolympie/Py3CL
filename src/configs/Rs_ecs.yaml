@@ -1,0 +1,13 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv049bis_rendement_stockage_ecs.csv
+keys:
+- key_name: type_stockage
+  key_type: cat
+- key_name: category_stockage
+  key_type: cat
+- key_name: volume_stockage
+  key_type: num
+values:
+- Cr

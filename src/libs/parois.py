@@ -1,6 +1,7 @@
 from libs.utils import safe_divide
 from pydantic import BaseModel
 import os
+from typing import Optional, List
 
 
 class ParoiInput(BaseModel):
@@ -51,48 +52,45 @@ class ParoiInput(BaseModel):
     """
 
     identifiant: str
-    identifiant_adjacents: list = None
+    identifiant_adjacents: Optional[List[str]] = None
 
     # dimensions
     surface_paroi: float
-    largeur: float = None
-    hauteur: float = None
-    inertie: str = None  # Leger / Lourd
+    largeur: Optional[float] = None
+    hauteur: Optional[float] = None
+    inertie: Optional[str] = None  # Leger / Lourd
 
     # Coefficient de transmission surfacique
     type_paroi: str  # ['Mur', 'Plancher bas', 'Plancher haut']
-    uparoi: float = None
-    materiaux: str = None
-    epaisseur: float = None
-    isolation: bool = None
-    annee_isolation: int = None
-    r_isolant: float = None
-    epaisseur_isolant: float = None
-    effet_joule: bool = None
+    uparoi: Optional[float] = None
+    materiaux: Optional[str] = None
+    epaisseur: Optional[float] = None
+    isolation: Optional[bool] = None
+    annee_isolation: Optional[int] = None
+    r_isolant: Optional[float] = None
+    epaisseur_isolant: Optional[float] = None
+    effet_joule: Optional[bool] = None
 
     # Specifique aux murs
-    enduit: bool = None
-    doublage_with_lame_below_15mm: bool = None
-    doublage_with_lame_above_15mm: bool = None
+    enduit: Optional[bool] = None
+    doublage_with_lame_below_15mm: Optional[bool] = None
+    doublage_with_lame_above_15mm: Optional[bool] = None
 
     # Specifique aux planchers bas
-    is_vide_sanitaire: bool = None
-    is_unheated_underground: bool = None
-    is_terre_plain: bool = None
-    surface_immeuble: float = None
-    perimeter_immeuble: float = None
-
-    # Specifique aux planchers hauts
-    ## None
+    is_vide_sanitaire: Optional[bool] = None
+    is_unheated_underground: Optional[bool] = None
+    is_terre_plain: Optional[bool] = None
+    surface_immeuble: Optional[float] = None
+    perimeter_immeuble: Optional[float] = None
 
     # Coefficient d'attenuation
-    exterior_type_or_local_non_chauffe: str = None
-    surface_paroi_contact: float = None
-    surface_paroi_local_non_chauffe: float = None
-    local_non_chauffe_isole: bool = None
+    exterior_type_or_local_non_chauffe: Optional[str] = None
+    surface_paroi_contact: Optional[float] = None
+    surface_paroi_local_non_chauffe: Optional[float] = None
+    local_non_chauffe_isole: Optional[bool] = None
 
     # Specifique aux verandas
-    orientation: str = None  # ['Nord', 'Sud', 'Est', 'Ouest']
+    orientation: Optional[str] = None  # ['Nord', 'Sud', 'Est', 'Ouest']
 
 
 class Paroi:
@@ -102,14 +100,18 @@ class Paroi:
     def forward(self, dpe, kwargs: ParoiInput):
         paroi = kwargs.dict()
         paroi["annee_construction_ou_isolation"] = (
-            paroi["annee_isolation"] if paroi["annee_isolation"] is not None else dpe["annee_construction"]
+            paroi["annee_isolation"]
+            if paroi["annee_isolation"] is not None
+            else dpe["annee_construction"]
         )
         paroi["zone_hiver"] = dpe["zone_hiver"]
 
         # Calc b : coefficient de reduction de deperdition
         if (
             paroi["exterior_type_or_local_non_chauffe"]
-            in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics["aiu_aue"]
+            in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics[
+                "aiu_aue"
+            ]
         ):
             paroi["b"] = self.abaques["coef_reduction_deperdition_exterieur"](
                 {"aiu_aue": paroi["exterior_type_or_local_non_chauffe"]}, "valeur"
@@ -124,7 +126,9 @@ class Paroi:
                 "bver",
             )
         else:
-            paroi["aiu_aue"] = safe_divide(paroi["surface_paroi_contact"], paroi["surface_paroi_local_non_chauffe"])
+            paroi["aiu_aue"] = safe_divide(
+                paroi["surface_paroi_contact"], paroi["surface_paroi_local_non_chauffe"]
+            )
             paroi["uvue"] = self.abaques["local_non_chauffe"](
                 {
                     "type_batiment": dpe["type_batiment"],
@@ -176,9 +180,15 @@ class Paroi:
             paroi["U"] = min(uparoi_0, uparoi_tab)
         else:
             if paroi["r_isolant"]:
-                paroi["U"] = safe_divide(1, safe_divide(1, uparoi_0) + paroi["r_isolant"])
+                paroi["U"] = safe_divide(
+                    1, safe_divide(1, uparoi_0) + paroi["r_isolant"]
+                )
             elif paroi["epaisseur_isolant"]:
-                paroi["U"] = safe_divide(1, safe_divide(1, uparoi_0) + safe_divide(paroi["epaisseur_isolant"], 40))
+                paroi["U"] = safe_divide(
+                    1,
+                    safe_divide(1, uparoi_0)
+                    + safe_divide(paroi["epaisseur_isolant"], 40),
+                )
             else:
                 uparoi_tab = self.abaques["uph"](
                     {
@@ -212,13 +222,21 @@ class Paroi:
             paroi["U"] = min(uparoi_0, uparoi_tab)
         else:
             if paroi["r_isolant"]:
-                paroi["U"] = safe_divide(1, safe_divide(1, uparoi_0) + paroi["r_isolant"])
+                paroi["U"] = safe_divide(
+                    1, safe_divide(1, uparoi_0) + paroi["r_isolant"]
+                )
             elif paroi["epaisseur_isolant"]:
-                paroi["U"] = safe_divide(1, safe_divide(1, uparoi_0) + safe_divide(paroi["epaisseur_isolant"], 42))
+                paroi["U"] = safe_divide(
+                    1,
+                    safe_divide(1, uparoi_0)
+                    + safe_divide(paroi["epaisseur_isolant"], 42),
+                )
             else:
                 uparoi_tab = self.abaques["upb"](
                     {
-                        "annee_construction_max": paroi["annee_construction_ou_isolation"],
+                        "annee_construction_max": paroi[
+                            "annee_construction_ou_isolation"
+                        ],
                         "zone_hiver": paroi["zone_hiver"],
                         "effet_joule": paroi["effet_joule"],
                     },
@@ -226,7 +244,11 @@ class Paroi:
                 )
                 paroi["U"] = min(uparoi_0, uparoi_tab)
 
-        if paroi["is_vide_sanitaire"] or paroi["is_unheated_underground"] or paroi["is_terre_plain"]:
+        if (
+            paroi["is_vide_sanitaire"]
+            or paroi["is_unheated_underground"]
+            or paroi["is_terre_plain"]
+        ):
             try:
                 ssp = 2 * paroi["surface_immeuble"] / paroi["perimeter_immeuble"]
             except:
@@ -240,13 +262,19 @@ class Paroi:
                 else:
                     type_tp = "tp_post_2001 plein"
             paroi["Upb_sans_tp"] = paroi["U"]
-            paroi["U"] = self.abaques["upb_tp"]({"type_tp": type_tp, "2S/P": ssp, "Upb": paroi["Upb_sans_tp"]}, "Value")
+            paroi["U"] = self.abaques["upb_tp"](
+                {"type_tp": type_tp, "2S/P": ssp, "Upb": paroi["Upb_sans_tp"]}, "Value"
+            )
         return paroi
 
     def _forward_mur(self, paroi):
         if paroi["materiaux"] and paroi["epaisseur"]:
             uparoi_0 = self.abaques["umur0"](
-                {"umur0_materiaux": paroi["materiaux"], "epaisseur": paroi["epaisseur"]}, "umur"
+                {
+                    "umur0_materiaux": paroi["materiaux"],
+                    "epaisseur": paroi["epaisseur"],
+                },
+                "umur",
             )
             uparoi_nu = min(uparoi_0, 2.5)
         else:
@@ -273,13 +301,21 @@ class Paroi:
             paroi["U"] = min(uparoi_0, uparoi_tab)
         else:
             if paroi["r_isolant"]:
-                paroi["U"] = safe_divide(1, safe_divide(1, uparoi_0) + paroi["r_isolant"])
+                paroi["U"] = safe_divide(
+                    1, safe_divide(1, uparoi_0) + paroi["r_isolant"]
+                )
             elif paroi["epaisseur_isolant"]:
-                paroi["U"] = safe_divide(1, safe_divide(1, uparoi_0) + safe_divide(paroi["epaisseur_isolant"], 40))
+                paroi["U"] = safe_divide(
+                    1,
+                    safe_divide(1, uparoi_0)
+                    + safe_divide(paroi["epaisseur_isolant"], 40),
+                )
             else:
                 uparoi_tab = self.abaques["umur"](
                     {
-                        "annee_construction_max": paroi["annee_construction_ou_isolation"],
+                        "annee_construction_max": paroi[
+                            "annee_construction_ou_isolation"
+                        ],
                         "zone_hiver": paroi["zone_hiver"],
                         "effet_joule": paroi["effet_joule"],
                     },

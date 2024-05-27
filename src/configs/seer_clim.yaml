@@ -1,0 +1,11 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv0xx_seer_clim.csv
+keys:
+- key_name: zone_hiver
+  key_type: cat
+- key_name: annee_climatisation
+  key_type: num
+values:
+- SEER

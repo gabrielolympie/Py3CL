@@ -61,7 +61,9 @@ class AttenuationCoefficient(BaseProcessor):
         elif exterior_type == "Véranda":
             return self._calc_veranda(zone_climatique, orientation, aiu_isole)
         elif exterior_type in self.local_non_chauffe_types:
-            return self._calc_local_non_chauffe(exterior_type, aiu, aue, aiu_isole, aue_isole)
+            return self._calc_local_non_chauffe(
+                exterior_type, aiu, aue, aiu_isole, aue_isole
+            )
         else:
             raise ValueError(f"exterior_type must be in {self.valid_exterior_types}")
 
@@ -75,7 +77,9 @@ class AttenuationCoefficient(BaseProcessor):
         Args:
             exterior_type (str): the type of exterior, see self.exterior_types
         """
-        assert exterior_type in self.exterior_types, f"exterior_type must be in {self.exterior_types }"
+        assert (
+            exterior_type in self.exterior_types
+        ), f"exterior_type must be in {self.exterior_types }"
         return self.coefficient_reduction_exterior[exterior_type]
 
     def _calc_local_non_chauffe(
@@ -96,16 +100,24 @@ class AttenuationCoefficient(BaseProcessor):
             aiu_isole (float): whether the interior area is isolated or not (1 or 0)
             aue_isole (float): whether the exterior area is isolated or not (1 or 0)
         """
-        assert exterior_type in self.local_non_chauffe_types, f"exterior_type must be in {self.local_non_chauffe_types}"
+        assert (
+            exterior_type in self.local_non_chauffe_types
+        ), f"exterior_type must be in {self.local_non_chauffe_types}"
         assert aiu is not None, "aiu should be provided for non heated areas"
         assert aue is not None, "aue should be provided for non heated areas"
-        assert aue_isole is not None, "aue_isole should be provided for non heated areas"
-        assert aiu_isole is not None, "aiu_isole should be provided for non heated areas"
+        assert (
+            aue_isole is not None
+        ), "aue_isole should be provided for non heated areas"
+        assert (
+            aiu_isole is not None
+        ), "aiu_isole should be provided for non heated areas"
 
         uv_ue = self.local_non_chauffe[exterior_type]
         aiu_aue = safe_divide(aiu, aue)
         idx = np.where(aiu_aue <= self.tresholds)[0][0]
-        return self.coefficient_reduction_interior.loc[self.tresholds[idx], uv_ue, aue_isole, aiu_isole]
+        return self.coefficient_reduction_interior.loc[
+            self.tresholds[idx], uv_ue, aue_isole, aiu_isole
+        ]
 
     def _calc_veranda(
         self,
@@ -132,7 +144,9 @@ class AttenuationCoefficient(BaseProcessor):
             "Sud",
         ], "orientation must be in ['Nord', 'Est / Ouest', 'Sud']"
         assert aiu_isole in [0, 1], "aiu_isole must be 0 or 1"
-        return self.coefficient_reduction_veranda.loc[zone_climatique, orientation, aiu_isole]
+        return self.coefficient_reduction_veranda.loc[
+            zone_climatique, orientation, aiu_isole
+        ]
 
     def load(
         self,
@@ -153,8 +167,12 @@ class AttenuationCoefficient(BaseProcessor):
         self.coefficient_reduction_deperditions = pd.read_csv(
             os.path.join(data_path, coefficient_reduction_deperditions_path)
         )
-        self.local_non_chauffe = pd.read_csv(os.path.join(data_path, local_non_chauffe_path))
-        self.coefficient_reduction_veranda = pd.read_csv(os.path.join(data_path, veranda_path))
+        self.local_non_chauffe = pd.read_csv(
+            os.path.join(data_path, local_non_chauffe_path)
+        )
+        self.coefficient_reduction_veranda = pd.read_csv(
+            os.path.join(data_path, veranda_path)
+        )
 
     def preprocess(self, *args, **kwargs):
         self._preprocess_coefficient_reduction_deperditions(*args, **kwargs)
@@ -167,9 +185,9 @@ class AttenuationCoefficient(BaseProcessor):
 
     def _preprocess_coefficient_reduction_deperditions(self, *args, **kwargs):
         self.coefficient_reduction_exterior = (
-            self.coefficient_reduction_deperditions[self.coefficient_reduction_deperditions["aue_isole"].isna()][
-                ["aiu_aue", "valeur"]
-            ]
+            self.coefficient_reduction_deperditions[
+                self.coefficient_reduction_deperditions["aue_isole"].isna()
+            ][["aiu_aue", "valeur"]]
             .set_index("aiu_aue", drop=True)["valeur"]
             .to_dict()
         )
@@ -178,23 +196,31 @@ class AttenuationCoefficient(BaseProcessor):
         self.coefficient_reduction_interior = self.coefficient_reduction_deperditions[
             self.coefficient_reduction_deperditions["aue_isole"].notna()
         ][["aiu_aue_max", "uv_ue", "aue_isole", "aiu_isole", "valeur"]]
-        self.coefficient_reduction_interior["aiu_aue_max"] = self.coefficient_reduction_interior["aiu_aue_max"].fillna(
-            10000
+        self.coefficient_reduction_interior["aiu_aue_max"] = (
+            self.coefficient_reduction_interior["aiu_aue_max"].fillna(10000)
         )
-        self.tresholds = self.coefficient_reduction_interior["aiu_aue_max"].sort_values().unique()
+        self.tresholds = (
+            self.coefficient_reduction_interior["aiu_aue_max"].sort_values().unique()
+        )
 
     def _preprocess_local_non_chauffe(self, *args, **kwargs):
-        self.local_non_chauffe = self.local_non_chauffe.set_index("local_non_chauffe")["uvue"].to_dict()
+        self.local_non_chauffe = self.local_non_chauffe.set_index("local_non_chauffe")[
+            "uvue"
+        ].to_dict()
 
     def _preprocess_veranda(self, *args, **kwargs):
-        self.coefficient_reduction_veranda["Paroi donnant sur la véranda"] = self.coefficient_reduction_veranda[
-            "Paroi donnant sur la véranda"
-        ].replace({"Isolé": 1, "Non isolé": 0})
-        self.coefficient_reduction_veranda = self.coefficient_reduction_veranda.set_index(
-            [
-                "Zone climatique",
-                "Orientation de la véranda",
-                "Paroi donnant sur la véranda",
-            ],
-            drop=True,
-        )["bver"]
+        self.coefficient_reduction_veranda["Paroi donnant sur la véranda"] = (
+            self.coefficient_reduction_veranda["Paroi donnant sur la véranda"].replace(
+                {"Isolé": 1, "Non isolé": 0}
+            )
+        )
+        self.coefficient_reduction_veranda = (
+            self.coefficient_reduction_veranda.set_index(
+                [
+                    "Zone climatique",
+                    "Orientation de la véranda",
+                    "Paroi donnant sur la véranda",
+                ],
+                drop=True,
+            )["bver"]
+        )

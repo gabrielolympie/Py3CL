@@ -1,0 +1,11 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv0xx_heure_ecl.csv
+keys:
+- key_name: month
+  key_type: cat
+- key_name: zone_climatique
+  key_type: cat
+values:
+- Nh

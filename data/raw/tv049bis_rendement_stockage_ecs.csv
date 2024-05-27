@@ -1,0 +1,17 @@
+type_stockage,category_stockage,volume_stockage,Cr
+Chauffe-eau horizontal,Other,100,0.39
+Chauffe-eau vertical,Other,100,0.32
+Chauffe-eau vertical,Catégorie B ou 2 étoiles,100,0.27
+Chauffe-eau vertical,Catégorie C ou 3 étoiles,100,0.25
+Chauffe-eau horizontal,Other,200,0.33
+Chauffe-eau vertical,Other,200,0.23
+Chauffe-eau vertical,Catégorie B ou 2 étoiles,200,0.22
+Chauffe-eau vertical,Catégorie C ou 3 étoiles,200,0.2
+Chauffe-eau horizontal,Other,300,0.3
+Chauffe-eau vertical,Other,300,0.22
+Chauffe-eau vertical,Catégorie B ou 2 étoiles,300,0.2
+Chauffe-eau vertical,Catégorie C ou 3 étoiles,300,0.18
+Chauffe-eau horizontal,Other,8000,0.3
+Chauffe-eau vertical,Other,8000,0.22
+Chauffe-eau vertical,Catégorie B ou 2 étoiles,8000,0.18
+Chauffe-eau vertical,Catégorie C ou 3 étoiles,8000,0.16

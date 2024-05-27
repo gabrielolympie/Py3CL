@@ -2,8 +2,11 @@ from libs.abaques import Abaque
 from libs.parois import ParoiInput, Paroi
 from libs.ouvrants import VitrageInput, Vitrage
 from libs.ponts_thermiques import PontThermiqueInput, PontThermique
+from libs.ecs import EcsInput, ECS
+from libs.climatisation import ClimatisationInput, Climatisation
 from libs.utils import safe_divide, vectorized_safe_divide
 from pydantic import BaseModel
+from typing import Optional
 import os
 import numpy as np
 
@@ -12,8 +15,12 @@ configs_path = "../src/configs/"
 abaques_configs = {
     "department": os.path.join(configs_path, "departments.yaml"),
     "local_non_chauffe": os.path.join(configs_path, "local_non_chauffe.yaml"),
-    "coef_reduction_deperdition_local": os.path.join(configs_path, "coef_reduction_deperdition_local.yaml"),
-    "coef_reduction_deperdition_exterieur": os.path.join(configs_path, "coef_reduction_deperdition_exterieur.yaml"),
+    "coef_reduction_deperdition_local": os.path.join(
+        configs_path, "coef_reduction_deperdition_local.yaml"
+    ),
+    "coef_reduction_deperdition_exterieur": os.path.join(
+        configs_path, "coef_reduction_deperdition_exterieur.yaml"
+    ),
     "coef_reduction_veranda": os.path.join(configs_path, "coef_reduction_veranda.yaml"),
     "umur0": os.path.join(configs_path, "umur0.yaml"),
     "umur": os.path.join(configs_path, "umur.yaml"),
@@ -24,16 +31,24 @@ abaques_configs = {
     "uph0": os.path.join(configs_path, "uph0.yaml"),
     "ug_vitrage": os.path.join(configs_path, "ug_vitrage.yaml"),
     "uw_vitrage": os.path.join(configs_path, "uw_vitrage.yaml"),
-    "resistance_additionnelle_vitrage": os.path.join(configs_path, "resistance_additionnelle_vitrage.yaml"),
-    "transmission_thermique_baie": os.path.join(configs_path, "transmission_thermique_baie.yaml"),
+    "resistance_additionnelle_vitrage": os.path.join(
+        configs_path, "resistance_additionnelle_vitrage.yaml"
+    ),
+    "transmission_thermique_baie": os.path.join(
+        configs_path, "transmission_thermique_baie.yaml"
+    ),
     "kpth": os.path.join(configs_path, "kpth.yaml"),
     "permeabilite_fenetre": os.path.join(configs_path, "permeabilite_fenetre.yaml"),
     "permeabilite_batiment": os.path.join(configs_path, "permeabilite_batiment.yaml"),
     "renouvellement_air": os.path.join(configs_path, "renouvellement_air.yaml"),
-    "coefficient_orientation": os.path.join(configs_path, "coefficient_orientation.yaml"),
+    "coefficient_orientation": os.path.join(
+        configs_path, "coefficient_orientation.yaml"
+    ),
     "facteur_solaire": os.path.join(configs_path, "facteur_solaire.yaml"),
     "coef_masques_proches": os.path.join(configs_path, "coef_masques_proches.yaml"),
-    "coef_masques_lointain_homogene": os.path.join(configs_path, "coef_masques_lointain_homogene.yaml"),
+    "coef_masques_lointain_homogene": os.path.join(
+        configs_path, "coef_masques_lointain_homogene.yaml"
+    ),
     "coef_ombrage_lointain": os.path.join(configs_path, "coef_ombrage_lointain.yaml"),
     "I0_intermittence": os.path.join(configs_path, "I0_intermittence.yaml"),
     "inertie_batiment": os.path.join(configs_path, "inertie_batiment.yaml"),
@@ -42,12 +57,22 @@ abaques_configs = {
     "Rd_systeme_chauffage": os.path.join(configs_path, "Rd_systeme_chauffage.yaml"),
     "Rr_systeme_chauffage": os.path.join(configs_path, "Rr_systeme_chauffage.yaml"),
     "Rg": os.path.join(configs_path, "Rg.yaml"),
-    "coef_correction_regulation": os.path.join(configs_path, "coef_correction_regulation.yaml"),
+    "coef_correction_regulation": os.path.join(
+        configs_path, "coef_correction_regulation.yaml"
+    ),
     "Rd_ecs": os.path.join(configs_path, "Rd_ecs.yaml"),
-    "coef_emplacement_fonctionnement": os.path.join(configs_path, "coef_emplacement_fonctionnement.yaml"),
+    "coef_emplacement_fonctionnement": os.path.join(
+        configs_path, "coef_emplacement_fonctionnement.yaml"
+    ),
     "conversion_kwh_co2": os.path.join(configs_path, "conversion_kwh_co2.yaml"),
     "convertion_energie_phi": os.path.join(configs_path, "convertion_energie_phi.yaml"),
     "zone_info": os.path.join(configs_path, "zone_info.yaml"),
+    "fecs": os.path.join(configs_path, "fecs.yaml"),
+    "Rs_ecs": os.path.join(configs_path, "Rs_ecs.yaml"),
+    "Rg_ecs": os.path.join(configs_path, "Rg_ecs.yaml"),
+    "Rg_ecs_pac": os.path.join(configs_path, "Rg_ecs_pac.yaml"),
+    "seer_clim": os.path.join(configs_path, "seer_clim.yaml"),
+    "heure_eclairage": os.path.join(configs_path, "heure_eclairage.yaml"),
 }
 
 # department
@@ -239,39 +264,79 @@ abaques_configs = {
 # Abaque(tv016bis_departement.csv)
 # Keys: ['altitude', 'month', 'zone_climatique', 'inertie']
 # Values: ['E-pv(kWh/m²)', 'Text(°C)', 'E(kWh/m²)', 'Nref(19°C)', 'DH19(°Ch)', 'DH14(°Ch)', 'Tefs(°C)', 'Nref(21°C)', 'DH21(°Ch)', 'Textmoy_clim(°C)Tcons=26°C', 'Textmoy_clim(°C)Tcons=28°C', 'E_fr(kWh/m²)Tcons=26°C', 'E_fr(kWh/m²)Tcons=28°C', 'Nref(26°C)', 'Nref(28°C)', 'DH26(°Ch)', 'DH28(°Ch)']
-        
 
+# fecs
+# Abaque(tv019bis_fecs.csv)
+# Keys: ['type_batiment', 'type_installation', 'zone_climatique']
+# Values: ['fecs']
+
+# Rs_ecs
+# Abaque(tv049bis_rendement_stockage_ecs.csv)
+# Keys: ['type_stockage', 'category_stockage', 'volume_stockage']
+# Values: ['Cr']
+
+# Rg_ecs
+# Abaque(tv047bis_rendement_generation_ecs.csv)
+# Keys: ['annee_generateur', 'puissance_nominale']
+# Values: ['Rpn', 'Qp0', 'Pveilleuse']
+
+# Rg_ecs_pac
+# Abaque(tv047bis_rendement_generation_ecs_pac.csv)
+# Keys: ['annee_generateur', 'zone_hiver', 'type_pac']
+# Values: ['COP']
+
+     
+# heure_eclairage
+# Abaque(tv0xx_heure_ecl.csv)
+# Keys: ['month', 'zone_climatique']
+# Values: ['Nh']
+        
 
 class DPEInput(BaseModel):
     postal_code: str  # 5 digits
-    adress: str = None
-    city: str = None
-    country: str = None
-    type_batiment: str = None  # ['Maison individuelle', 'Logement collectif', 'Tous bâtiments']
+    adress: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None
+    type_batiment: Optional[str] = (
+        None  # ['Maison individuelle', 'Logement collectif', 'Tous bâtiments']
+    )
     usage: str = "Conventionnel"  # ['Conventionnel', 'Dépensier']
-    altitude: float = None
-    surface_habitable: float = None
+    altitude: Optional[float] = None
+    surface_habitable: Optional[float] = None
     nb_logements: int = 1
-    hauteur_sous_plafond: float = None
-    annee_construction: int = None
+    hauteur_sous_plafond: Optional[float] = None
+    annee_construction: Optional[int] = None
 
     ## Enveloppe
-    parois: dict = None
-    vitrages: dict = None
-    ponts_thermiques: dict = None
+    parois: Optional[dict] = None
+    vitrages: Optional[dict] = None
+    ponts_thermiques: Optional[dict] = None
 
-    type_ventilation: str = None
-    q4paconv: float = None  # permeabilite de l'enveloppe, si isolation faite récemment
+    type_ventilation: Optional[str] = None
+    q4paconv: Optional[float] = (
+        None  # permeabilite de l'enveloppe, si isolation faite récemment
+    )
 
     ## Installations
-    type_installation: str = None  #'Chauffage Individuel', 'Chauffage Collectif'
-    type_chauffage: str = None  # 'Central', 'Divisé'
-    type_regulation: str = None  #'Avec régulation pièce par pièce', 'Sans régulation pièce par pièce'
-    type_emetteur: str = None  #'Planchers chauffant', 'Autres systèmes', 'Air soufflé','Radiateurs'
-    equipement_intermittence: str = (
+    type_installation: Optional[str] = (
+        None  #'Chauffage Individuel', 'Chauffage Collectif'
+    )
+    type_chauffage: Optional[str] = None  # 'Central', 'Divisé'
+    type_regulation: Optional[str] = (
+        None  #'Avec régulation pièce par pièce', 'Sans régulation pièce par pièce'
+    )
+    type_emetteur: Optional[str] = (
+        None  #'Planchers chauffant', 'Autres systèmes', 'Air soufflé','Radiateurs'
+    )
+    equipement_intermittence: Optional[str] = (
         None  #'Absent', 'Central sans minimum de température', 'Central avec minimum de température', 'Par pièce avec minimum de température', 'NULL', 'Central Collectif'
     )
-    comptage_individuel: str = None  # 'NULL', 'Absent', 'Présent'
+    comptage_individuel: Optional[str] = None  # 'NULL', 'Absent', 'Présent'
+
+    type_installation_fecs: Optional[str] = (
+        None  # 'Chauffage solaire (seul ou combiné)', 'ECS solaire seule > 5 ans', 'ECS solaire seule ≤ 5 ans', 'Chauffage + ECS solaire'
+    )
+    installations: Optional[dict] = None  # ECS, Chauffage, PAC ...
 
 
 months_days = {
@@ -286,8 +351,9 @@ months_days = {
     "Septembre": 30,
     "Octobre": 31,
     "Novembre": 30,
-    "Décembre": 24
+    "Décembre": 24,
 }
+
 
 class DPE:
     def __init__(self, configs=abaques_configs):
@@ -297,6 +363,8 @@ class DPE:
         self.parois_processor = Paroi(self.abaques)
         self.vitrage_processor = Vitrage(self.abaques)
         self.pont_thermique_processor = PontThermique(self.abaques)
+        self.ecs_processor = ECS(self.abaques)
+        self.clim_processor = Climatisation(self.abaques)
 
         self.months = list(months_days.keys())
 
@@ -319,7 +387,6 @@ class DPE:
         ## Calcul Inertie
         dpe = self._calc_inertie(dpe)
 
-
         ## Get info based on inertie, altitude etc.
         dpe = self._calc_geographics_bis(dpe)
 
@@ -336,23 +403,24 @@ class DPE:
         dpe = self._calc_intermitence(dpe)
 
         ## Consommation ECS
-        dpe["Tefsj"] = np.array([self.abaques["zone_info"]({'inertie': dpe['inertie_globale'] ,'altitude': dpe['altitude_1'], 'month': elt, 'zone_climatique': dpe['zone_climatique']}, 'Tefs(°C)') for elt in self.months])
-        
-        if dpe['usage'] == 'Conventionnel':
-            dpe['Nlmoy'] = 56
+        dpe = self._calc_consommation_ecs(dpe)
+
+        ## Consommation Froids
+        n_clim=0
+        for installation in dpe["installations"]:
+            if "clim" in installation:
+                clim_input = ClimatisationInput(**dpe["installations"][installation])
+                dpe["installations"][installation] = self.clim_processor.forward(
+                    dpe, clim_input
+                )
+                n_clim+=1
+        if n_clim==0:
+            dpe["Cfr"] = 0
         else:
-            dpe['Nlmoy'] = 79
+            dpe["Cfr"] = np.array([dpe["installations"][installation]["Cfr"] for installation in dpe["installations"] if 'clim' in installation]).sum()
 
-        dpe['nj'] = np.array(list(map(lambda x: months_days[x], self.months)))
-        dpe['Becsj'] = 1.163 * dpe['Nadeq'] * dpe['Nlmoy'] * (40 - dpe['Tefsj']) * dpe['nj']
-
-
-        
-
-
-
-        # dpe['Nhj'] = np.array([self.abaques['zone_info']({'altitude': dpe['altitude_1'], 'month': elt, 'zone_climatique': dpe['zone_climatique']}, 'Nref(19°C)') for elt in self.months])
-        # dpe['Ceclj'] = dpe['surface_habitable'] * 0.9 * 1.4
+        ## Calcul des besoins d'éclairage
+        dpe = self._calc_consommation_eclairage(dpe)
 
         return dpe
 
@@ -370,9 +438,67 @@ class DPE:
         # Implementation for returning valid inputs
         pass
 
+    def _calc_consommation_eclairage(self, dpe):
+        Pecl=1.4
+        C=0.9
+        dpe["Cecl_j"] = Pecl * 0.9 * dpe['Nhj'] * dpe['surface_habitable']
+        dpe["Cecl"] = dpe["Cecl_j"].sum() / 1000
+        return dpe
+
+    def _calc_consommation_ecs(self, dpe):
+        dpe["Tefsj"] = np.array(
+            [
+                self.abaques["zone_info"](
+                    {
+                        "inertie": dpe["inertie_globale"],
+                        "altitude": dpe["altitude_1"],
+                        "month": elt,
+                        "zone_climatique": dpe["zone_climatique"],
+                    },
+                    "Tefs(°C)",
+                )
+                for elt in self.months
+            ]
+        )
+
+        if dpe["usage"] == "Conventionnel":
+            dpe["Nlmoy"] = 56
+        else:
+            dpe["Nlmoy"] = 79
+
+        dpe["nj"] = np.array(list(map(lambda x: months_days[x], self.months)))
+        dpe["Becsj"] = (
+            1.163 * dpe["Nadeq"] * dpe["Nlmoy"] * (40 - dpe["Tefsj"]) * dpe["nj"]
+        )
+        dpe["Becs"] = dpe["Becsj"].sum()
+
+        if dpe["type_installation_fecs"]:
+            dpe["fecs"] = self.abaques["fecs"](
+                {
+                    "type_batiment": dpe["type_batiment"],
+                    "type_installation": dpe["type_installation_fecs"],
+                    "zone_climatique": dpe["zone_climatique"],
+                },
+                "fecs",
+            )
+        else:
+            dpe["fecs"] = 0
+
+        Iecs = []
+        for installation in dpe["installations"]:
+            if "ecs" in installation:
+                ecs_input = EcsInput(**dpe["installations"][installation])
+                dpe["installations"][installation] = self.ecs_processor.forward(
+                    dpe, ecs_input
+                )
+                Iecs.append(dpe["installations"][installation]["Iecs"])
+        dpe["Iecs"] = np.mean(Iecs)
+        dpe["Cecs"] = dpe["Becs"] * dpe["Iecs"] * (1 - dpe["fecs"]) / 1000
+        return dpe
+
     def _calc_intermitence(self, dpe):
         dpe["G"] = dpe["GV"] / (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"])
-  
+
         dpe["INT"] = self.abaques["I0_intermittence"](
             {
                 "type_batiment": dpe["type_batiment"],
@@ -380,7 +506,7 @@ class DPE:
                 "type_chauffage": dpe["type_chauffage"],
                 "type_regulation": dpe["type_regulation"],
                 "type_emetteur": dpe["type_emetteur"],
-                "inertie": dpe['inertie_globale'],
+                "inertie": dpe["inertie_globale"],
                 "equipement_intermittence": dpe["equipement_intermittence"],
                 "comptage_individuel": dpe["comptage_individuel"],
             },
@@ -389,17 +515,31 @@ class DPE:
         return dpe
 
     def _calc_apports_solaire(self, dpe):
-        dpe["ssej"] = np.array([vitre["ssej"] for id, vitre in dpe["vitrages"].items()]).sum(axis=0)
+        dpe["ssej"] = np.array(
+            [vitre["ssej"] for id, vitre in dpe["vitrages"].items()]
+        ).sum(axis=0)
         dpe["Asj"] = dpe["ssej"] * dpe["Ej"] * 1000  ## todo : add veranda
-        dpe["Aij"] = ((3.18 + 0.34) * dpe["surface_habitable"] + 90 * (132 / 168) * dpe["Nadeq"]) * dpe["Nrefj"]
-        dpe["Xj"] = vectorized_safe_divide(dpe["Asj"] + dpe["Aij"], dpe["GV"] * dpe["Dhj"])
+
+        dpe["Ai_chj"] = (
+            (3.18 + 0.34) * dpe["surface_habitable"] + 90 * (132 / 168) * dpe["Nadeq"]
+        ) * dpe["Nref_chauffe_j"]
+        dpe["Ai_frj"] = (
+            (3.18 + 0.34) * dpe["surface_habitable"] + 90 * (132 / 168) * dpe["Nadeq"]
+        ) * dpe["Nref_froids_j"]
+        dpe["Aij"] = dpe["Ai_chj"] + dpe["Ai_frj"]
+        dpe["Xj"] = vectorized_safe_divide(
+            dpe["Asj"] + dpe["Aij"], dpe["GV"] * dpe["DHj"]
+        )
         dpe["Fj"] = vectorized_safe_divide(
-            dpe["Xj"] - dpe["Xj"] ** dpe["coef_inertie"], 1 - dpe["Xj"] ** dpe["coef_inertie"]
+            dpe["Xj"] - dpe["Xj"] ** dpe["coef_inertie"],
+            1 - dpe["Xj"] ** dpe["coef_inertie"],
         )
         return dpe
 
     def _calc_n_adeq(self, dpe):
-        dpe["surface_habitable_moyenne"] = dpe["surface_habitable"] / dpe["nb_logements"]
+        dpe["surface_habitable_moyenne"] = (
+            dpe["surface_habitable"] / dpe["nb_logements"]
+        )
         if dpe["type_batiment"] == "Maison individuelle":
             t1, t2, c = 30, 70, 0.025
         else:
@@ -421,9 +561,15 @@ class DPE:
     def _calc_deperdition_enveloppe(self, dpe):
         parois = [paroi for id, paroi in dpe["parois"].items()]
         vitrages = [vitrage for id, vitrage in dpe["vitrages"].items()]
-        ponts_thermiques = [pont_thermique for id, pont_thermique in dpe["ponts_thermiques"].items()]
+        ponts_thermiques = [
+            pont_thermique for id, pont_thermique in dpe["ponts_thermiques"].items()
+        ]
         dpe["DP_mur"] = sum(
-            [paroi["U"] * paroi["surface_paroi"] * paroi["b"] for paroi in parois if paroi["type_paroi"] == "Mur"]
+            [
+                paroi["U"] * paroi["surface_paroi"] * paroi["b"]
+                for paroi in parois
+                if paroi["type_paroi"] == "Mur"
+            ]
         )
         dpe["DP_pb"] = sum(
             [
@@ -439,30 +585,58 @@ class DPE:
                 if paroi["type_paroi"] == "Plancher haut"
             ]
         )
-        dpe["DP_vitrage"] = sum([vitrage["U"] * vitrage["surface_vitrage"] * vitrage["b"] for vitrage in vitrages])
-        dpe["PT"] = sum([pont_thermique["d_pont"] for pont_thermique in ponts_thermiques])
+        dpe["DP_vitrage"] = sum(
+            [
+                vitrage["U"] * vitrage["surface_vitrage"] * vitrage["b"]
+                for vitrage in vitrages
+            ]
+        )
+        dpe["PT"] = sum(
+            [pont_thermique["d_pont"] for pont_thermique in ponts_thermiques]
+        )
         dpe["DR"] = dpe["Hvent"] + dpe["Hperm"]
-        dpe["GV"] = dpe["DP_mur"] + dpe["DP_pb"] + dpe["DP_ph"] + dpe["DP_vitrage"] + dpe["PT"] + dpe["DR"]
+        dpe["GV"] = (
+            dpe["DP_mur"]
+            + dpe["DP_pb"]
+            + dpe["DP_ph"]
+            + dpe["DP_vitrage"]
+            + dpe["PT"]
+            + dpe["DR"]
+        )
         return dpe
 
     def _calc_inertie(self, dpe):
         parois = [paroi for id, paroi in dpe["parois"].items()]
-        inerties_mur = [(paroi["inertie"], paroi["surface_paroi"]) for paroi in parois if paroi["type_paroi"] == "Mur"]
-        inerties_mur = sorted(inerties_mur, key=lambda x: x[1], reverse=True)[0][0] + "e"
+        inerties_mur = [
+            (paroi["inertie"], paroi["surface_paroi"])
+            for paroi in parois
+            if paroi["type_paroi"] == "Mur"
+        ]
+        inerties_mur = (
+            sorted(inerties_mur, key=lambda x: x[1], reverse=True)[0][0] + "e"
+        )
 
         inerties_plancher_bas = [
-            (paroi["inertie"], paroi["surface_paroi"]) for paroi in parois if paroi["type_paroi"] == "Plancher bas"
+            (paroi["inertie"], paroi["surface_paroi"])
+            for paroi in parois
+            if paroi["type_paroi"] == "Plancher bas"
         ]
         if len(inerties_plancher_bas) > 0:
-            inerties_plancher_bas = sorted(inerties_plancher_bas, key=lambda x: x[1], reverse=True)[0][0]
+            inerties_plancher_bas = sorted(
+                inerties_plancher_bas, key=lambda x: x[1], reverse=True
+            )[0][0]
         else:
             inerties_plancher_bas = "Léger"
 
         inerties_plancher_haut = [
-            (paroi["inertie"], paroi["surface_paroi"]) for paroi in parois if paroi["type_paroi"] == "Plancher haut"
+            (paroi["inertie"], paroi["surface_paroi"])
+            for paroi in parois
+            if paroi["type_paroi"] == "Plancher haut"
         ]
         if len(inerties_plancher_haut) > 0:
-            inerties_plancher_haut = sorted(inerties_plancher_haut, key=lambda x: x[1], reverse=True)[0][0]
+            inerties_plancher_haut = sorted(
+                inerties_plancher_haut, key=lambda x: x[1], reverse=True
+            )[0][0]
         else:
             inerties_plancher_haut = "Léger"
 
@@ -483,9 +657,9 @@ class DPE:
             dpe["coef_inertie"] = 3.6
 
         if dpe["inertie_batiment"] in ["Légère", "Moyenne"]:
-            dpe['inertie_globale'] = "Légère ou Moyenne"
+            dpe["inertie_globale"] = "Légère ou Moyenne"
         else:
-            dpe['inertie_globale'] = "Lourde ou Très lourde"
+            dpe["inertie_globale"] = "Lourde ou Très lourde"
         return dpe
 
     def __calc_enveloppe(self, dpe):
@@ -515,19 +689,35 @@ class DPE:
         ponts_thermiques = []
         for id, pont_thermique in dpe["ponts_thermiques"].items():
             pont_thermique_input = PontThermiqueInput(**pont_thermique)
-            dpe["ponts_thermiques"][id] = self.pont_thermique_processor.forward(dpe, pont_thermique_input)
+            dpe["ponts_thermiques"][id] = self.pont_thermique_processor.forward(
+                dpe, pont_thermique_input
+            )
         return dpe
 
     def _calc_geographics(self, dpe):
         if dpe["usage"] == "Conventionnel":
-            dpe["DH"] = "DH19(°Ch)"
-            dpe["Nref"] = "Nref(19°C)"
+            dpe["DH_chauffe"] = "DH19(°Ch)"
+            dpe["DH_froids"] = "DH28(°Ch)"
+            dpe["Nref_chauffe"] = "Nref(19°C)"
+            dpe["Nref_froids"] = "Nref(28°C)"
+            dpe["Textmoy_clim"] = "Textmoy_clim(°C)Tcons=26°C"
+            dpe['Tint_froids']= 28
+            dpe['Tint_chauffe']= 19
+            dpe['E_fr']="E_fr(kWh/m²)Tcons=28°C"
         else:
-            dpe["DH"] = "DH21(°Ch)"
-            dpe["Nref"] = "Nref(21°C)"
+            dpe["DH_chauffe"] = "DH21(°Ch)"
+            dpe["Nref_chauffe"] = "Nref(21°C)"
+            dpe["DH_froids"] = "DH26(°Ch)"
+            dpe["Nref_froids"] = "Nref(26°C)"
+            dpe["Textmoy_clim"] = "Textmoy_clim(°C)Tcons=28°C"
+            dpe['Tint_froids']= 26
+            dpe['Tint_chauffe']= 21
+            dpe['E_fr']="E_fr(kWh/m²)Tcons=26°C"
 
         dpe["department"] = int(dpe["postal_code"][:2])
-        dpe["zone_climatique"] = self.abaques["department"]({"id": dpe["department"]}, "zone_climatique")
+        dpe["zone_climatique"] = self.abaques["department"](
+            {"id": dpe["department"]}, "zone_climatique"
+        )
         if dpe["zone_climatique"][:2] == "H3":
             dpe["zone_climatique"] = "H3"
         dpe["zone_hiver"] = dpe["zone_climatique"][:2]
@@ -538,10 +728,8 @@ class DPE:
                 + self.abaques["department"]({"id": dpe["department"]}, "altmax")
             ) / 2
 
-
-
         return dpe
-    
+
     def _calc_geographics_bis(self, dpe):
         if dpe["altitude"] < 400:
             dpe["altitude_1"] = 400
@@ -550,39 +738,118 @@ class DPE:
         else:
             dpe["altitude_1"] = 8000
 
-        dpe["t_ext_basse"] = self.abaques["department"]({"id": dpe["department"]}, "t_ext_basse")
+        dpe["t_ext_basse"] = self.abaques["department"](
+            {"id": dpe["department"]}, "t_ext_basse"
+        )
 
-
-        dpe["Dhj"] = np.array(
+        dpe["Dh_chauffe_j"] = np.array(
             [
                 self.abaques["zone_info"](
-                    {"inertie":dpe['inertie_globale'],"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]}, dpe["DH"]
+                    {
+                        "inertie": dpe["inertie_globale"],
+                        "altitude": dpe["altitude_1"],
+                        "month": elt,
+                        "zone_climatique": dpe["zone_climatique"],
+                    },
+                    dpe["DH_chauffe"],
                 )
                 for elt in self.months
             ]
         )
-        dpe["Nrefj"] = np.array(
+
+        dpe["Dh_froids_j"] = np.array(
             [
                 self.abaques["zone_info"](
-                    {"inertie":dpe['inertie_globale'],"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]},
-                    dpe["Nref"],
+                    {
+                        "inertie": dpe["inertie_globale"],
+                        "altitude": dpe["altitude_1"],
+                        "month": elt,
+                        "zone_climatique": dpe["zone_climatique"],
+                    },
+                    dpe["DH_froids"],
                 )
                 for elt in self.months
             ]
         )
-        dpe["Ej"] = np.array(
+
+        dpe["Textmoy_clim_j"] = np.array(
             [
                 self.abaques["zone_info"](
-                    {"inertie":dpe['inertie_globale'],"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]},
+                    {
+                        "inertie": dpe["inertie_globale"],
+                        "altitude": dpe["altitude_1"],
+                        "month": elt,
+                        "zone_climatique": dpe["zone_climatique"],
+                    },
+                    dpe["Textmoy_clim"],
+                )
+                for elt in self.months
+            ]
+        )
+
+        dpe["Nref_chauffe_j"] = np.array(
+            [
+                self.abaques["zone_info"](
+                    {
+                        "inertie": dpe["inertie_globale"],
+                        "altitude": dpe["altitude_1"],
+                        "month": elt,
+                        "zone_climatique": dpe["zone_climatique"],
+                    },
+                    dpe["Nref_chauffe"],
+                )
+                for elt in self.months
+            ]
+        )
+
+        dpe["Nref_froids_j"] = np.array(
+            [
+                self.abaques["zone_info"](
+                    {
+                        "inertie": dpe["inertie_globale"],
+                        "altitude": dpe["altitude_1"],
+                        "month": elt,
+                        "zone_climatique": dpe["zone_climatique"],
+                    },
+                    dpe["Nref_froids"],
+                )
+                for elt in self.months
+            ]
+        )
+
+        dpe["DHj"] = dpe["Dh_chauffe_j"] + dpe["Dh_froids_j"] 
+        dpe["Nrefj"] = dpe["Nref_chauffe_j"] + dpe["Nref_froids_j"]
+
+        dpe["E_chauffe_j"] = np.array(
+            [
+                self.abaques["zone_info"](
+                    {
+                        "inertie": dpe["inertie_globale"],
+                        "altitude": dpe["altitude_1"],
+                        "month": elt,
+                        "zone_climatique": dpe["zone_climatique"],
+                    },
                     "E(kWh/m²)",
                 )
                 for elt in self.months
             ]
         )
+
+        dpe['Nhj'] = np.array([self.abaques['heure_eclairage']({'month': elt, 'zone_climatique': dpe['zone_climatique']}, 'Nh') for elt in self.months])
+
+        dpe['E_froids_j']=np.array([self.abaques['zone_info']({'inertie': dpe['inertie_globale'], 'altitude': dpe['altitude_1'], 'month': elt, 'zone_climatique': dpe['zone_climatique']}, dpe['E_fr']) for elt in self.months])
+        dpe['Ej']=dpe['E_chauffe_j'] + dpe['E_froids_j']
+
         dpe["Textj"] = np.array(
             [
                 self.abaques["zone_info"](
-                    {"inertie":dpe['inertie_globale'],"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]}, "Text(°C)"
+                    {
+                        "inertie": dpe["inertie_globale"],
+                        "altitude": dpe["altitude_1"],
+                        "month": elt,
+                        "zone_climatique": dpe["zone_climatique"],
+                    },
+                    "Text(°C)",
                 )
                 for elt in self.months
             ]
@@ -593,7 +860,11 @@ class DPE:
 
         if dpe["q4paconv"] is None:
             q4paconv = self.abaques["permeabilite_batiment"](
-                {"type_batiment": dpe["type_batiment"], "annee_construction_max": dpe["annee_construction"]}, "q4paconv"
+                {
+                    "type_batiment": dpe["type_batiment"],
+                    "annee_construction_max": dpe["annee_construction"],
+                },
+                "q4paconv",
             )
         else:
             q4paconv = dpe["q4paconv"]
@@ -601,20 +872,36 @@ class DPE:
         sh = dpe["surface_habitable"]
         hsp = dpe["hauteur_sous_plafond"]
 
-        nb_facade_exposee = len([paroi for id, paroi in dpe["parois"].items() if paroi["type_paroi"] == "Mur"])
+        nb_facade_exposee = len(
+            [
+                paroi
+                for id, paroi in dpe["parois"].items()
+                if paroi["type_paroi"] == "Mur"
+            ]
+        )
         if nb_facade_exposee > 1:
             e, f = 0.07, 15
         else:
             e, f = 0.02, 20
 
         type_ventilation = dpe["type_ventilation"]
-        qvarepconv = self.abaques["renouvellement_air"]({"type_ventilation": type_ventilation}, "Qvarepconv")
-        qvasoufconv = self.abaques["renouvellement_air"]({"type_ventilation": type_ventilation}, "Qvasoufconv")
-        smeaconv = self.abaques["renouvellement_air"]({"type_ventilation": type_ventilation}, "Smeaconv")
+        qvarepconv = self.abaques["renouvellement_air"](
+            {"type_ventilation": type_ventilation}, "Qvarepconv"
+        )
+        qvasoufconv = self.abaques["renouvellement_air"](
+            {"type_ventilation": type_ventilation}, "Qvasoufconv"
+        )
+        smeaconv = self.abaques["renouvellement_air"](
+            {"type_ventilation": type_ventilation}, "Smeaconv"
+        )
 
         ## Somme des surfaces hors plancher bas
         sdep = sum(
-            [paroi["surface_paroi"] for id, paroi in dpe["parois"].items() if paroi["type_paroi"] != "Plancher bas"]
+            [
+                paroi["surface_paroi"]
+                for id, paroi in dpe["parois"].items()
+                if paroi["type_paroi"] != "Plancher bas"
+            ]
         )
 
         q4paenv = q4paconv * sh

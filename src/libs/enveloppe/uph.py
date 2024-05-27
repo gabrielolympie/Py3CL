@@ -73,7 +73,9 @@ class UParoiProcessorPh(BaseProcessor):
             uparoi_nu = 2.5
 
         if isolation is None:
-            uparoi_table = self._calc_uparoi_table(type_toit, annee_construction, zone_climatique, effet_joule)
+            uparoi_table = self._calc_uparoi_table(
+                type_toit, annee_construction, zone_climatique, effet_joule
+            )
             return min(uparoi_nu, uparoi_table)
         elif isolation is False:
             return uparoi_nu
@@ -95,7 +97,9 @@ class UParoiProcessorPh(BaseProcessor):
                         annee_isolation = 76
                     else:
                         annee_isolation = annee_construction
-                uparoi_table = self._calc_uparoi_table(annee_isolation, zone_climatique, 1)
+                uparoi_table = self._calc_uparoi_table(
+                    annee_isolation, zone_climatique, 1
+                )
                 return min(uparoi_nu, uparoi_table)
 
     def _calc_uparoi_table(
@@ -113,8 +117,12 @@ class UParoiProcessorPh(BaseProcessor):
             - zone_climatique (str): Zone climatique, in ['H1', 'H2', 'H3']
             - effet_joule (float): Effet joule, in [0, 1], is computation is for isolation, put zero. Is computation is for construction and heating is done with electricity, then put 1
         """
-        assert type_toit is not None, "type_toit is required in uparoi table calculation"
-        assert type_toit in self.valid_ph_type, f"type_toit should be in {self.valid_ph_type}"
+        assert (
+            type_toit is not None
+        ), "type_toit is required in uparoi table calculation"
+        assert (
+            type_toit in self.valid_ph_type
+        ), f"type_toit should be in {self.valid_ph_type}"
         assert (
             annee_construction_isolation is not None
         ), "anne_construction_isolation is required in uparoi table calculation"
@@ -123,22 +131,34 @@ class UParoiProcessorPh(BaseProcessor):
             "H2",
             "H3",
         ], "zone_climatique is required in uparoi table calculation and with a value in ['H1', 'H2', 'H3']"
-        assert effet_joule is not None, "effet_joule is required in uparoi table calculation"
+        assert (
+            effet_joule is not None
+        ), "effet_joule is required in uparoi table calculation"
 
-        idx_year = np.where(annee_construction_isolation <= self.uparoi_table_max_years)[0][0]
+        idx_year = np.where(
+            annee_construction_isolation <= self.uparoi_table_max_years
+        )[0][0]
         year = self.uparoi_table_max_years[idx_year]
-        uparoi_0 = self.uparoi_table.loc[(type_toit, year, zone_climatique, effet_joule)]
+        uparoi_0 = self.uparoi_table.loc[
+            (type_toit, year, zone_climatique, effet_joule)
+        ]
         return uparoi_0
 
-    def _calc_harmonic_mean(self, uparoi_nu: float = None, r_isolant: float = None) -> float:
+    def _calc_harmonic_mean(
+        self, uparoi_nu: float = None, r_isolant: float = None
+    ) -> float:
         """Calcule la moyenne harmonique entre l'uparoi nu et l'uparoi de l'isolant
 
         Args:
             - uparoi_nu (float): uparoi nu
             - r_isolant (float): R de l'isolant
         """
-        assert uparoi_nu is not None, "uparoi_nu is required in harmonic mean calculation"
-        assert r_isolant is not None, "r_isolant is required in harmonic mean calculation"
+        assert (
+            uparoi_nu is not None
+        ), "uparoi_nu is required in harmonic mean calculation"
+        assert (
+            r_isolant is not None
+        ), "r_isolant is required in harmonic mean calculation"
         return 1 / (1 / uparoi_nu + r_isolant)
 
     def _calc_uparoi_0(
@@ -151,7 +171,9 @@ class UParoiProcessorPh(BaseProcessor):
             - materiaux (str): Materiaux de la paroi
         """
         assert materiaux is not None, "materiaux is required in uparoi0 calculation"
-        assert materiaux in self.valid_ph_materiaux, f"materiaux should be in {self.valid_ph_materiaux}"
+        assert (
+            materiaux in self.valid_ph_materiaux
+        ), f"materiaux should be in {self.valid_ph_materiaux}"
 
         return self.uparoi0.loc[materiaux]
 
@@ -181,7 +203,9 @@ class UParoiProcessorPh(BaseProcessor):
 
     def _preprocess_uparoi_materiaux(self):
         self.valid_ph_type = self.uparoi_materiaux["type_toit"].unique()
-        self.type_toit_id = self.uparoi_materiaux.set_index("id", drop=True)["type_toit"].to_dict()
+        self.type_toit_id = self.uparoi_materiaux.set_index("id", drop=True)[
+            "type_toit"
+        ].to_dict()
 
     def _preprocess_uparoi0(self):
         self.valid_ph_materiaux = self.uparoi0["materiaux"].unique()
@@ -190,11 +214,15 @@ class UParoiProcessorPh(BaseProcessor):
 
     def _preprocess_uparoi_table(self):
         self.uparoi_table = self.uparoi_table.dropna(subset="annee_construction")
-        self.uparoi_table["zone_climatique"] = self.uparoi_table["tv017_zone_hiver_id"].replace(
-            {1: "H1", 2: "H2", 3: "H3"}
+        self.uparoi_table["zone_climatique"] = self.uparoi_table[
+            "tv017_zone_hiver_id"
+        ].replace({1: "H1", 2: "H2", 3: "H3"})
+        self.uparoi_table["type_toit"] = self.uparoi_table[
+            "tv007_uph_type_toit_id"
+        ].replace(self.type_toit_id)
+        self.uparoi_table_max_years = (
+            self.uparoi_table["annee_construction_max"].sort_values().unique()
         )
-        self.uparoi_table["type_toit"] = self.uparoi_table["tv007_uph_type_toit_id"].replace(self.type_toit_id)
-        self.uparoi_table_max_years = self.uparoi_table["annee_construction_max"].sort_values().unique()
         self.uparoi_table = self.uparoi_table.set_index(
             ["type_toit", "annee_construction_max", "zone_climatique", "effet_joule"],
             drop=True,

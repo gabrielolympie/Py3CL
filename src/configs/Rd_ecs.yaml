@@ -11,6 +11,11 @@ keys:
   key_type: cat
 - key_name: pieces_alimentees_contigues
   key_type: cat
+mapping:
+- col: production_volume_habitable
+  function: 'lambda x: True if x == 1 elif False if x == 0 else None'
+- col:  pieces_alimentees_contigues
+  function: 'lambda x: True if x == 1 elif False if x == 0 else None'
 refs:
 - col: tv040_rendement_distribution_ecs_type_installation_id
   file: tv040_rendement_distribution_ecs_type_installation.csv

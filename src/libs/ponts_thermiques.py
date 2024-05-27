@@ -30,7 +30,9 @@ class PontThermiqueInput(BaseModel):
     type_liaison: str = (
         None  # Menuiserie / Mur, Plancher bas / Mur, Plancher haut lourd / Mur, Plancher intermédiaire lourd / Mur, Refend / Mur, Menuiserie / Plancher haut
     )
-    isolation_mur: str = None  # ITE, ITE+ITR, ITI, ITI+ITE, ITI+ITR, ITR, Non isolé, MOB, Inconnu
+    isolation_mur: str = (
+        None  # ITE, ITE+ITR, ITI, ITI+ITE, ITI+ITR, ITR, Non isolé, MOB, Inconnu
+    )
     isolation_plancher_bas: str = None  # ITE, ITE+ITI, ITI, Non isolé, Inconnu
     type_pose: str = None  # Nu extérieur, Nu intérieur, Tunnel
     retour_isolation: str = None  # Avec, Sans

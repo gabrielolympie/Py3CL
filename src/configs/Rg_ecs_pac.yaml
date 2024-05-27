@@ -1,15 +1,13 @@
 # Description: Configuration file
 # Order of the operations: rename -> filter -> refs -> mapping -> reduce
 data_path: ../data/raw
-file: tv047bis_rendement_generation_ecs.csv
+file: tv047bis_rendement_generation_ecs_pac.csv
 keys:
 - key_name: annee_generateur
   key_type: num
-- key_name: puissance_nominale
+- key_name: zone_hiver
   key_type: cat
-rename:
-  ancienneté: annee_generateur
+- key_name: type_pac
+  key_type: cat
 values:
-- Rpn
-- Qp0
-- Pveilleuse
+- COP
