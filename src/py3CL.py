@@ -237,8 +237,9 @@ abaques_configs = {
 
 # zone_info
 # Abaque(tv016bis_departement.csv)
-# Keys: ['altitude', 'month', 'zone_climatique']
-# Values: ['E(kWh/m²)', 'Text(°C)', 'Nref(19°C)', 'Nref(21°C)', 'DH14(°Ch)', 'DH19(°Ch)', 'DH21(°Ch)']
+# Keys: ['altitude', 'month', 'zone_climatique', 'inertie']
+# Values: ['E-pv(kWh/m²)', 'Text(°C)', 'E(kWh/m²)', 'Nref(19°C)', 'DH19(°Ch)', 'DH14(°Ch)', 'Tefs(°C)', 'Nref(21°C)', 'DH21(°Ch)', 'Textmoy_clim(°C)Tcons=26°C', 'Textmoy_clim(°C)Tcons=28°C', 'E_fr(kWh/m²)Tcons=26°C', 'E_fr(kWh/m²)Tcons=28°C', 'Nref(26°C)', 'Nref(28°C)', 'DH26(°Ch)', 'DH28(°Ch)']
+        
 
 
 class DPEInput(BaseModel):
@@ -273,6 +274,21 @@ class DPEInput(BaseModel):
     comptage_individuel: str = None  # 'NULL', 'Absent', 'Présent'
 
 
+months_days = {
+    "Janvier": 31,
+    "Février": 28,
+    "Mars": 31,
+    "Avril": 30,
+    "Mai": 31,
+    "Juin": 30,
+    "Juillet": 31,
+    "Août": 31,
+    "Septembre": 30,
+    "Octobre": 31,
+    "Novembre": 30,
+    "Décembre": 24
+}
+
 class DPE:
     def __init__(self, configs=abaques_configs):
         self.configs = configs
@@ -282,20 +298,7 @@ class DPE:
         self.vitrage_processor = Vitrage(self.abaques)
         self.pont_thermique_processor = PontThermique(self.abaques)
 
-        self.months = [
-            "Janvier",
-            "Février",
-            "Mars",
-            "Avril",
-            "Mai",
-            "Juin",
-            "Juillet",
-            "Août",
-            "Septembre",
-            "Octobre",
-            "Novembre",
-            "Décembre",
-        ]
+        self.months = list(months_days.keys())
 
     def forward(self, kwargs: DPEInput):
         ## Warning you who read this code, each function is used in a given order, changing this order will likelly break the code
@@ -316,6 +319,10 @@ class DPE:
         ## Calcul Inertie
         dpe = self._calc_inertie(dpe)
 
+
+        ## Get info based on inertie, altitude etc.
+        dpe = self._calc_geographics_bis(dpe)
+
         ## Calcul deperdition enveloppe
         dpe = self._calc_deperdition_enveloppe(dpe)
 
@@ -326,26 +333,24 @@ class DPE:
         dpe["BVj"] = dpe["GV"] * (1 - dpe["Fj"])
 
         ## Calcul Coefficient d'intermittence
-        dpe["G"] = dpe["GV"] / (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"])
-        if dpe["inertie_batiment"] in ["Légère", "Moyenne"]:
-            inertie = "Légère ou Moyenne"
-        else:
-            inertie = "Lourde ou Très lourde"
-        dpe["INT"] = self.abaques["I0_intermittence"](
-            {
-                "type_batiment": dpe["type_batiment"],
-                "type_installation": dpe["type_installation"],
-                "type_chauffage": dpe["type_chauffage"],
-                "type_regulation": dpe["type_regulation"],
-                "type_emetteur": dpe["type_emetteur"],
-                "inertie": inertie,
-                "equipement_intermittence": dpe["equipement_intermittence"],
-                "comptage_individuel": dpe["comptage_individuel"],
-            },
-            "I0",
-        )
+        dpe = self._calc_intermitence(dpe)
 
-        ## Calcul de la consommation d'éclairage
+        ## Consommation ECS
+        dpe["Tefsj"] = np.array([self.abaques["zone_info"]({'inertie': dpe['inertie_globale'] ,'altitude': dpe['altitude_1'], 'month': elt, 'zone_climatique': dpe['zone_climatique']}, 'Tefs(°C)') for elt in self.months])
+        
+        if dpe['usage'] == 'Conventionnel':
+            dpe['Nlmoy'] = 56
+        else:
+            dpe['Nlmoy'] = 79
+
+        dpe['nj'] = np.array(list(map(lambda x: months_days[x], self.months)))
+        dpe['Becsj'] = 1.163 * dpe['Nadeq'] * dpe['Nlmoy'] * (40 - dpe['Tefsj']) * dpe['nj']
+
+
+        
+
+
+
         # dpe['Nhj'] = np.array([self.abaques['zone_info']({'altitude': dpe['altitude_1'], 'month': elt, 'zone_climatique': dpe['zone_climatique']}, 'Nref(19°C)') for elt in self.months])
         # dpe['Ceclj'] = dpe['surface_habitable'] * 0.9 * 1.4
 
@@ -364,6 +369,24 @@ class DPE:
     def get_valid_inputs(self):
         # Implementation for returning valid inputs
         pass
+
+    def _calc_intermitence(self, dpe):
+        dpe["G"] = dpe["GV"] / (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"])
+  
+        dpe["INT"] = self.abaques["I0_intermittence"](
+            {
+                "type_batiment": dpe["type_batiment"],
+                "type_installation": dpe["type_installation"],
+                "type_chauffage": dpe["type_chauffage"],
+                "type_regulation": dpe["type_regulation"],
+                "type_emetteur": dpe["type_emetteur"],
+                "inertie": dpe['inertie_globale'],
+                "equipement_intermittence": dpe["equipement_intermittence"],
+                "comptage_individuel": dpe["comptage_individuel"],
+            },
+            "I0",
+        )
+        return dpe
 
     def _calc_apports_solaire(self, dpe):
         dpe["ssej"] = np.array([vitre["ssej"] for id, vitre in dpe["vitrages"].items()]).sum(axis=0)
@@ -458,6 +481,11 @@ class DPE:
             dpe["coef_inertie"] = 2.9
         else:
             dpe["coef_inertie"] = 3.6
+
+        if dpe["inertie_batiment"] in ["Légère", "Moyenne"]:
+            dpe['inertie_globale'] = "Légère ou Moyenne"
+        else:
+            dpe['inertie_globale'] = "Lourde ou Très lourde"
         return dpe
 
     def __calc_enveloppe(self, dpe):
@@ -510,6 +538,11 @@ class DPE:
                 + self.abaques["department"]({"id": dpe["department"]}, "altmax")
             ) / 2
 
+
+
+        return dpe
+    
+    def _calc_geographics_bis(self, dpe):
         if dpe["altitude"] < 400:
             dpe["altitude_1"] = 400
         elif dpe["altitude"] < 800:
@@ -519,10 +552,11 @@ class DPE:
 
         dpe["t_ext_basse"] = self.abaques["department"]({"id": dpe["department"]}, "t_ext_basse")
 
+
         dpe["Dhj"] = np.array(
             [
                 self.abaques["zone_info"](
-                    {"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]}, dpe["DH"]
+                    {"inertie":dpe['inertie_globale'],"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]}, dpe["DH"]
                 )
                 for elt in self.months
             ]
@@ -530,7 +564,7 @@ class DPE:
         dpe["Nrefj"] = np.array(
             [
                 self.abaques["zone_info"](
-                    {"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]},
+                    {"inertie":dpe['inertie_globale'],"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]},
                     dpe["Nref"],
                 )
                 for elt in self.months
@@ -539,7 +573,7 @@ class DPE:
         dpe["Ej"] = np.array(
             [
                 self.abaques["zone_info"](
-                    {"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]},
+                    {"inertie":dpe['inertie_globale'],"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]},
                     "E(kWh/m²)",
                 )
                 for elt in self.months
@@ -548,12 +582,11 @@ class DPE:
         dpe["Textj"] = np.array(
             [
                 self.abaques["zone_info"](
-                    {"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]}, "Text(°C)"
+                    {"inertie":dpe['inertie_globale'],"altitude": dpe["altitude_1"], "month": elt, "zone_climatique": dpe["zone_climatique"]}, "Text(°C)"
                 )
                 for elt in self.months
             ]
         )
-
         return dpe
 
     def _calc_deperdition_flux_air(self, dpe):

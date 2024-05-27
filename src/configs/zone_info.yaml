@@ -9,13 +9,25 @@ keys:
   key_type: cat
 - key_name: zone_climatique
   key_type: cat
-
-# E(kWh/m²),Text(°C),Nref(19°C),DH19(°Ch),DH14(°Ch),Nref(21°C),DH21(°Ch)
+- key_name: inertie
+  key_type: cat
+# E-pv(kWh/m²),Text(°C),E(kWh/m²),Nref(19°C),DH19(°Ch),DH14(°Ch),Tefs(°C),Nref(21°C),DH21(°Ch),Textmoy_clim(°C)Tcons=26°C,Textmoy_clim(°C)Tcons=28°C,E_fr(kWh/m²)Tcons=26°C,E_fr(kWh/m²)Tcons=28°C,Nref(26°C),Nref(28°C),DH26(°Ch),DH28(°Ch)
 values:
-- E(kWh/m²)
+- E-pv(kWh/m²)
 - Text(°C)
+- E(kWh/m²)
 - Nref(19°C)
-- Nref(21°C)
-- DH14(°Ch)
 - DH19(°Ch)
+- DH14(°Ch)
+- Tefs(°C)
+- Nref(21°C)
 - DH21(°Ch)
+- Textmoy_clim(°C)Tcons=26°C
+- Textmoy_clim(°C)Tcons=28°C
+- E_fr(kWh/m²)Tcons=26°C
+- E_fr(kWh/m²)Tcons=28°C
+- Nref(26°C)
+- Nref(28°C)
+- DH26(°Ch)
+- DH28(°Ch)
+
