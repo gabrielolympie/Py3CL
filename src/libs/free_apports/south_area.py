@@ -190,9 +190,7 @@ class SouthAreaProcessor(BaseProcessor):
         if inclinaison_paroi == "Paroi Horizontale":
             orientation_paroi = "Paroi Horizontale"
 
-        return self.coefficient_orientation[
-            (zone, mois, orientation_paroi, inclinaison_paroi)
-        ]
+        return self.coefficient_orientation[(zone, mois, orientation_paroi, inclinaison_paroi)]
 
     def _calc_facteur_solaire(
         self,
@@ -277,9 +275,7 @@ class SouthAreaProcessor(BaseProcessor):
         assert (
             orientation in self.valid_orientation
         ), f"orientation must be in {self.valid_orientation} when type_masque is {type_masque}, got {orientation}"
-        return self.coefficient_masques_proches[
-            (type_masque, avancee, orientation, "Null", "Null")
-        ]
+        return self.coefficient_masques_proches[(type_masque, avancee, orientation, "Null", "Null")]
 
     def _calc_coefficient_masques_proches_4(
         self,
@@ -297,9 +293,7 @@ class SouthAreaProcessor(BaseProcessor):
             rapport_l1_l2 in self.valid_rapport_l1_l2
         ), f"rapport_l1_l2 must be in {self.valid_rapport_l1_l2} when type_masque is {type_masque}, got {rapport_l1_l2}"
 
-        return self.coefficient_masques_proches[
-            (type_masque, avancee, "Null", rapport_l1_l2, "Null")
-        ]
+        return self.coefficient_masques_proches[(type_masque, avancee, "Null", rapport_l1_l2, "Null")]
 
     def _calc_coefficient_masques_proches_5(
         self,
@@ -312,9 +306,7 @@ class SouthAreaProcessor(BaseProcessor):
         assert (
             beta_gama in self.valid_beta_gama
         ), f"beta_gama must be in {self.valid_beta_gama} when type_masque is {type_masque}, got {beta_gama}"
-        return self.coefficient_masques_proches[
-            (type_masque, "Null", "Null", "Null", beta_gama)
-        ]
+        return self.coefficient_masques_proches[(type_masque, "Null", "Null", "Null", beta_gama)]
 
     def _calc_coefficient_masques_lointains_homogenes(
         self,
@@ -322,19 +314,14 @@ class SouthAreaProcessor(BaseProcessor):
         orientation: str = None,
     ):
         assert (
-            hauteur_alpha
-            in self.valid_coefficient_masques_lointains_homogenes_hauteur_alpha
+            hauteur_alpha in self.valid_coefficient_masques_lointains_homogenes_hauteur_alpha
         ), f"hauteur_alpha must be in {self.valid_coefficient_masques_lointains_homogenes_hauteur_alpha}, got {hauteur_alpha}"
-        assert (
-            orientation in self.valid_orientation
-        ), f"orientation must be in {self.valid_orientation}"
+        assert orientation in self.valid_orientation, f"orientation must be in {self.valid_orientation}"
 
         if hauteur_alpha == "< 15" or hauteur_alpha == "Absence de masque":
             return 0.1
 
-        return self.coefficient_masques_lointains_homogenes[
-            (hauteur_alpha, orientation)
-        ]
+        return self.coefficient_masques_lointains_homogenes[(hauteur_alpha, orientation)]
 
     def _calc_ombrage_obstacle_lointain(
         self,
@@ -379,12 +366,8 @@ class SouthAreaProcessor(BaseProcessor):
     ):
         return 1 - 0.01 * sum(
             [
-                self._calc_ombrage_obstacle_lointain(
-                    hauteur=hauteur, secteur=secteur, orientation=orientation
-                )
-                for hauteur, secteur, orientation in zip(
-                    hauteurs, secteurs, orientations
-                )
+                self._calc_ombrage_obstacle_lointain(hauteur=hauteur, secteur=secteur, orientation=orientation)
+                for hauteur, secteur, orientation in zip(hauteurs, secteurs, orientations)
             ]
         )
 
@@ -418,21 +401,11 @@ class SouthAreaProcessor(BaseProcessor):
         self.coefficient_orientation_orientation_paroi = pd.read_csv(
             os.path.join(data_path, coefficient_orientation_orientation_paroi)
         )
-        self.coefficient_orientation = pd.read_csv(
-            os.path.join(data_path, coefficient_orientation)
-        )
-        self.facteur_solaire_materiaux = pd.read_csv(
-            os.path.join(data_path, facteur_solaire_materiaux)
-        )
-        self.facteur_solaire_type_baie = pd.read_csv(
-            os.path.join(data_path, facteur_solaire_type_baie)
-        )
-        self.facteur_solaire_type_pose = pd.read_csv(
-            os.path.join(data_path, facteur_solaire_type_pose)
-        )
-        self.facteur_solaire_type_vitrage = pd.read_csv(
-            os.path.join(data_path, facteur_solaire_type_vitrage)
-        )
+        self.coefficient_orientation = pd.read_csv(os.path.join(data_path, coefficient_orientation))
+        self.facteur_solaire_materiaux = pd.read_csv(os.path.join(data_path, facteur_solaire_materiaux))
+        self.facteur_solaire_type_baie = pd.read_csv(os.path.join(data_path, facteur_solaire_type_baie))
+        self.facteur_solaire_type_pose = pd.read_csv(os.path.join(data_path, facteur_solaire_type_pose))
+        self.facteur_solaire_type_vitrage = pd.read_csv(os.path.join(data_path, facteur_solaire_type_vitrage))
         self.facteur_solaire = pd.read_csv(os.path.join(data_path, facteur_solaire))
         self.coefficient_masques_proches_avance = pd.read_csv(
             os.path.join(data_path, coefficient_masques_proches_avance)
@@ -441,26 +414,16 @@ class SouthAreaProcessor(BaseProcessor):
             os.path.join(data_path, coefficient_masques_proches_type_masque)
         )
         self.orientation = pd.read_csv(os.path.join(data_path, orientation))
-        self.coefficient_masques_proches = pd.read_csv(
-            os.path.join(data_path, coefficient_masques_proches)
-        )
+        self.coefficient_masques_proches = pd.read_csv(os.path.join(data_path, coefficient_masques_proches))
         self.coefficient_masques_lointains_homogenes_hauteur_alpha = pd.read_csv(
-            os.path.join(
-                data_path, coefficient_masques_lointains_homogenes_hauteur_alpha
-            )
+            os.path.join(data_path, coefficient_masques_lointains_homogenes_hauteur_alpha)
         )
         self.coefficient_masques_lointains_homogenes = pd.read_csv(
             os.path.join(data_path, coefficient_masques_lointains_homogenes)
         )
-        self.ombrage_obstacle_lointain_hauteur = pd.read_csv(
-            os.path.join(data_path, ombrage_obstacle_lointain_hauteur)
-        )
-        self.ombrage_obstacle_lointain_secteur = pd.read_csv(
-            os.path.join(data_path, ombrage_obstacle_lointain_secteur)
-        )
-        self.ombrage_obstacle_lointain = pd.read_csv(
-            os.path.join(data_path, ombrage_obstacle_lointain)
-        )
+        self.ombrage_obstacle_lointain_hauteur = pd.read_csv(os.path.join(data_path, ombrage_obstacle_lointain_hauteur))
+        self.ombrage_obstacle_lointain_secteur = pd.read_csv(os.path.join(data_path, ombrage_obstacle_lointain_secteur))
+        self.ombrage_obstacle_lointain = pd.read_csv(os.path.join(data_path, ombrage_obstacle_lointain))
 
     def preprocess(
         self,
@@ -492,21 +455,17 @@ class SouthAreaProcessor(BaseProcessor):
                 {">= 75°": ">=75°", "75° >  >= 25°": "75°> ≥25°", "< 25°": "<25°"}
             )
         )
-        self.coefficient_orientation_inclinaison_paroi = (
-            self.coefficient_orientation_inclinaison_paroi.set_index(
-                "inclinaison_paroi"
-            )["id"].to_dict()
-        )
+        self.coefficient_orientation_inclinaison_paroi = self.coefficient_orientation_inclinaison_paroi.set_index(
+            "inclinaison_paroi"
+        )["id"].to_dict()
         self.valid_coefficient_orientation_inclinaison_paroi = list(
             self.coefficient_orientation_inclinaison_paroi.keys()
         ) + [None]
 
     def _preprocess_coefficient_orientation_orientation_paroi(self):
-        self.coefficient_orientation_orientation_paroi = (
-            self.coefficient_orientation_orientation_paroi.set_index(
-                "orientation_paroi"
-            )["id"].to_dict()
-        )
+        self.coefficient_orientation_orientation_paroi = self.coefficient_orientation_orientation_paroi.set_index(
+            "orientation_paroi"
+        )["id"].to_dict()
         self.valid_coefficient_orientation_orientation_paroi = list(
             self.coefficient_orientation_orientation_paroi.keys()
         ) + [None]
@@ -514,12 +473,12 @@ class SouthAreaProcessor(BaseProcessor):
     def _preprocess_coefficient_orientation(self):
         self.valid_zone = list(self.coefficient_orientation["area"].unique())
         self.valid_mois = list(self.coefficient_orientation["month"].unique())
-        self.coefficient_orientation["orientation"] = self.coefficient_orientation[
-            "orientation"
-        ].replace({"Horizontal": "Paroi Horizontale"})
-        self.coefficient_orientation["inclination"] = self.coefficient_orientation[
-            "inclination"
-        ].fillna("Paroi Horizontale")
+        self.coefficient_orientation["orientation"] = self.coefficient_orientation["orientation"].replace(
+            {"Horizontal": "Paroi Horizontale"}
+        )
+        self.coefficient_orientation["inclination"] = self.coefficient_orientation["inclination"].fillna(
+            "Paroi Horizontale"
+        )
         self.valid_coefficient_orientation_inclinaison_paroi = list(
             self.coefficient_orientation["inclination"].unique()
         ) + [None]
@@ -528,36 +487,20 @@ class SouthAreaProcessor(BaseProcessor):
         )["c1"].to_dict()
 
     def _preprocess_facteur_solaire_materiaux(self):
-        self.facteur_solaire_materiaux = self.facteur_solaire_materiaux.set_index("id")[
-            "materiaux"
-        ].to_dict()
-        self.valid_facteur_solaire_materiaux = list(
-            self.facteur_solaire_materiaux.values()
-        ) + [None]
+        self.facteur_solaire_materiaux = self.facteur_solaire_materiaux.set_index("id")["materiaux"].to_dict()
+        self.valid_facteur_solaire_materiaux = list(self.facteur_solaire_materiaux.values()) + [None]
 
     def _preprocess_facteur_solaire_type_baie(self):
-        self.facteur_solaire_type_baie = self.facteur_solaire_type_baie.set_index("id")[
-            "type_baie"
-        ].to_dict()
-        self.valid_facteur_solaire_type_baie = list(
-            self.facteur_solaire_type_baie.values()
-        ) + [None]
+        self.facteur_solaire_type_baie = self.facteur_solaire_type_baie.set_index("id")["type_baie"].to_dict()
+        self.valid_facteur_solaire_type_baie = list(self.facteur_solaire_type_baie.values()) + [None]
 
     def _preprocess_facteur_solaire_type_pose(self):
-        self.facteur_solaire_type_pose = self.facteur_solaire_type_pose.set_index("id")[
-            "type_pose"
-        ].to_dict()
-        self.valid_facteur_solaire_type_pose = list(
-            self.facteur_solaire_type_pose.values()
-        ) + [None]
+        self.facteur_solaire_type_pose = self.facteur_solaire_type_pose.set_index("id")["type_pose"].to_dict()
+        self.valid_facteur_solaire_type_pose = list(self.facteur_solaire_type_pose.values()) + [None]
 
     def _preprocess_facteur_solaire_type_vitrage(self):
-        self.facteur_solaire_type_vitrage = self.facteur_solaire_type_vitrage.set_index(
-            "id"
-        )["type_vitrage"].to_dict()
-        self.valid_facteur_solaire_type_vitrage = list(
-            self.facteur_solaire_type_vitrage.values()
-        ) + [None]
+        self.facteur_solaire_type_vitrage = self.facteur_solaire_type_vitrage.set_index("id")["type_vitrage"].to_dict()
+        self.valid_facteur_solaire_type_vitrage = list(self.facteur_solaire_type_vitrage.values()) + [None]
 
     def _preprocess_facteur_solaire(self):
         self.facteur_solaire["facteur_solaire_materiaux"] = self.facteur_solaire[
@@ -582,19 +525,15 @@ class SouthAreaProcessor(BaseProcessor):
         )["fts"].to_dict()
 
     def _preprocess_coefficient_masques_proches_avance(self):
-        self.coefficient_masques_proches_avance = (
-            self.coefficient_masques_proches_avance.set_index("id")["avance"].to_dict()
-        )
-        self.valid_coefficient_masques_proches_avance = list(
-            self.coefficient_masques_proches_avance.values()
-        ) + [None]
+        self.coefficient_masques_proches_avance = self.coefficient_masques_proches_avance.set_index("id")[
+            "avance"
+        ].to_dict()
+        self.valid_coefficient_masques_proches_avance = list(self.coefficient_masques_proches_avance.values()) + [None]
 
     def _preprocess_coefficient_masques_proches_type_masque(self):
-        self.coefficient_masques_proches_type_masque = (
-            self.coefficient_masques_proches_type_masque.set_index("id")[
-                "type_masque"
-            ].to_dict()
-        )
+        self.coefficient_masques_proches_type_masque = self.coefficient_masques_proches_type_masque.set_index("id")[
+            "type_masque"
+        ].to_dict()
         self.valid_coefficient_masques_proches_type_masque = list(
             self.coefficient_masques_proches_type_masque.values()
         ) + [None]
@@ -604,30 +543,18 @@ class SouthAreaProcessor(BaseProcessor):
         self.valid_orientation = list(self.orientation.values()) + [None]
 
     def _preprocess_coefficient_masques_proches(self):
-        self.coefficient_masques_proches["coefficient_masques_proches_avance"] = (
-            self.coefficient_masques_proches[
-                "tv022_coefficient_masques_proches_avance_id"
-            ].replace(self.coefficient_masques_proches_avance)
-        )
-        self.coefficient_masques_proches["coefficient_masques_proches_type_masque"] = (
-            self.coefficient_masques_proches[
-                "tv022_coefficient_masques_proches_type_masque_id"
-            ].replace(self.coefficient_masques_proches_type_masque)
-        )
-        self.coefficient_masques_proches["orientation"] = (
-            self.coefficient_masques_proches["tv0xx_orientation_id"].replace(
-                self.orientation
-            )
-        )
-        self.valid_rapport_l1_l2 = list(
-            self.coefficient_masques_proches["rapport_l1_l2"].unique()
-        )
-        self.valid_largeur_baie_superieure = list(
-            self.coefficient_masques_proches["largeur_baie_superieure"].unique()
-        )
-        self.valid_beta_gama = list(
-            self.coefficient_masques_proches["beta_gama"].unique()
-        ) + [None]
+        self.coefficient_masques_proches["coefficient_masques_proches_avance"] = self.coefficient_masques_proches[
+            "tv022_coefficient_masques_proches_avance_id"
+        ].replace(self.coefficient_masques_proches_avance)
+        self.coefficient_masques_proches["coefficient_masques_proches_type_masque"] = self.coefficient_masques_proches[
+            "tv022_coefficient_masques_proches_type_masque_id"
+        ].replace(self.coefficient_masques_proches_type_masque)
+        self.coefficient_masques_proches["orientation"] = self.coefficient_masques_proches[
+            "tv0xx_orientation_id"
+        ].replace(self.orientation)
+        self.valid_rapport_l1_l2 = list(self.coefficient_masques_proches["rapport_l1_l2"].unique())
+        self.valid_largeur_baie_superieure = list(self.coefficient_masques_proches["largeur_baie_superieure"].unique())
+        self.valid_beta_gama = list(self.coefficient_masques_proches["beta_gama"].unique()) + [None]
 
         self.coefficient_masques_proches = (
             self.coefficient_masques_proches.fillna("Null")
@@ -645,63 +572,47 @@ class SouthAreaProcessor(BaseProcessor):
 
     def _preprocess_coefficient_masques_lointains_homogenes_hauteur_alpha(self):
         self.coefficient_masques_lointains_homogenes_hauteur_alpha = (
-            self.coefficient_masques_lointains_homogenes_hauteur_alpha.set_index(
-                ["id"]
-            )["hauteur_alpha"].to_dict()
+            self.coefficient_masques_lointains_homogenes_hauteur_alpha.set_index(["id"])["hauteur_alpha"].to_dict()
         )
         self.valid_coefficient_masques_lointains_homogenes_hauteur_alpha = list(
             self.coefficient_masques_lointains_homogenes_hauteur_alpha.values()
         ) + [None]
 
     def _preprocess_coefficient_masques_lointains_homogenes(self):
-        self.coefficient_masques_lointains_homogenes[
-            "coefficient_masques_lointains_homogenes_hauteur_alpha"
-        ] = self.coefficient_masques_lointains_homogenes[
-            "tv023_coefficient_masques_lointains_homogenes_hauteur_alpha_id"
-        ].replace(
-            self.coefficient_masques_lointains_homogenes_hauteur_alpha
-        )
-        self.coefficient_masques_lointains_homogenes["orientation"] = (
+        self.coefficient_masques_lointains_homogenes["coefficient_masques_lointains_homogenes_hauteur_alpha"] = (
             self.coefficient_masques_lointains_homogenes[
-                "tv0xx_orientation_id"
-            ].replace(self.orientation)
+                "tv023_coefficient_masques_lointains_homogenes_hauteur_alpha_id"
+            ].replace(self.coefficient_masques_lointains_homogenes_hauteur_alpha)
         )
-        self.coefficient_masques_lointains_homogenes = (
-            self.coefficient_masques_lointains_homogenes.set_index(
-                ["coefficient_masques_lointains_homogenes_hauteur_alpha", "orientation"]
-            )["id"].to_dict()
-        )
-
-    def _preprocess_ombrage_obstacle_lointain_hauteur(self):
-        self.ombrage_obstacle_lointain_hauteur = (
-            self.ombrage_obstacle_lointain_hauteur.set_index("id")["hauteur"].to_dict()
-        )
-        self.valid_ombrage_obstacle_lointain_hauteur = list(
-            self.ombrage_obstacle_lointain_hauteur.values()
-        ) + [None]
-
-    def _preprocess_ombrage_obstacle_lointain_secteur(self):
-        self.ombrage_obstacle_lointain_secteur = (
-            self.ombrage_obstacle_lointain_secteur.set_index("id")["secteur"].to_dict()
-        )
-        self.valid_ombrage_obstacle_lointain_secteur = list(
-            self.ombrage_obstacle_lointain_secteur.values()
-        ) + [None]
-
-    def _preprocess_ombrage_obstacle_lointain(self):
-        self.ombrage_obstacle_lointain["ombrage_obstacle_lointain_hauteur"] = (
-            self.ombrage_obstacle_lointain[
-                "tv024_ombrage_obstacle_lointain_hauteur_id"
-            ].replace(self.ombrage_obstacle_lointain_hauteur)
-        )
-        self.ombrage_obstacle_lointain["ombrage_obstacle_lointain_secteur"] = (
-            self.ombrage_obstacle_lointain[
-                "tv024_ombrage_obstacle_lointain_secteur_id"
-            ].replace(self.ombrage_obstacle_lointain_secteur)
-        )
-        self.ombrage_obstacle_lointain["orientation"] = self.ombrage_obstacle_lointain[
+        self.coefficient_masques_lointains_homogenes["orientation"] = self.coefficient_masques_lointains_homogenes[
             "tv0xx_orientation_id"
         ].replace(self.orientation)
+        self.coefficient_masques_lointains_homogenes = self.coefficient_masques_lointains_homogenes.set_index(
+            ["coefficient_masques_lointains_homogenes_hauteur_alpha", "orientation"]
+        )["id"].to_dict()
+
+    def _preprocess_ombrage_obstacle_lointain_hauteur(self):
+        self.ombrage_obstacle_lointain_hauteur = self.ombrage_obstacle_lointain_hauteur.set_index("id")[
+            "hauteur"
+        ].to_dict()
+        self.valid_ombrage_obstacle_lointain_hauteur = list(self.ombrage_obstacle_lointain_hauteur.values()) + [None]
+
+    def _preprocess_ombrage_obstacle_lointain_secteur(self):
+        self.ombrage_obstacle_lointain_secteur = self.ombrage_obstacle_lointain_secteur.set_index("id")[
+            "secteur"
+        ].to_dict()
+        self.valid_ombrage_obstacle_lointain_secteur = list(self.ombrage_obstacle_lointain_secteur.values()) + [None]
+
+    def _preprocess_ombrage_obstacle_lointain(self):
+        self.ombrage_obstacle_lointain["ombrage_obstacle_lointain_hauteur"] = self.ombrage_obstacle_lointain[
+            "tv024_ombrage_obstacle_lointain_hauteur_id"
+        ].replace(self.ombrage_obstacle_lointain_hauteur)
+        self.ombrage_obstacle_lointain["ombrage_obstacle_lointain_secteur"] = self.ombrage_obstacle_lointain[
+            "tv024_ombrage_obstacle_lointain_secteur_id"
+        ].replace(self.ombrage_obstacle_lointain_secteur)
+        self.ombrage_obstacle_lointain["orientation"] = self.ombrage_obstacle_lointain["tv0xx_orientation_id"].replace(
+            self.orientation
+        )
         self.ombrage_obstacle_lointain = self.ombrage_obstacle_lointain.set_index(
             [
                 "ombrage_obstacle_lointain_hauteur",

@@ -44,9 +44,7 @@ class EcsInput(BaseModel):
 
     ## Rendement stockage
     type_stockage: Optional[str] = None  # Chauffe-eau vertical, Chauffe-eau horizontal
-    category_stockage: Optional[str] = (
-        None  # Catégorie B ou 2 étoiles, Catégorie C ou 3 étoiles, Other
-    )
+    category_stockage: Optional[str] = None  # Catégorie B ou 2 étoiles, Catégorie C ou 3 étoiles, Other
     volume_ballon: Optional[float] = None  # Volume du ballon en litre
 
     ## Rendement_générateur
@@ -93,13 +91,8 @@ class ECS:
 
         ## Rendement générateur
 
-        if (
-            ecs["type_generateur"]
-            == "A combustion Chauffe-bain au gaz à production instantannée"
-        ):
-            ecs["type_generateur"] = (
-                "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
-            )
+        if ecs["type_generateur"] == "A combustion Chauffe-bain au gaz à production instantannée":
+            ecs["type_generateur"] = "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
         if (
             ecs["type_generateur"] == "Electrique"
             or ecs["type_generateur"] == "Electrique classique"
@@ -112,10 +105,7 @@ class ECS:
         elif ecs["type_generateur"] == "Réseau de chaleur non isolé":
             ecs["Rg"] = 0.75
             ecs["Rs"] = 1
-        elif (
-            ecs["type_generateur"]
-            == "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
-        ):
+        elif ecs["type_generateur"] == "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz":
             ecs["Pnom"] = 10 if ecs["Pnom"] < 10 else 1000
             ecs["Rpn"] = self.abaques["Rg_ecs"](
                 {
@@ -140,13 +130,9 @@ class ECS:
             )
             ecs["Rg"] = safe_divide(
                 1,
-                (1 / ecs["Rpn"])
-                + (1790 * ecs["Qp0"] / dpe["Becs"])
-                + (6970 * ecs["Pveilleuse"] / dpe["Becs"]),
+                (1 / ecs["Rpn"]) + (1790 * ecs["Qp0"] / dpe["Becs"]) + (6970 * ecs["Pveilleuse"] / dpe["Becs"]),
             )
-        elif (
-            ecs["type_generateur"] == "A combustion Mixte chaudière gaz, fioul ou bois"
-        ):
+        elif ecs["type_generateur"] == "A combustion Mixte chaudière gaz, fioul ou bois":
             ecs["Pnom"] = 10 if ecs["Pnom"] < 10 else 1000
             ecs["Rpn"] = self.abaques["Rg_ecs"](
                 {
