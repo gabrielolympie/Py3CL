@@ -1,0 +1,15 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv0xx_scop_pac.csv
+keys:
+- key_name: type_pac
+  key_type: cat
+- key_name: zone_hiver
+  key_type: cat
+- key_name: annee_installation
+  key_type: num
+- key_name: type_emetteur
+  key_type: cat
+values:
+- SCOP

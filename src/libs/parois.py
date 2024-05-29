@@ -1,7 +1,7 @@
 from libs.utils import safe_divide
 from pydantic import BaseModel
 import os
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 
 
 class ParoiInput(BaseModel):
@@ -95,9 +95,25 @@ class ParoiInput(BaseModel):
 
 class Paroi:
     def __init__(self, abaques):
+        """
+        Initializes a new instance of the Paroi class.
+
+        Args:
+            abaques (dict): A dictionary containing reference data and coefficients necessary for calculations.
+        """
         self.abaques = abaques
 
     def forward(self, dpe, kwargs: ParoiInput):
+        """
+        Processes input data for a wall using provided models and reference coefficients.
+
+        Args:
+            dpe (dict): A dictionary containing information about the overall energy performance of the building.
+            kwargs (ParoiInput): An instance of ParoiInput containing detailed wall-specific parameters.
+
+        Returns:
+            dict: A dictionary containing processed data and calculated values for the wall.
+        """
         paroi = kwargs.dict()
         paroi["annee_construction_ou_isolation"] = (
             paroi["annee_isolation"] if paroi["annee_isolation"] is not None else dpe["annee_construction"]
@@ -154,6 +170,15 @@ class Paroi:
         return paroi
 
     def _forward_plancher_haut(self, paroi):
+        """
+        Processes and calculates thermal transmittance values specifically for upper floors.
+
+        Args:
+            paroi (dict): A dictionary containing specific parameters for an upper floor.
+
+        Returns:
+            dict: The updated dictionary with calculated U values for the floor.
+        """
         if paroi["materiaux"]:
             uparoi_0 = self.abaques["uph0"]({"materiaux": paroi["materiaux"]}, "uph0")
             uparoi_nu = min(uparoi_0, 2.5)
@@ -193,6 +218,15 @@ class Paroi:
         return paroi
 
     def _forward_plancher_bas(self, paroi):
+        """
+        Processes and calculates thermal transmittance values specifically for lower floors.
+
+        Args:
+            paroi (dict): A dictionary containing specific parameters for a lower floor.
+
+        Returns:
+            dict: The updated dictionary with calculated U values for the floor.
+        """
         if paroi["materiaux"]:
             uparoi_0 = self.abaques["upb0"]({"materiaux": paroi["materiaux"]}, "upb0")
             uparoi_nu = min(uparoi_0, 2.0)
@@ -248,6 +282,15 @@ class Paroi:
         return paroi
 
     def _forward_mur(self, paroi):
+        """
+        Processes and calculates thermal transmittance values specifically for walls.
+
+        Args:
+            paroi (dict): A dictionary containing specific parameters for a wall.
+
+        Returns:
+            dict: The updated dictionary with calculated U values for the wall.
+        """
         if paroi["materiaux"] and paroi["epaisseur"]:
             uparoi_0 = self.abaques["umur0"](
                 {

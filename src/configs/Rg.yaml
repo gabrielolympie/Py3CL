@@ -5,13 +5,13 @@ file: tv031_rendement_generation.csv
 keys:
 - key_name: type_generateur
   key_type: cat
-- key_name: methode_generation
-  key_type: cat
-refs:
-- col: tv031_rendement_generation_methode_generation_id
-  file: tv031_rendement_generation_methode_generation.csv
-  key: id
-  new_col: methode_generation
-  value: methode_generation
+# - key_name: methode_generation
+#   key_type: cat
+# refs:
+# - col: tv031_rendement_generation_methode_generation_id
+#   file: tv031_rendement_generation_methode_generation.csv
+#   key: id
+#   new_col: methode_generation
+#   value: methode_generation
 values:
 - rg

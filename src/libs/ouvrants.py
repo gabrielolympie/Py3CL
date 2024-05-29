@@ -2,7 +2,21 @@ from libs.utils import safe_divide
 from pydantic import BaseModel
 import os
 import numpy as np
-from typing import Optional
+from typing import Optional, Dict, List, Tuple, Any
+
+# Constants for fixed strings
+ORIENTATION_HORIZONTAL = "Horizontal"
+ORIENTATION_VERTICAL = "Verticale"
+VALID_SUB_TYPE_FENETRES = [
+    "Portes-fenêtres coulissantes",
+    "Fenêtres battantes",
+    "Portes-fenêtres battantes",
+    "Fenêtres coulissantes",
+    "Fenêtres battante ou coulissantes",
+    "Portes-fenêtres battantes ou coulissantes sans soubassement",
+    "Portes-fenêtres battantes avec soubassement",
+    "Portes-fenêtres battantes sans soubassement",
+]
 
 
 class VitrageInput(BaseModel):
@@ -39,15 +53,12 @@ class VitrageInput(BaseModel):
     """
 
     identifiant: str
-
-    ## Dimensions
     surface_vitrage: float
     hauteur_vitrage: float
     largeur_vitrage: float
-
     type_vitrage: str
-    orientation: Optional[str] = None  # Sud, Nord, Est, Ouest, Horizontal
-    inclinaison: Optional[str] = None  # >= 75, 75° >  >= 25°, < 25°, Paroi Horizontale, >= 75 = vertical
+    orientation: Optional[str] = None
+    inclinaison: Optional[str] = None
     remplissage: Optional[str] = None
     traitement_vitrage: Optional[str] = None
     epaisseur_lame: Optional[float] = None
@@ -67,7 +78,6 @@ class VitrageInput(BaseModel):
     ombrage_lointain_hauteur: Optional[float] = None
     ombrage_lointain_orientation: Optional[str] = None
     ombrage_lointain_secteur: Optional[str] = None
-
     exterior_type_or_local_non_chauffe: Optional[str] = None
     surface_paroi_contact: Optional[float] = None
     surface_paroi_local_non_chauffe: Optional[float] = None
@@ -75,7 +85,24 @@ class VitrageInput(BaseModel):
 
 
 class Vitrage:
-    def __init__(self, abaques):
+    """
+    A class that encapsulates the logic to process vitrage data using provided input parameters and external datasets.
+
+    Attributes:
+        abaques (dict): A dictionary containing the datasets used for calculation.
+
+    Methods:
+        forward(dpe: dict, kwargs: VitrageInput) -> dict:
+            Calculates the thermal properties of a glazing system based on the input parameters and given performance datasets.
+    """
+
+    def __init__(self, abaques: Dict[str, Any]) -> None:
+        """
+        Initializes the Vitrage object with the given datasets.
+
+        Args:
+            abaques (dict): A dictionary containing the datasets used for calculation.
+        """
         self.abaques = abaques
         self.months = [
             "Janvier",
@@ -103,21 +130,57 @@ class Vitrage:
             "Portes-fenêtres battantes  sans soubassement",
         ]
 
-    def forward(self, dpe, kwargs: VitrageInput):
+    def forward(self, dpe: Dict[str, Any], kwargs: VitrageInput) -> Dict[str, Any]:
+        """
+        Processes the vitrage input data to calculate various thermal properties such as U-values and solar factors,
+        integrating with given abaque datasets that provide necessary coefficients and values for computations.
+
+        Args:
+            dpe (dict): Dictionary containing building-specific energy performance data.
+                        Keys should include 'zone_climatique' and 'zone_hiver', which are used for regional thermal property calculations.
+            kwargs (VitrageInput): Object containing detailed specifications of a glazing unit, including dimensions,
+                                materials, and environmental context.
+
+        Returns:
+            dict: A dictionary containing updated input data with additional calculated thermal properties such as 'Ug', 'Uw', and solar gain factors.
+
+        Raises:
+            KeyError: If required keys in the 'dpe' dictionary are missing.
+            ValueError: If any input values in 'kwargs' are outside of expected ranges or incompatible with the dataset constraints.
+        """
         vitrage = kwargs.dict()
         vitrage["zone_climatique"] = dpe["zone_climatique"]
         vitrage["zone_hiver"] = dpe["zone_hiver"]
 
-        # Calc b : coefficient de reduction de deperdition
-        if (
-            vitrage["exterior_type_or_local_non_chauffe"]
-            in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics["aiu_aue"]
-        ):
-            vitrage["b"] = self.abaques["coef_reduction_deperdition_exterieur"](
-                {"aiu_aue": vitrage["exterior_type_or_local_non_chauffe"]}, "valeur"
-            )
-        elif vitrage["exterior_type_or_local_non_chauffe"] == "Véranda":
-            vitrage["b"] = self.abaques["coef_reduction_veranda"](
+        vitrage["b"] = self.calculate_b(vitrage, dpe)
+        vitrage["Ug"] = self.calculate_ug(vitrage)
+        vitrage["Uw"] = self.calculate_uw(vitrage)
+        vitrage["U"] = self.calculate_u(vitrage)
+
+        if vitrage["type_baie"] != "Portes":
+            vitrage["facteur_solaire"] = self.calculate_facteur_solaire(vitrage)
+            vitrage["c1j"] = self.calculate_c1j(vitrage)
+            vitrage["Fe"], vitrage["Fe1"], vitrage["Fe2"] = self.calculate_fe(vitrage)
+            vitrage["ssej"] = self.calculate_ssej(vitrage)
+
+        return vitrage
+
+    def calculate_b(self, vitrage: Dict[str, Any], dpe: Dict[str, Any]) -> float:
+        """
+        Calculates the coefficient of reduction of loss (b) for the vitrage.
+
+        Args:
+            vitrage (dict): Dictionary containing vitrage-specific data.
+            dpe (dict): Dictionary containing building-specific energy performance data.
+
+        Returns:
+            float: The coefficient of reduction of loss (b).
+        """
+        exterior_type = vitrage["exterior_type_or_local_non_chauffe"]
+        if exterior_type in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics["aiu_aue"]:
+            return self.abaques["coef_reduction_deperdition_exterieur"]({"aiu_aue": exterior_type}, "valeur")
+        elif exterior_type == "Véranda":
+            return self.abaques["coef_reduction_veranda"](
                 {
                     "zone_hiver": vitrage["zone_hiver"],
                     "orientation_veranda": vitrage["orientation"],
@@ -127,17 +190,12 @@ class Vitrage:
             )
         else:
             vitrage["aiu_aue"] = safe_divide(
-                vitrage["surface_paroi_contact"],
-                vitrage["surface_paroi_local_non_chauffe"],
+                vitrage["surface_paroi_contact"], vitrage["surface_paroi_local_non_chauffe"]
             )
             vitrage["uvue"] = self.abaques["local_non_chauffe"](
-                {
-                    "type_batiment": dpe["type_batiment"],
-                    "local_non_chauffe": vitrage["exterior_type_or_local_non_chauffe"],
-                },
-                "uvue",
+                {"type_batiment": dpe["type_batiment"], "local_non_chauffe": exterior_type}, "uvue"
             )
-            vitrage["b"] = self.abaques["coef_reduction_deperdition_local"](
+            return self.abaques["coef_reduction_deperdition_local"](
                 {
                     "aiu_aue_max": vitrage["aiu_aue"],
                     "aue_isole": vitrage["isolation"],
@@ -147,32 +205,46 @@ class Vitrage:
                 "valeur",
             )
 
-        # Calc Ug
-        if vitrage["type_vitrage"] == "Simple Vitrage":
-            vitrage["Ug"] = 5.8
-        else:
-            if vitrage["orientation"] == "Horizontal":
-                orientation = "Horizontale"
-                vitrage["orientation"] = vitrage["orientation"]
-            else:
-                orientation = "Verticale"
-            vitrage["Ug"] = self.abaques["ug_vitrage"](
-                {
-                    "type_vitrage": vitrage["type_vitrage"],
-                    "orientation": orientation,
-                    "remplissage": vitrage["remplissage"],
-                    "traitement_vitrage": vitrage["traitement_vitrage"],
-                    "epaisseur_lame": vitrage["epaisseur_lame"],
-                },
-                "ug",
-            )
+    def calculate_ug(self, vitrage: Dict[str, Any]) -> float:
+        """
+        Calculates the U-value (Ug) for the vitrage based on its type and characteristics.
 
-        # Calc Uw
-        if vitrage["type_baie"] in self.valid_sub_type_fenetres:
-            type_baie = "Fenêtres / Porte-fenêtres"
-        else:
-            type_baie = vitrage["type_baie"]
-        vitrage["Uw"] = self.abaques["uw_vitrage"](
+        Args:
+            vitrage (dict): Dictionary containing vitrage-specific data.
+
+        Returns:
+            float: The U-value (Ug) of the vitrage.
+        """
+        if vitrage["type_vitrage"] == "Simple Vitrage":
+            return 5.8
+        orientation = "Horizontale" if vitrage["orientation"] == "Horizontal" else "Verticale"
+        return self.abaques["ug_vitrage"](
+            {
+                "type_vitrage": vitrage["type_vitrage"],
+                "orientation": orientation,
+                "remplissage": vitrage["remplissage"],
+                "traitement_vitrage": vitrage["traitement_vitrage"],
+                "epaisseur_lame": vitrage["epaisseur_lame"],
+            },
+            "ug",
+        )
+
+    def calculate_uw(self, vitrage: Dict[str, Any]) -> float:
+        """
+        Calculates the U-value (Uw) for the vitrage based on its type and characteristics.
+
+        Args:
+            vitrage (dict): Dictionary containing vitrage-specific data.
+
+        Returns:
+            float: The U-value (Uw) of the vitrage.
+        """
+        type_baie = (
+            "Fenêtres / Porte-fenêtres"
+            if vitrage["type_baie"] in self.valid_sub_type_fenetres
+            else vitrage["type_baie"]
+        )
+        return self.abaques["uw_vitrage"](
             {
                 "type_materiaux": vitrage["type_materiaux"],
                 "type_menuiserie": vitrage["type_menuiserie"],
@@ -182,106 +254,137 @@ class Vitrage:
             "uw",
         )
 
+    def calculate_u(self, vitrage: Dict[str, Any]) -> float:
+        """
+        Calculates the overall U-value (U) for the vitrage, taking into account additional resistance if there are closures.
+
+        Args:
+            vitrage (dict): Dictionary containing vitrage-specific data.
+
+        Returns:
+            float: The overall U-value (U) of the vitrage.
+        """
         if vitrage["fermetures"]:
-            # Calc DeltaR
             vitrage["DeltaR"] = self.abaques["resistance_additionnelle_vitrage"](
                 {"fermetures": vitrage["fermetures"]}, "resistance_additionnelle"
             )
             vitrage["Ujn"] = self.abaques["transmission_thermique_baie"](
                 {"uw": vitrage["Uw"], "deltar": vitrage["DeltaR"]}, "ujn"
             )
-            vitrage["U"] = vitrage["Ujn"]
-        else:
-            vitrage["U"] = vitrage["Uw"]
+            return vitrage["Ujn"]
+        return vitrage["Uw"]
 
-        ## Calcul facteur solaire
+    def calculate_facteur_solaire(self, vitrage: Dict[str, Any]) -> float:
+        """
+        Calculates the solar factor (facteur solaire) for the vitrage.
 
-        if vitrage["type_baie"] != "Portes":
-            if vitrage["traitement_vitrage"] != "Non Traités":
-                if "Double" in vitrage["type_vitrage"] or "Triple" in vitrage["type_vitrage"]:
-                    vitrage["type_vitrage"] = vitrage["type_vitrage"] + " V.I.R"
+        Args:
+            vitrage (dict): Dictionary containing vitrage-specific data.
 
-            vitrage["facteur_solaire"] = self.abaques["facteur_solaire"](
+        Returns:
+            float: The solar factor (facteur solaire) of the vitrage.
+        """
+        if vitrage["traitement_vitrage"] != "Non Traités":
+            if "Double" in vitrage["type_vitrage"] or "Triple" in vitrage["type_vitrage"]:
+                vitrage["type_vitrage"] += " V.I.R"
+        return self.abaques["facteur_solaire"](
+            {
+                "type_pose": vitrage["type_pose"],
+                "materiaux": vitrage["type_materiaux"],
+                "type_baie": vitrage["type_baie"],
+                "type_vitrage": vitrage["type_vitrage"],
+            },
+            "fts",
+        )
+
+    def calculate_c1j(self, vitrage: Dict[str, Any]) -> np.ndarray:
+        """
+        Calculates the orientation factor (c1j) for each month of the year.
+
+        Args:
+            vitrage (dict): Dictionary containing vitrage-specific data.
+
+        Returns:
+            np.ndarray: An array of orientation factors for each month.
+        """
+        orientation = "Horizontal" if vitrage["orientation"] == "Horizontal" else vitrage["orientation"]
+        inclinaison = "NULL" if vitrage["orientation"] == "Horizontal" else vitrage["inclinaison"]
+        return np.array(
+            [
+                self.abaques["coefficient_orientation"](
+                    {
+                        "zone_climatique": vitrage["zone_climatique"],
+                        "month": month,
+                        "orientation": orientation,
+                        "inclination": inclinaison,
+                    },
+                    "c1",
+                )
+                for month in self.months
+            ]
+        )
+
+    def calculate_fe(self, vitrage: Dict[str, Any]) -> tuple:
+        """
+        Calculates the shading coefficients (Fe, Fe1, Fe2) for the vitrage.
+
+        Args:
+            vitrage (dict): Dictionary containing vitrage-specific data.
+
+        Returns:
+            tuple: A tuple containing the overall shading coefficient (Fe) and its components (Fe1, Fe2).
+        """
+        Fe1 = 1.0
+        if vitrage["masque_proche_type_masque"] and vitrage["masque_proche_type_masque"] != "Absence de masque proche":
+            Fe1 = self.abaques["coef_masques_proches"](
                 {
-                    "type_pose": vitrage["type_pose"],
-                    "materiaux": vitrage["type_materiaux"],
-                    "type_baie": vitrage["type_baie"],
-                    "type_vitrage": vitrage["type_vitrage"],
+                    "type_masque": vitrage["masque_proche_type_masque"],
+                    "avance": vitrage["masque_proche_avance"],
+                    "orientation": vitrage["masque_proche_orientation"],
+                    "rapport_l1_l2": vitrage["masque_proche_rapport_l1_l2"],
+                    "beta_gama": vitrage["masque_proche_beta_gama"],
+                    "angle_superieur_30": vitrage["masque_proche_angle_superieur_30"],
                 },
-                "fts",
+                "fe1",
             )
 
-            ## Calcul facteur d'orientation
-            if vitrage["orientation"] == "Horizontal":
-                orientation = "Horizontal"
-                inclinaison = "NULL"
-            else:
-                inclinaison = vitrage["inclinaison"]
-                orientation = vitrage["orientation"]
-
-            vitrage["c1j"] = np.array(
-                [
-                    self.abaques["coefficient_orientation"](
-                        {
-                            "zone_climatique": vitrage["zone_climatique"],
-                            "month": month,
-                            "orientation": orientation,
-                            "inclination": inclinaison,
-                        },
-                        "c1",
-                    )
-                    for month in self.months
-                ]
+        Fe2_1 = 1.0
+        if vitrage["masque_lointain_hauteur_alpha"] and vitrage["masque_lointain_orientation"]:
+            Fe2_1 = self.abaques["coef_masques_lointain_homogene"](
+                {
+                    "hauteur_alpha": vitrage["masque_lointain_hauteur_alpha"],
+                    "orientation": vitrage["masque_lointain_orientation"],
+                },
+                "fe2",
             )
 
-            ## Calcul coefficient de masques proches
-            Fe1 = 1.0
-            if (
-                vitrage["masque_proche_type_masque"]
-                and vitrage["masque_proche_type_masque"] != "Absence de masque proche"
-            ):
-                Fe1 = self.abaques["coef_masques_proches"](
-                    {
-                        "type_masque": vitrage["masque_proche_type_masque"],
-                        "avance": vitrage["masque_proche_avance"],
-                        "orientation": vitrage["masque_proche_orientation"],
-                        "rapport_l1_l2": vitrage["masque_proche_rapport_l1_l2"],
-                        "beta_gama": vitrage["masque_proche_beta_gama"],
-                        "angle_superieur_30": vitrage["masque_proche_angle_superieur_30"],
-                    },
-                    "fe1",
-                )
+        Fe2_2 = 1.0
+        if (
+            vitrage["ombrage_lointain_hauteur"]
+            and vitrage["ombrage_lointain_orientation"]
+            and vitrage["ombrage_lointain_secteur"]
+        ):
+            Fe2_2 = 1 - 0.01 * self.abaques["coef_ombrage_lointain"](
+                {
+                    "hauteur": vitrage["ombrage_lointain_hauteur"],
+                    "orientation": vitrage["ombrage_lointain_orientation"],
+                    "secteur": vitrage["ombrage_lointain_secteur"],
+                },
+                "omb",
+            )
 
-            Fe2_1 = 1.0
-            if vitrage["masque_lointain_hauteur_alpha"] and vitrage["masque_lointain_orientation"]:
-                Fe2_1 = self.abaques["coef_masques_lointain_homogene"](
-                    {
-                        "hauteur_alpha": vitrage["masque_lointain_hauteur_alpha"],
-                        "orientation": vitrage["masque_lointain_orientation"],
-                    },
-                    "fe2",
-                )
+        Fe2 = min(Fe2_1, Fe2_2)
+        Fe = Fe1 * Fe2
+        return Fe, Fe1, Fe2
 
-            Fe2_2 = 1.0
-            if (
-                vitrage["ombrage_lointain_hauteur"]
-                and vitrage["ombrage_lointain_orientation"]
-                and vitrage["ombrage_lointain_secteur"]
-            ):
-                Fe2_2 = 1 - 0.01 * self.abaques["coef_ombrage_lointain"](
-                    {
-                        "hauteur": vitrage["ombrage_lointain_hauteur"],
-                        "orientation": vitrage["ombrage_lointain_orientation"],
-                        "secteur": vitrage["ombrage_lointain_secteur"],
-                    },
-                    "omb",
-                )
+    def calculate_ssej(self, vitrage: Dict[str, Any]) -> np.ndarray:
+        """
+        Calculates the solar heat gain (ssej) for each month of the year.
 
-            Fe2 = min(Fe2_1, Fe2_2)
-            Fe = Fe1 * Fe2
-            vitrage["Fe"] = Fe
-            vitrage["Fe1"] = Fe1
-            vitrage["Fe2"] = Fe2
+        Args:
+            vitrage (dict): Dictionary containing vitrage-specific data.
 
-            vitrage["ssej"] = vitrage["surface_vitrage"] * vitrage["facteur_solaire"] * vitrage["Fe"] * vitrage["c1j"]
-        return vitrage
+        Returns:
+            np.ndarray: An array of solar heat gains for each month.
+        """
+        return vitrage["surface_vitrage"] * vitrage["facteur_solaire"] * vitrage["Fe"] * vitrage["c1j"]
