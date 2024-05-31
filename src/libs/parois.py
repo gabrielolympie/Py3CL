@@ -16,8 +16,8 @@ class ParoiInput(BaseModel):
         surface_paroi: The surface area of the wall in square meters.
         hauteur: The height/plancher of the wall in meters. None for planchers
         largeur: The width/plancher of the wall in meters. None for planchers
+        inertie: The inertia of the wall, which can be one of 'Léger' ou 'Lourd'
 
-        type_paroi: The type of wall, which can be one of 'Mur', 'Plancher bas', or 'Plancher haut'.
         uparoi: The non-insulated thermal transmittance of the wall in W/(m²·K).
         materiaux: The materials used to construct the wall.
         epaisseur: The thickness of the wall in centimeters.
@@ -62,7 +62,7 @@ class ParoiInput(BaseModel):
     inertie: Optional[str] = None  # Leger / Lourd
 
     # Coefficient de transmission surfacique
-    type_paroi: str  # ['Mur', 'Plancher bas', 'Plancher haut']
+    # type_paroi: str  # ['Mur', 'Plancher bas', 'Plancher haut']
     uparoi: Optional[float] = None
     materiaux: Optional[str] = None
     epaisseur: Optional[float] = None
@@ -115,12 +115,16 @@ class Paroi(BaseProcessor):
         Args:
             abaques (dict): A dictionary containing reference data and coefficients necessary for calculations.
         """
-        super().__init__(abaques, ParoiInput)
+        self.characteristics_corrections={
+            'inertie':['Léger', 'Lourd'],
+            "effet_joule":[True, False],
+        }
+        super().__init__(abaques, ParoiInput, characteristics_corrections=self.characteristics_corrections)
 
     def define_categorical(self):
         self.categorical_fields = [
             # 'identifiant_adjacents',
-            'type_paroi',
+            # 'type_paroi',
             'materiaux',
             'isolation',
             'effet_joule',
@@ -246,11 +250,11 @@ class Paroi(BaseProcessor):
         if paroi["uparoi"] is not None:
             paroi["U"] = paroi["uparoi"]
         else:
-            if paroi["type_paroi"] == "Mur":
+            if "mur" in paroi["identifiant"]:
                 paroi = self._forward_mur(paroi)
-            elif paroi["type_paroi"] == "Plancher bas":
+            elif "plancher_bas" in paroi["identifiant"]:
                 paroi = self._forward_plancher_bas(paroi)
-            elif paroi["type_paroi"] == "Plancher haut":
+            elif "plancher_haut" in paroi["identifiant"]:
                 paroi = self._forward_plancher_haut(paroi)
 
         return paroi

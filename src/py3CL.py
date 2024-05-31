@@ -399,8 +399,11 @@ class DPE(BaseProcessor):
 
         self.configs = configs
         self.load_abaques(self.configs)
+        self.characteristics_corrections={
+            'usage':['Conventionnel', 'Dépensier'],
+        }
 
-        super().__init__(self.abaques, DPEInput)
+        super().__init__(self.abaques, DPEInput, characteristics_corrections=self.characteristics_corrections)
 
         self.parois_processor = Paroi(self.abaques)
         self.vitrage_processor = Vitrage(self.abaques)
@@ -740,21 +743,21 @@ class DPE(BaseProcessor):
             [
                 paroi["U"] * paroi["surface_paroi"] * paroi["b"]
                 for paroi in parois
-                if paroi["type_paroi"] == "Mur"
+                if "mur" in paroi["identifiant"]
             ]
         )
         dpe["DP_pb"] = sum(
             [
                 paroi["U"] * paroi["surface_paroi"] * paroi["b"]
                 for paroi in parois
-                if paroi["type_paroi"] == "Plancher bas"
+                if "plancher_bas" in paroi["identifiant"]
             ]
         )
         dpe["DP_ph"] = sum(
             [
                 paroi["U"] * paroi["surface_paroi"] * paroi["b"]
                 for paroi in parois
-                if paroi["type_paroi"] == "Plancher haut"
+                if "planche_haut" in paroi["identifiant"]
             ]
         )
         dpe["DP_vitrage"] = sum(
@@ -788,16 +791,20 @@ class DPE(BaseProcessor):
         inerties_mur = [
             (paroi["inertie"], paroi["surface_paroi"])
             for paroi in parois
-            if paroi["type_paroi"] == "Mur"
+            if "mur" in paroi["identifiant"]
         ]
         inerties_mur = (
-            sorted(inerties_mur, key=lambda x: x[1], reverse=True)[0][0] + "e"
+            sorted(inerties_mur, key=lambda x: x[1], reverse=True)[0][0]
         )
+        if inerties_mur=="Léger":
+            inerties_mur="Légère"
+        else:
+            inerties_mur="Lourde"
 
         inerties_plancher_bas = [
             (paroi["inertie"], paroi["surface_paroi"])
             for paroi in parois
-            if paroi["type_paroi"] == "Plancher bas"
+            if "plancher_bas" in paroi["identifiant"]
         ]
         if len(inerties_plancher_bas) > 0:
             inerties_plancher_bas = sorted(
@@ -809,7 +816,7 @@ class DPE(BaseProcessor):
         inerties_plancher_haut = [
             (paroi["inertie"], paroi["surface_paroi"])
             for paroi in parois
-            if paroi["type_paroi"] == "Plancher haut"
+            if "plancher_haut" in paroi["identifiant"]
         ]
         if len(inerties_plancher_haut) > 0:
             inerties_plancher_haut = sorted(
@@ -1078,7 +1085,7 @@ class DPE(BaseProcessor):
             [
                 paroi
                 for id, paroi in dpe["parois"].items()
-                if paroi["type_paroi"] == "Mur"
+                if "mur" in paroi["identifiant"]
             ]
         )
         if nb_facade_exposee > 1:
@@ -1102,7 +1109,7 @@ class DPE(BaseProcessor):
             [
                 paroi["surface_paroi"]
                 for id, paroi in dpe["parois"].items()
-                if paroi["type_paroi"] != "Plancher bas"
+                if "plancher_bas" not in paroi["identifiant"]
             ]
         )
 

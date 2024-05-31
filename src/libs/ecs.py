@@ -4,6 +4,20 @@ from pydantic import BaseModel
 import os
 from typing import Optional, Dict, Any
 
+generator_types = [
+    "A combustion Chauffe-bain au gaz à production instantannée",
+    "Electrique",
+    "Electrique classique",
+    "Electrique thermodinamyque",
+    "Réseau de chaleur isolé",
+    "Réseau de chaleur non isolé",
+    "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz",
+    "A combustion Mixte chaudière gaz, fioul ou bois",
+    "A combustion Accumulateur gaz",
+    "Thermodynamique à accumulation avec appoint",
+    "Thermodynamique à accumulation sans appoint"
+]
+
 
 class EcsInput(BaseModel):
     """
@@ -63,7 +77,12 @@ class ECS(BaseProcessor):
         Args:
             abaques (dict): Dictionary containing the lookup tables for efficiency calculations.
         """
-        super().__init__(abaques, EcsInput)
+        self.characteristics_corrections={
+            "type_generateur": generator_types,
+            "pieces_alimentees_contigues": [True, False],
+        }
+
+        super().__init__(abaques, EcsInput, characteristics_corrections=self.characteristics_corrections)
 
     def define_categorical(self):
         """

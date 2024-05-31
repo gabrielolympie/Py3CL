@@ -20,10 +20,11 @@ class BaseProcessor:
         used_abaques (dict): Mapping of field usage to abaque specifications.
         field_usage (dict): Tracks the usage of fields across different abaques.
     """
-    def __init__(self, abaques, input):
+    def __init__(self, abaques, input, characteristics_corrections=None):
         self.abaques = abaques
         self.input=input
         self.input_scheme = input.__annotations__
+        self.characteristics_corrections = characteristics_corrections
         self.define_categorical()
         self.define_numerical()
         self.define_abaques()
@@ -120,6 +121,9 @@ class BaseProcessor:
                 key_characteristics[field]="float"
             else:
                 key_characteristics[field]="any"
+        if self.characteristics_corrections is not None:
+            for field, value in self.characteristics_corrections.items():
+                key_characteristics[field]=value
         return key_characteristics
                 
     @property
