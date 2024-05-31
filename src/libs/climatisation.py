@@ -1,5 +1,6 @@
 from libs.utils import safe_divide, vectorized_safe_divide
 from pydantic import BaseModel
+from libs.base import BaseProcessor
 import numpy as np
 from typing import Optional
 
@@ -21,7 +22,7 @@ class ClimatisationInput(BaseModel):
     type_energie: Optional[str] = None  # Electricité, Gaz, Fioul...
 
 
-class Climatisation:
+class Climatisation(BaseProcessor):
     """
     Represents a climatisation system with methods to calculate various climatic metrics.
 
@@ -40,7 +41,35 @@ class Climatisation:
         Args:
             abaques (dict): Abaques for calculating EER and other coefficients.
         """
-        self.abaques = abaques
+        super().__init__(abaques, ClimatisationInput)
+
+    def define_categorical(self):
+        """
+        Define the fields that are considered categorical within the input data model.
+        """
+        self.categorical_fields = [
+            "type_energie",  # 'Electricité', 'Gaz', 'Fioul'...
+        ]
+
+    def define_numerical(self):
+        """
+        Define the fields that are considered numerical within the input data model.
+        """
+        self.numerical_fields = [
+            "annee_installation",
+            "surface_refroidie",
+        ]
+
+    def define_abaques(self):
+        """
+        Define and map the abaque configurations to specific fields used in climatisation calculations.
+        """
+        self.used_abaques = {
+            "seer_clim": {
+                "zone_hiver": "zone_hiver",  # This might come from dpe, not ClimatisationInput
+                "annee_climatisation": "annee_installation",
+            },
+        }
 
     def calculate_rbth_j(self, dpe):
         """

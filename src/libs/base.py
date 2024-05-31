@@ -1,89 +1,139 @@
+from libs.utils import safe_divide, vectorized_safe_divide, set_community, iterative_merge
+from pydantic import BaseModel
+import os
+from typing import Optional
 import numpy as np
 import pandas as pd
-import os
 
 
 class BaseProcessor:
-    def __init__(self, data_path, *args, **kwargs):
-        """Define the base class for the processor"""
-        self.load(data_path, *args, **kwargs)
-        self.preprocess(*args, **kwargs)
+    """
+    A processor class that handles the initialization and configuration of processing parameters based on input schemes,
+    defines categorical and numerical fields, manages abaque configurations, and establishes inverse mappings.
+    
+    Attributes:
+        abaque (dict): A dictionary containing abaque configurations.
+        input (Any): An input object expected to have type annotations defining its structure.
+        input_scheme (dict): Extracted type annotations from the input object.
+        categorical_fields (list): List of fields categorized as categorical.
+        numerical_fields (list): List of fields categorized as numerical.
+        used_abaques (dict): Mapping of field usage to abaque specifications.
+        field_usage (dict): Tracks the usage of fields across different abaques.
+    """
+    def __init__(self, abaques, input):
+        self.abaques = abaques
+        self.input=input
+        self.input_scheme = input.__annotations__
+        self.define_categorical()
+        self.define_numerical()
+        self.define_abaques()
+        self.inverse_abaques()
+        self.field_usage = self.list_fields_usages
 
-    def __str__(self):
-        return f"{self.__class__.__name__}({self.__dict})"
+    
+    def define_categorical(self):
+        self.categorical_fields = [
+            ## Fill with the categorical fields
+        ]
 
-    def __dict__(self):
-        return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
+    def define_numerical(self):
+        self.numerical_fields = [
+            ## Fill with the numerical fields
+        ]
 
-    def __call__(self, *args, **kwargs):
-        """Call the calc function"""
-        return self.calc(*args, **kwargs)
+    def define_abaques(self):
+        self.used_abaques = {
+            # "Rd_systeme_chauffage": {
+            #     "type_distribution": "type_distribution",
+            #     "isole": "isolation_distribution",
+            # },
+        }
 
-    def load(self, *args, **kwargs):
-        pass
+    def inverse_abaques(self):
+        self.used_abaques_inv = self.used_abaques.copy()
+        for k, v in self.used_abaques_inv.items():
+            v = {v: k for k, v in v.items()}
+            self.used_abaques[k] = v
 
-    def preprocess(self, *args, **kwargs):
-        pass
-
-    def calc(self, *args, **kwargs):
-        """Based on variable, compute the value of the variable"""
-        pass
+    def get_renamed_cat_combination(self, name_abaque):
+        cat_combinations=pd.DataFrame(self.abaques[name_abaque].valid_cat_combinations)
+        correspondance_dict=self.used_abaques_inv[name_abaque]
+        cat_combinations.columns = [correspondance_dict[elt] if elt in correspondance_dict else elt for elt in cat_combinations.columns]
+        return cat_combinations.to_dict(orient='records')
 
     @property
-    def calc_input(self):
-        """Return the valid inputs of the calc function when input is categorical"""
-        return {}
+    def valid_cat_combinations(self):
+        valid_cat_combinations = {}
+        # Iterate over each abaque to gather combinations of fields that are used together
+        standalone_abaques = []
+        entangled_abaques = []
+        for field, abaques in self.field_usage.items():
+            if field in self.categorical_fields:
+                if len(abaques) > 1:
+                    entangled_abaques.append(set(abaques))
+        standalone_abaques = [abaques for abaques in self.used_abaques if abaques not in list(set().union(*entangled_abaques))]
+        entangled_abaques = [list(elt) for elt in set_community(entangled_abaques)]
 
-    def validate(self, *args, **kwargs):
-        """Validate the input of the calc function"""
-        for arg, arg_value in kwargs.items():
-            if arg_value is not None and not (str(arg_value).lower() == "nan"):
-                if arg in self.calc_input:
-                    if type(arg_value) == list:
-                        for value in arg_value:
-                            if value is not None and not (str(value).lower() == "nan"):
-                                assert (
-                                    value in self.calc_input[arg]
-                                ), f"{arg} must be in {self.calc_input[arg]}, got {value}"
+        n=0
+        for elt in standalone_abaques:
+            # temp = pd.DataFrame(self.abaques[elt].valid_cat_combinations)
+            # temp.columns = []
+
+            valid_cat_combinations[f"group_{n}"] = {
+                'keys': list(self.used_abaques[elt].keys()),
+                'combinations':self.get_renamed_cat_combination(elt)
+            }
+            n+=1
+
+        for elt in entangled_abaques:
+            combinations = [self.get_renamed_cat_combination(a) for a in elt]
+            combinations = iterative_merge(combinations)
+            valid_cat_combinations[f"group_{n}"] = {
+                'keys': list(set().union(*[list(c.keys()) for c in combinations])),
+                'combinations': combinations
+            }
+            n+=1
+
+        return valid_cat_combinations
+
+    @property
+    def key_characteristics(self):
+        key_characteristics={}
+        for field in self.input_scheme:
+            if field in self.field_usage:
+                candidates=[self.abaques[a].key_characteristics[self.used_abaques[a][field]] for a in self.field_usage[field]]
+                if field in self.categorical_fields:
+                    if len(candidates)>1:
+                        candidates=np.concatenate(candidates)
                     else:
-                        assert (
-                            arg_value in self.calc_input[arg]
-                        ), f"{arg} must be in {self.calc_input[arg]}, got {arg_value}"
-
-
-class AggregatedProcessor:
-    def __init__(self, data_path, *args, **kwargs):
-        """Define the base class for the processor"""
-        self.load(data_path, *args, **kwargs)
-
-    def __str__(self):
-        return f"{self.__class__.__name__}({self.__dict})"
-
-    def __dict__(self):
-        return {k: v for k, v in self.__dict__.items() if not k.startswith("_")}
-
-    def __call__(self, *args, **kwargs):
-        """Call the calc function"""
-        return self.calc(*args, **kwargs)
-
+                        candidates=candidates[0]
+                    
+                    candidates=np.unique([str(elt) for elt in candidates])
+                    key_characteristics[field]=candidates
+                elif field in self.numerical_fields:
+                    m = min([candidate['min'] for candidate in candidates])
+                    M = max([candidate['max'] for candidate in candidates])
+                    key_characteristics[field]={'min':m, 'max':M}
+                else:
+                    key_characteristics[field]="any"
+            elif field in self.numerical_fields:
+                key_characteristics[field]="float"
+            else:
+                key_characteristics[field]="any"
+        return key_characteristics
+                
     @property
-    def calc_input(self):
-        """Return a dict of inputs for the detailed_calc function.
+    def list_fields_usages(self):
+        dico={}
+        for elt in self.input_scheme:
+            for abaque in self.used_abaques:
+                if elt in self.used_abaques[abaque].keys():
+                    try:
+                        dico[elt].append(abaque)
+                    except:
+                        dico[elt]=[abaque]
+        return dico
+    
 
-        For categorical inputs, the value is a list of valid inputs.
-        For numerical inputs, the value is "num"
-
-        """
-        return {}
-
-    def load(self, data_path):
-        """This time, directly loads leaf processor to perform computations"""
-        pass
-
-    def calc(self, args, kwargs):
-        """Based on variable, compute the value of the variable"""
-        pass
-
-    def detailed_calc(self, args, kwargs):
-        """Based on variable, compute the value of the variable and output the final value as well as the intermediate values into a dictionary"""
+    def forward(self, dpe, kwargs):
         pass

@@ -1,3 +1,4 @@
+from libs.base import BaseProcessor
 from libs.abaques import Abaque
 from libs.parois import ParoiInput, Paroi
 from libs.ouvrants import VitrageInput, Vitrage
@@ -372,7 +373,7 @@ months_days = {
 }
 
 
-class DPE:
+class DPE(BaseProcessor):
     """
     Represents a DPE model with methods to calculate various energy efficiency metrics.
 
@@ -399,6 +400,8 @@ class DPE:
         self.configs = configs
         self.load_abaques(self.configs)
 
+        super().__init__(self.abaques, DPEInput)
+
         self.parois_processor = Paroi(self.abaques)
         self.vitrage_processor = Vitrage(self.abaques)
         self.pont_thermique_processor = PontThermique(self.abaques)
@@ -407,6 +410,50 @@ class DPE:
         self.chauffage_processor = Chauffage(self.abaques)
 
         self.months = list(months_days.keys())
+
+
+    def define_categorical(self):
+        self.categorical_fields =[
+            "type_batiment",
+            "usage",
+            "type_ventilation",
+            "type_installation_fecs"
+        ]
+
+    def define_numerical(self):
+        self.numerical_fields = [
+            "altitude",
+            "surface_habitable",
+            "hauteur_sous_plafond",
+            "annee_construction",
+            "q4paconv",
+        ]
+
+    def define_abaques(self):
+        self.used_abaques = {
+            # 'coef_reduction_deperdition_exterieur': {
+            #     # Mapping the exterior type to calculate reduction coefficients
+            #     'aiu_aue': 'exterior_type_or_local_non_chauffe'
+            # },
+            'zone_info': {
+                'altitude': 'altitude',
+                'month': 'calc_month',
+                'zone_climatique': 'calc_zone_climatique'
+            },
+            'fecs': {
+                'type_batiment': 'type_batiment',
+                'type_installation': 'type_installation_fecs',
+                'zone_climatique': 'calc_zone_climatique'
+            },
+            'department': {
+                'id': 'calc_department'
+            },
+            'renouvellement_air': {
+                'type_ventilation': 'type_ventilation'
+            },
+
+        }
+
 
     def forward(self, kwargs: DPEInput):
         """

@@ -1,8 +1,9 @@
-from libs.utils import safe_divide
+from libs.utils import safe_divide, vectorized_safe_divide, set_community, iterative_merge
+from libs.base import BaseProcessor
 from pydantic import BaseModel
 import os
 from typing import Optional
-
+import numpy as np
 
 class ChauffageInput(BaseModel):
     """
@@ -24,7 +25,6 @@ class ChauffageInput(BaseModel):
         type_regulation_intermittence (str, optional): Type of intermittent regulation.
         type_chauffage (str, optional): General type of heating, e.g., 'Central', 'Divisé'.
     """
-
     identifiant: str
     surface_chauffee: Optional[float] = None
     type_installation: Optional[str] = None
@@ -41,22 +41,78 @@ class ChauffageInput(BaseModel):
     type_chauffage: Optional[str] = None
 
 
-class Chauffage:
+class Chauffage(BaseProcessor):
     """
     A class to handle heating system calculations based on various input parameters and predefined efficiency tables.
 
     Attributes:
-        abaques (dict): A dictionary containing various efficiency tables and coefficients for different types of heating components.
+        abaque (dict): A dictionary containing abaque configurations.
+        input (Any): An input object expected to have type annotations defining its structure.
+        input_scheme (dict): Extracted type annotations from the input object.
+        categorical_fields (list): List of fields categorized as categorical.
+        numerical_fields (list): List of fields categorized as numerical.
+        used_abaques (dict): Mapping of field usage to abaque specifications.
+        field_usage (dict): Tracks the usage of fields across different abaques.
     """
 
     def __init__(self, abaques):
-        """
-        Initializes the Chauffage class with necessary efficiency tables.
+        super().__init__(abaques, ChauffageInput)
 
-        Args:
-            abaques (dict): Efficiency tables and coefficients for heating calculations.
-        """
-        self.abaques = abaques
+    
+    def define_categorical(self):
+        self.categorical_fields = [
+            "type_installation",
+            "type_pac",
+            "type_generateur",
+            "type_emetteur",
+            "type_distribution",
+            "isolation_distribution",
+            "type_regulation",
+            "equipement_intermittence",
+            "comptage_individuel",
+            "type_regulation_intermittence",
+            "type_chauffage",
+        ]
+
+    def define_numerical(self):
+        self.numerical_fields = [
+            "surface_chauffee",
+            "annee_installation",
+        ]
+
+    def define_abaques(self):
+        self.used_abaques = {
+            "Rd_systeme_chauffage": {
+                "type_distribution": "type_distribution",
+                "isole": "isolation_distribution",
+            },
+            "Rr_systeme_chauffage": {
+                "type_installation": "type_regulation",
+            },
+            "Re_systeme_chauffage": {
+                "type_emetteur": "type_emetteur",
+            },
+            "scop_pac": {
+                "type_pac": "type_pac",
+                "zone_hiver": "zone_hiver",  # This comes from dpe, not ChauffageInput
+                "annee_installation": "annee_installation",
+                "type_emetteur": "calc_type_emetteur",  # Adjusted based on logic in the class
+            },
+            "Rg": {
+                "type_generateur": "type_generateur",
+            },
+            "I0_intermittence": {
+                "type_batiment": "type_batiment",  # This comes from dpe, not ChauffageInput
+                "type_installation": "type_installation",
+                "type_chauffage": "type_chauffage",
+                "type_regulation": "type_regulation_intermittence",
+                "type_emetteur": "calc_type_emetteur",  # Adjusted based on logic in the class
+                "inertie": "inertie_globale",  # This comes from dpe, not ChauffageInput
+                "equipement_intermittence": "equipement_intermittence",
+                "comptage_individuel": "comptage_individuel",
+            },
+        }
+
 
     def forward(self, dpe, kwargs: ChauffageInput):
         """

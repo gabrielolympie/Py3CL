@@ -1,5 +1,6 @@
 from libs.utils import safe_divide
 from pydantic import BaseModel
+from libs.base import BaseProcessor
 import os
 import numpy as np
 from typing import Optional, Dict, List, Tuple, Any
@@ -40,14 +41,14 @@ class VitrageInput(BaseModel):
         type_baie (str, optional): The overall type of window system (e.g., window, door-window, french window). Defaults to None.
         fermetures (str, optional): The type of closure device for the window (e.g., shutters, blinds). Defaults to None.
         masque_proche_type_masque (str, optional): The type of nearby shading element (e.g., awning, overhang). Defaults to None.
-        masque_proche_avance (float, optional): The distance between the window and the nearby shading element (meters). Defaults to None.
+        masque_proche_avance (str, optional): The distance between the window and the nearby shading element (meters). Defaults to None.
         masque_proche_orientation (str, optional): The orientation of the nearby shading element. Defaults to None.
-        masque_proche_rapport_l1_l2 (float, optional): The ratio of the width to the height of the nearby shading element. Defaults to None.
-        masque_proche_beta_gama (float, optional): The beta-gamma angle of the nearby shading element. Defaults to None.
-        masque_proche_angle_superieur_30 (float, optional): The angle of the nearby shading element relative to the horizontal plane (degrees). Defaults to None.
-        masque_lointain_hauteur_alpha (float, optional): The height-alpha angle of the distant shading element (degrees). Defaults to None.
+        masque_proche_rapport_l1_l2 (str, optional): The ratio of the width to the height of the nearby shading element. Defaults to None.
+        masque_proche_beta_gama (str, optional): The beta-gamma angle of the nearby shading element. Defaults to None.
+        masque_proche_angle_superieur_30 (str, optional): The angle of the nearby shading element relative to the horizontal plane (degrees). Defaults to None.
+        masque_lointain_hauteur_alpha (str, optional): The height-alpha angle of the distant shading element (degrees). Defaults to None.
         masque_lointain_orientation (str, optional): The orientation of the distant shading element. Defaults to None.
-        ombrage_lointain_hauteur (float, optional): The height of the distant obstacle (degrees). Defaults to None.
+        ombrage_lointain_hauteur (str, optional): The height of the distant obstacle (degrees). Defaults to None.
         ombrage_lointain_orientation (str, optional): The orientation of the distant obstacle. Defaults to None.
         ombrage_lointain_secteur (str, optional): The sector of the distant obstacle. Defaults to None.
     """
@@ -68,14 +69,14 @@ class VitrageInput(BaseModel):
     type_baie: Optional[str] = None
     fermetures: Optional[str] = None
     masque_proche_type_masque: Optional[str] = None
-    masque_proche_avance: Optional[float] = None
+    masque_proche_avance: Optional[str] = None
     masque_proche_orientation: Optional[str] = None
-    masque_proche_rapport_l1_l2: Optional[float] = None
-    masque_proche_beta_gama: Optional[float] = None
-    masque_proche_angle_superieur_30: Optional[float] = None
+    masque_proche_rapport_l1_l2: Optional[str] = None
+    masque_proche_beta_gama: Optional[str] = None
+    masque_proche_angle_superieur_30: Optional[str] = None
     masque_lointain_hauteur_alpha: Optional[str] = None
     masque_lointain_orientation: Optional[str] = None
-    ombrage_lointain_hauteur: Optional[float] = None
+    ombrage_lointain_hauteur: Optional[str] = None
     ombrage_lointain_orientation: Optional[str] = None
     ombrage_lointain_secteur: Optional[str] = None
     exterior_type_or_local_non_chauffe: Optional[str] = None
@@ -84,12 +85,18 @@ class VitrageInput(BaseModel):
     local_non_chauffe_isole: Optional[bool] = None
 
 
-class Vitrage:
+class Vitrage(BaseProcessor):
     """
     A class that encapsulates the logic to process vitrage data using provided input parameters and external datasets.
 
     Attributes:
-        abaques (dict): A dictionary containing the datasets used for calculation.
+        abaque (dict): A dictionary containing abaque configurations.
+        input (Any): An input object expected to have type annotations defining its structure.
+        input_scheme (dict): Extracted type annotations from the input object.
+        categorical_fields (list): List of fields categorized as categorical.
+        numerical_fields (list): List of fields categorized as numerical.
+        used_abaques (dict): Mapping of field usage to abaque specifications.
+        field_usage (dict): Tracks the usage of fields across different abaques.
 
     Methods:
         forward(dpe: dict, kwargs: VitrageInput) -> dict:
@@ -103,7 +110,7 @@ class Vitrage:
         Args:
             abaques (dict): A dictionary containing the datasets used for calculation.
         """
-        self.abaques = abaques
+        super().__init__(abaques, VitrageInput)
         self.months = [
             "Janvier",
             "Février",
@@ -129,6 +136,110 @@ class Vitrage:
             "Portes-fenêtres battantes  avec soubassement",
             "Portes-fenêtres battantes  sans soubassement",
         ]
+
+    def define_categorical(self):
+        self.categorical_fields = [
+            "type_vitrage",
+            "orientation",
+            "inclinaison",
+            "remplissage",
+            "traitement_vitrage",
+            "type_pose",
+            "type_materiaux",
+            "type_menuiserie",
+            "type_baie",
+            "fermetures",
+            "masque_proche_type_masque",
+            "masque_proche_orientation",
+            "masque_lointain_orientation",
+            "ombrage_lointain_orientation",
+            "ombrage_lointain_secteur",
+            "exterior_type_or_local_non_chauffe",
+            "masque_proche_avance",
+            "masque_proche_rapport_l1_l2",
+            "masque_proche_beta_gama",
+            "masque_proche_angle_superieur_30",
+            "masque_lointain_hauteur_alpha",
+            "ombrage_lointain_hauteur",
+        ]
+
+    def define_numerical(self):
+        self.numerical_fields = [
+            "surface_vitrage",
+            "hauteur_vitrage",
+            "largeur_vitrage",
+            "epaisseur_lame",            
+            "surface_paroi_contact",
+            "surface_paroi_local_non_chauffe"
+        ]
+
+    def define_abaques(self):
+        self.used_abaques = {
+            "coef_reduction_deperdition_exterieur": {
+                "aiu_aue": "exterior_type_or_local_non_chauffe",
+            },
+            "coef_reduction_veranda": {
+                "zone_hiver": "zone_hiver",
+                "orientation_veranda": "orientation",
+                "isolation_paroi": "local_non_chauffe_isole"
+            },
+            "coef_reduction_deperdition_local": {
+                "aiu_aue_max": "aiu_aue",
+                "aue_isole": "local_non_chauffe_isole",
+                "aiu_isole": "isolation",
+                "uv_ue": "uvue"
+            },
+            "ug_vitrage": {
+                "type_vitrage": "type_vitrage",
+                "orientation": "orientation",
+                "remplissage": "remplissage",
+                "traitement_vitrage": "traitement_vitrage",
+                "epaisseur_lame": "epaisseur_lame"
+            },
+            "uw_vitrage": {
+                "type_materiaux": "type_materiaux",
+                "type_menuiserie": "type_menuiserie",
+                "type_baie": "type_baie",
+                "ug": "Ug"
+            },
+            "resistance_additionnelle_vitrage": {
+                "fermetures": "fermetures"
+            },
+            "transmission_thermique_baie": {
+                "uw": "Uw",
+                "deltar": "DeltaR"
+            },
+            "facteur_solaire": {
+                "type_pose": "type_pose",
+                "materiaux": "type_materiaux",
+                "type_baie": "type_baie",
+                "type_vitrage": "calc_type_vitrage_fs"
+            },
+            "coefficient_orientation": {
+                "zone_climatique": "zone_climatique",
+                "month": "month",
+                "orientation": "orientation",
+                "inclination": "inclinaison"
+            },
+            "coef_masques_proches": {
+                "type_masque": "masque_proche_type_masque",
+                "avance": "masque_proche_avance",
+                "orientation": "masque_proche_orientation",
+                "rapport_l1_l2": "masque_proche_rapport_l1_l2",
+                "beta_gama": "masque_proche_beta_gama",
+                "angle_superieur_30": "masque_proche_angle_superieur_30"
+            },
+            "coef_masques_lointain_homogene": {
+                "hauteur_alpha": "masque_lointain_hauteur_alpha",
+                "orientation": "masque_lointain_orientation"
+            },
+            "coef_ombrage_lointain": {
+                "hauteur": "ombrage_lointain_hauteur",
+                "orientation": "ombrage_lointain_orientation",
+                "secteur": "ombrage_lointain_secteur"
+            }
+        }
+
 
     def forward(self, dpe: Dict[str, Any], kwargs: VitrageInput) -> Dict[str, Any]:
         """
@@ -284,15 +395,17 @@ class Vitrage:
         Returns:
             float: The solar factor (facteur solaire) of the vitrage.
         """
+        vitrage["type_vitrage_fs"] = vitrage["type_vitrage"]
         if vitrage["traitement_vitrage"] != "Non Traités":
             if "Double" in vitrage["type_vitrage"] or "Triple" in vitrage["type_vitrage"]:
-                vitrage["type_vitrage"] += " V.I.R"
+                vitrage["type_vitrage_fs"] = vitrage["type_vitrage"] + " V.I.R"
+        
         return self.abaques["facteur_solaire"](
             {
                 "type_pose": vitrage["type_pose"],
                 "materiaux": vitrage["type_materiaux"],
                 "type_baie": vitrage["type_baie"],
-                "type_vitrage": vitrage["type_vitrage"],
+                "type_vitrage": vitrage["type_vitrage_fs"],
             },
             "fts",
         )

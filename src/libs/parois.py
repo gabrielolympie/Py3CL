@@ -1,5 +1,6 @@
 from libs.utils import safe_divide
 from pydantic import BaseModel
+from libs.base import BaseProcessor
 import os
 from typing import Optional, List, Dict, Any
 
@@ -93,15 +94,100 @@ class ParoiInput(BaseModel):
     orientation: Optional[str] = None  # ['Nord', 'Sud', 'Est', 'Ouest']
 
 
-class Paroi:
+class Paroi(BaseProcessor):
+    """
+    A processor class that handles the initialization and configuration of processing parameters based on input schemes,
+
+    Attributes:
+        abaque (dict): A dictionary containing abaque configurations.
+        input (Any): An input object expected to have type annotations defining its structure.
+        input_scheme (dict): Extracted type annotations from the input object.
+        categorical_fields (list): List of fields categorized as categorical.
+        numerical_fields (list): List of fields categorized as numerical.
+        used_abaques (dict): Mapping of field usage to abaque specifications.
+        field_usage (dict): Tracks the usage of fields across different abaques.
+    """
     def __init__(self, abaques):
         """
         Initializes a new instance of the Paroi class.
 
+        
         Args:
             abaques (dict): A dictionary containing reference data and coefficients necessary for calculations.
         """
-        self.abaques = abaques
+        super().__init__(abaques, ParoiInput)
+
+    def define_categorical(self):
+        self.categorical_fields = [
+            # 'identifiant_adjacents',
+            'type_paroi',
+            'materiaux',
+            'isolation',
+            'effet_joule',
+            'enduit',
+            'doublage_with_lame_below_15mm',
+            'doublage_with_lame_above_15mm', 
+            'is_vide_sanitaire',
+            'is_unheated_underground',
+            'is_terre_plain', 
+            'exterior_type_or_local_non_chauffe', 
+            'local_non_chauffe_isole', 
+            'orientation'
+        ]
+
+    def define_numerical(self):
+        self.numerical_fields = [
+            'surface_paroi',
+            'largeur',
+            'hauteur',
+            'uparoi',
+            'epaisseur',
+            'annee_isolation',
+            'r_isolant',
+            'epaisseur_isolant',
+            'surface_immeuble',
+            'perimeter_immeuble',
+            'surface_paroi_contact',
+            'surface_paroi_local_non_chauffe'
+        ]
+
+    def define_abaques(self):
+        self.used_abaques = {
+            'coef_reduction_deperdition_exterieur': {
+                # Mapping the exterior type to calculate reduction coefficients
+                'aiu_aue': 'exterior_type_or_local_non_chauffe'
+            },
+            'coef_reduction_veranda': {
+                # Specific handling for verandas based on orientation and isolation
+                'orientation_veranda': 'orientation',
+                'isolation_paroi': 'isolation'
+            },
+            'local_non_chauffe': {
+                # Handling non-heated local conditions based on building type
+                'type_batiment': 'type_batiment',  # Assuming 'type_batiment' is available in the dpe context
+                'local_non_chauffe': 'exterior_type_or_local_non_chauffe'
+            },
+            'coef_reduction_deperdition_local': {
+                # Handling local non-heated coefficients based on surface contact and isolation
+                'aiu_aue_max': 'surface_paroi_contact',
+                'aue_isole': 'local_non_chauffe_isole',
+                'aiu_isole': 'isolation',
+                'uv_ue': 'calc_uvue'
+            },
+            'uph0': {
+                # Basic thermal transmittance for upper floors based on materials
+                'materiaux': 'materiaux'
+            },
+            'upb0': {
+                # Basic thermal transmittance for lower floors based on materials
+                'materiaux': 'materiaux'
+            },
+            'umur0': {
+                # Basic thermal transmittance for walls based on materials and thickness
+                'umur0_materiaux': 'materiaux',
+                'epaisseur': 'epaisseur'
+            }
+        }
 
     def forward(self, dpe, kwargs: ParoiInput):
         """

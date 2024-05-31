@@ -1,4 +1,5 @@
 from libs.utils import safe_divide
+from libs.base import BaseProcessor
 from pydantic import BaseModel
 import os
 from typing import Optional, Dict, Any
@@ -33,13 +34,23 @@ class EcsInput(BaseModel):
     category_stockage: Optional[str] = None
     volume_ballon: Optional[float] = None
     Pnom: Optional[float] = None
+    # is_accumulateur: Optional[bool] = None
     annee_generateur: Optional[int] = None
     type_pac: Optional[str] = None
 
 
-class ECS:
+class ECS(BaseProcessor):
     """
     Class to compute various efficiency metrics for a hot water system based on provided parameters and lookup tables (abaques).
+
+    Attributes:
+        abaque (dict): A dictionary containing abaque configurations.
+        input (Any): An input object expected to have type annotations defining its structure.
+        input_scheme (dict): Extracted type annotations from the input object.
+        categorical_fields (list): List of fields categorized as categorical.
+        numerical_fields (list): List of fields categorized as numerical.
+        used_abaques (dict): Mapping of field usage to abaque specifications.
+        field_usage (dict): Tracks the usage of fields across different abaques.
     """
 
     DEFAULT_POWER_LIMIT_LOW = 10
@@ -52,7 +63,59 @@ class ECS:
         Args:
             abaques (dict): Dictionary containing the lookup tables for efficiency calculations.
         """
-        self.abaques = abaques
+        super().__init__(abaques, EcsInput)
+
+    def define_categorical(self):
+        """
+        Defines the list of input fields that are categorized as categorical for processing ECS efficiency.
+        """
+        self.categorical_fields = [
+            "type_generateur",
+            "type_generateur_distribution",
+            "type_installation",
+            "production_en_volume_habitable",
+            "type_stockage",
+            "category_stockage",
+            "type_pac",
+            "Pnom",
+        ]
+
+    def define_numerical(self):
+        """
+        Defines the list of input fields that are categorized as numerical for computing efficiencies in the ECS system.
+        """
+        self.numerical_fields = [
+            "volume_ballon",
+            "annee_generateur",
+        ]
+
+    def define_abaques(self):
+        """
+        Sets up the mapping of field usage to abaque configurations necessary for ECS efficiency calculations.
+        """
+        self.used_abaques = {
+            "Rd_ecs": {
+                "type_installation": "type_installation",
+                "type_generateur": "type_generateur_distribution",
+                "production_volume_habitable": "production_en_volume_habitable",
+                "pieces_alimentees_contigues": "pieces_alimentees_contigues",
+            },
+            "Rs_ecs": {
+                "type_stockage": "type_stockage",
+                "category_stockage": "category_stockage",
+                "volume_stockage": "volume_ballon",
+            },
+            "Rg_ecs": {
+                # "type_generateur": "type_generateur",
+                "annee_generateur": "annee_generateur",
+                "puissance_nominale": "Pnom",
+            },
+            "Rg_ecs_pac": {
+                "annee_generateur": "annee_generateur",
+                "zone_hiver": "zone_hiver",  # From DPE data
+                "type_pac": "type_pac",
+            },
+        }
 
     def forward(self, dpe: Dict[str, Any], kwargs: EcsInput) -> Dict[str, Any]:
         """

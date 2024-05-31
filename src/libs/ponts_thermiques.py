@@ -1,5 +1,6 @@
 from libs.utils import safe_divide
 from pydantic import BaseModel, Field
+from libs.base import BaseProcessor
 import os
 from typing import Optional, Dict, Any
 import logging
@@ -36,11 +37,17 @@ class PontThermiqueInput(BaseModel):
     largeur_dormant: Optional[float] = Field(None, gt=0, description="Width of the frame in meters.")
 
 
-class PontThermique:
+class PontThermique(BaseProcessor):
     """Manages the calculations for thermal bridges using input parameters and abaque tables.
 
     Attributes:
-        abaques (dict): A dictionary of abaque tables used for looking up thermal bridge coefficients.
+        abaque (dict): A dictionary containing abaque configurations.
+        input (Any): An input object expected to have type annotations defining its structure.
+        input_scheme (dict): Extracted type annotations from the input object.
+        categorical_fields (list): List of fields categorized as categorical.
+        numerical_fields (list): List of fields categorized as numerical.
+        used_abaques (dict): Mapping of field usage to abaque specifications.
+        field_usage (dict): Tracks the usage of fields across different abaques.
     """
 
     def __init__(self, abaques: Dict[str, Any]):
@@ -49,7 +56,38 @@ class PontThermique:
         Args:
             abaques (dict): A dictionary containing abaque tables needed for the calculations.
         """
-        self.abaques = abaques
+        super().__init__(abaques, PontThermiqueInput)
+
+    def define_categorical(self):
+        """Defines the categorical fields for the PontThermique calculations."""
+        self.categorical_fields = [
+            "type_liaison",
+            "isolation_mur",
+            "isolation_plancher_bas",
+            "type_pose",
+            "retour_isolation",
+            "largeur_dormant"
+        ]
+
+    def define_numerical(self):
+        """Defines the numerical fields for the PontThermique calculations."""
+        self.numerical_fields = [
+            "longueur_pont",
+        ]
+    
+    def define_abaques(self):
+        """Defines the usage of different abaques for calculating the k values."""
+        self.used_abaques = {
+            "kpth": {
+                "type_liaison": "type_liaison",
+                "isolation_mur": "isolation_mur",
+                "isolation_plancher_bas": "isolation_plancher_bas",
+                "type_pose": "type_pose",
+                "retour_isolation": "retour_isolation",
+                "largeur_dormant": "largeur_dormant"
+            }
+        }
+
 
     def lookup_k_value(self, pont_thermique: Dict[str, Any]) -> float:
         """Look up the k value from the abaque tables based on the input parameters.

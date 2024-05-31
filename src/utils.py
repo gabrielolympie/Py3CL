@@ -30,3 +30,5 @@ def load_config(filename):
         loaded_funcs_yaml = yaml.safe_load(file)
     # loaded_funcs = {k: deserialize_function(v) for k, v in loaded_funcs_yaml.items()}
     return loaded_funcs_yaml
+
+
