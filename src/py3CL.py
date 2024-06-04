@@ -401,6 +401,7 @@ class DPE(BaseProcessor):
         self.load_abaques(self.configs)
         self.characteristics_corrections={
             'usage':['Conventionnel', 'Dépensier'],
+            "nb_logements":'float',
         }
 
         super().__init__(self.abaques, DPEInput, characteristics_corrections=self.characteristics_corrections)
@@ -1121,7 +1122,7 @@ class DPE(BaseProcessor):
         nu_50 = safe_divide(nu_50_num, nu_50_den)
 
         Hperm_num = 0.34 * hsp * sh * nu_50 * e
-        Hperm_den = 1 + (f / e) * ((qvasoufconv - qvarepconv) / (hsp * nu_50)) ** 2
+        Hperm_den = 1 + (f / e) * safe_divide(qvasoufconv - qvarepconv,hsp * nu_50) ** 2
 
         dpe["nu_50"] = nu_50
         dpe["nb_facade_exposee"] = nb_facade_exposee
