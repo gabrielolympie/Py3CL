@@ -1,0 +1,12 @@
+# "id","code","energie","methode","type_production","taux_conversion","conversion_pci_pcs","est_efface","simu_ordre","simulateur"
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv046bis_evaluation_contenu_co2_reseaux.csv
+keys:
+- key_name: departement
+  key_type: cat
+rename:
+  tv016_departement_id: departement
+values:
+- co2

@@ -1,0 +1,16 @@
+# "id","code","energie","methode","type_production","taux_conversion","conversion_pci_pcs","est_efface","simu_ordre","simulateur"
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv045_conversion_kwh_co2.csv
+keys:
+- key_name: type_energie
+  key_type: cat
+rename:
+  energie: type_energie
+filters:
+- col: type_production
+  function: "lambda x: x=='ECS'"
+values:
+- taux_conversion
+- conversion_pci_pcs

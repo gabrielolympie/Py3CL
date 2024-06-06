@@ -1,0 +1,121 @@
+type_pac,type_emetteur,zone_hiver,annee_installation,SCOP
+PAC Air/Eau,Autres,H1,2008,2.2
+PAC Air/Eau,Planchers/Plafonds,H1,2008,2.4
+PAC Eau/Eau,Autres,H1,2008,2.2
+PAC Eau/Eau,Planchers/Plafonds,H1,2008,2.4
+PAC Eau glycolée/Eau,Autres,H1,2008,2.2
+PAC Eau glycolée/Eau,Planchers/Plafonds,H1,2008,2.4
+PAC Géothermie,Autres,H1,2008,2.2
+PAC Géothermie,Planchers/Plafonds,H1,2008,2.4
+PAC Air/Eau,Autres,H2,2008,2.2
+PAC Air/Eau,Planchers/Plafonds,H2,2008,2.4
+PAC Eau/Eau,Autres,H2,2008,2.2
+PAC Eau/Eau,Planchers/Plafonds,H2,2008,2.4
+PAC Eau glycolée/Eau,Autres,H2,2008,2.2
+PAC Eau glycolée/Eau,Planchers/Plafonds,H2,2008,2.4
+PAC Géothermie,Autres,H2,2008,2.2
+PAC Géothermie,Planchers/Plafonds,H2,2008,2.4
+PAC Air/Eau,Autres,H3,2008,2.5
+PAC Air/Eau,Planchers/Plafonds,H3,2008,2.9
+PAC Eau/Eau,Autres,H3,2008,2.5
+PAC Eau/Eau,Planchers/Plafonds,H3,2008,2.9
+PAC Eau glycolée/Eau,Autres,H3,2008,2.5
+PAC Eau glycolée/Eau,Planchers/Plafonds,H3,2008,2.9
+PAC Géothermie,Autres,H3,2008,2.5
+PAC Géothermie,Planchers/Plafonds,H3,2008,2.9
+PAC Air/Air,Autres,H1,2008,2.2
+PAC Air/Air,Planchers/Plafonds,H1,2008,2.2
+PAC Air/Air,Autres,H2,2008,2.2
+PAC Air/Air,Planchers/Plafonds,H2,2008,2.2
+PAC Air/Air,Autres,H3,2008,2.4
+PAC Air/Air,Planchers/Plafonds,H3,2008,2.4
+PAC Air/Eau,Autres,H1,2014,2.4
+PAC Air/Eau,Planchers/Plafonds,H1,2014,2.6
+PAC Eau/Eau,Autres,H1,2014,2.4
+PAC Eau/Eau,Planchers/Plafonds,H1,2014,2.6
+PAC Eau glycolée/Eau,Autres,H1,2014,2.4
+PAC Eau glycolée/Eau,Planchers/Plafonds,H1,2014,2.6
+PAC Géothermie,Autres,H1,2014,2.4
+PAC Géothermie,Planchers/Plafonds,H1,2014,2.6
+PAC Air/Eau,Autres,H2,2014,2.4
+PAC Air/Eau,Planchers/Plafonds,H2,2014,2.6
+PAC Eau/Eau,Autres,H2,2014,2.4
+PAC Eau/Eau,Planchers/Plafonds,H2,2014,2.6
+PAC Eau glycolée/Eau,Autres,H2,2014,2.4
+PAC Eau glycolée/Eau,Planchers/Plafonds,H2,2014,2.6
+PAC Géothermie,Autres,H2,2014,2.4
+PAC Géothermie,Planchers/Plafonds,H2,2014,2.6
+PAC Air/Eau,Autres,H3,2014,2.8
+PAC Air/Eau,Planchers/Plafonds,H3,2014,3.1
+PAC Eau/Eau,Autres,H3,2014,2.8
+PAC Eau/Eau,Planchers/Plafonds,H3,2014,3.1
+PAC Eau glycolée/Eau,Autres,H3,2014,2.8
+PAC Eau glycolée/Eau,Planchers/Plafonds,H3,2014,3.1
+PAC Géothermie,Autres,H3,2014,2.8
+PAC Géothermie,Planchers/Plafonds,H3,2014,3.1
+PAC Air/Air,Autres,H1,2014,2.3
+PAC Air/Air,Planchers/Plafonds,H1,2014,2.3
+PAC Air/Air,Autres,H2,2014,2.3
+PAC Air/Air,Planchers/Plafonds,H2,2014,2.3
+PAC Air/Air,Autres,H3,2014,2.6
+PAC Air/Air,Planchers/Plafonds,H3,2014,2.6
+PAC Air/Eau,Autres,H1,2016,2.6
+PAC Air/Eau,Planchers/Plafonds,H1,2016,2.9
+PAC Eau/Eau,Autres,H1,2016,2.7
+PAC Eau/Eau,Planchers/Plafonds,H1,2016,3
+PAC Eau glycolée/Eau,Autres,H1,2016,2.7
+PAC Eau glycolée/Eau,Planchers/Plafonds,H1,2016,3
+PAC Géothermie,Autres,H1,2016,2.7
+PAC Géothermie,Planchers/Plafonds,H1,2016,3
+PAC Air/Eau,Autres,H2,2016,2.6
+PAC Air/Eau,Planchers/Plafonds,H2,2016,2.9
+PAC Eau/Eau,Autres,H2,2016,2.7
+PAC Eau/Eau,Planchers/Plafonds,H2,2016,3
+PAC Eau glycolée/Eau,Autres,H2,2016,2.7
+PAC Eau glycolée/Eau,Planchers/Plafonds,H2,2016,3
+PAC Géothermie,Autres,H2,2016,2.7
+PAC Géothermie,Planchers/Plafonds,H2,2016,3
+PAC Air/Eau,Autres,H3,2016,3
+PAC Air/Eau,Planchers/Plafonds,H3,2016,3.5
+PAC Eau/Eau,Autres,H3,2016,3.1
+PAC Eau/Eau,Planchers/Plafonds,H3,2016,3.6
+PAC Eau glycolée/Eau,Autres,H3,2016,3.1
+PAC Eau glycolée/Eau,Planchers/Plafonds,H3,2016,3.6
+PAC Géothermie,Autres,H3,2016,3.1
+PAC Géothermie,Planchers/Plafonds,H3,2016,3.6
+PAC Air/Air,Autres,H1,2016,3
+PAC Air/Air,Planchers/Plafonds,H1,2016,3
+PAC Air/Air,Autres,H2,2016,3
+PAC Air/Air,Planchers/Plafonds,H2,2016,3
+PAC Air/Air,Autres,H3,2016,3.3
+PAC Air/Air,Planchers/Plafonds,H3,2016,3.3
+PAC Air/Eau,Autres,H1,2100,2.8
+PAC Air/Eau,Planchers/Plafonds,H1,2100,3.2
+PAC Eau/Eau,Autres,H1,2100,3
+PAC Eau/Eau,Planchers/Plafonds,H1,2100,3.3
+PAC Eau glycolée/Eau,Autres,H1,2100,3
+PAC Eau glycolée/Eau,Planchers/Plafonds,H1,2100,3.3
+PAC Géothermie,Autres,H1,2100,3
+PAC Géothermie,Planchers/Plafonds,H1,2100,3.3
+PAC Air/Eau,Autres,H2,2100,2.8
+PAC Air/Eau,Planchers/Plafonds,H2,2100,3.2
+PAC Eau/Eau,Autres,H2,2100,3
+PAC Eau/Eau,Planchers/Plafonds,H2,2100,3.3
+PAC Eau glycolée/Eau,Autres,H2,2100,3
+PAC Eau glycolée/Eau,Planchers/Plafonds,H2,2100,3.3
+PAC Géothermie,Autres,H2,2100,3
+PAC Géothermie,Planchers/Plafonds,H2,2100,3.3
+PAC Air/Eau,Autres,H3,2100,3.2
+PAC Air/Eau,Planchers/Plafonds,H3,2100,3.8
+PAC Eau/Eau,Autres,H3,2100,3.5
+PAC Eau/Eau,Planchers/Plafonds,H3,2100,4
+PAC Eau glycolée/Eau,Autres,H3,2100,3.5
+PAC Eau glycolée/Eau,Planchers/Plafonds,H3,2100,4
+PAC Géothermie,Autres,H3,2100,3.5
+PAC Géothermie,Planchers/Plafonds,H3,2100,4
+PAC Air/Air,Autres,H1,2100,3
+PAC Air/Air,Planchers/Plafonds,H1,2100,3
+PAC Air/Air,Autres,H2,2100,3
+PAC Air/Air,Planchers/Plafonds,H2,2100,3
+PAC Air/Air,Autres,H3,2100,3.3
+PAC Air/Air,Planchers/Plafonds,H3,2100,3.3
