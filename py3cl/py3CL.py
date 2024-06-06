@@ -105,6 +105,8 @@ abaques_configs = {
     "emission_froid": os.path.join(configs_path, "emission_froid.yaml"),
     "emission_autre": os.path.join(configs_path, "emission_autre.yaml"),
     "kwh_to_co2": os.path.join(configs_path, "kwh_to_co2.yaml"),
+    "dpe": os.path.join(configs_path, "dpe.yaml"),
+    'ges': os.path.join(configs_path, 'ges.yaml'),
 }
 
 # department
@@ -353,6 +355,19 @@ abaques_configs = {
 # Keys: ['departement']
 # Values: ['co2']
 
+# dpe
+# An error occurred: "None of [Index(['dpe'], dtype='object')] are in the [columns]"
+# Abaque(tv0xx_dpe.csv)
+# Keys: ['conso_per_square_meter']
+# Values: ['dpe']
+        
+# ges
+# An error occurred: "None of [Index(['ges'], dtype='object')] are in the [columns]"
+# Abaque(tv0xx_ges.csv)
+# Keys: ['conso_per_square_meter']
+# Values: ['ges']
+        
+
 class DPEInput(BaseModel):
     """
     This class represents the input for the DPE (Diagnostic de Performance Énergétique) model.
@@ -586,7 +601,24 @@ class DPE(BaseProcessor):
 
         dpe = self._calc_consommation_chauffage(dpe)
 
+        ## Emission primaire
+        dpe['C_finale'] = dpe['Cch'] + dpe['Cfr'] + dpe['Cecl'] + dpe['Cecs']
+        dpe['C_primaire'] = dpe['Cch_primaire'] + dpe['Cfr_primaire'] + dpe['Cecl_primaire'] + dpe['Cecs_primaire']
+        dpe['emission_totale'] = dpe['emission_ch'] + dpe['emission_fr'] + dpe['emission_ecl'] + dpe['emission_ecs']
+
+        ## Per square meter
+        dpe['C_finale_m2'] = safe_divide(dpe['C_finale'], dpe['surface_habitable'])
+        dpe['C_primaire_m2'] = safe_divide(dpe['C_primaire'], dpe['surface_habitable'])
+        dpe['emission_totale_m2'] = safe_divide(dpe['emission_totale'], dpe['surface_habitable'])
+
+        ## Compute DPE and GES
+        dpe['dpe'] = self.abaques['dpe']({"conso_per_square_meter": dpe['C_primaire_m2']}, 'dpe')
+        dpe['ges'] = self.abaques['ges']({"conso_per_square_meter": dpe['emission_totale_m2']}, 'ges')
         return dpe
+
+    def __call__(self, kwargs: DPEInput):
+        dpe = self.forward(kwargs)
+
 
     def load_abaques(self, configs):
         """
@@ -626,8 +658,10 @@ class DPE(BaseProcessor):
                 # total_power+=dpe["installations"][installation]["power"]
                 chauffages.append(dpe["installations"][installation])
 
-        dpe['Cchj'] = dpe['Bch_j'] * np.sum([elt['Ich'] * elt['%_surface'] * elt['INT'] for elt in chauffages])# / total_power
-        dpe['Cch'] = dpe['Cchj'].sum()
+
+        dpe['Cch'] = np.sum([installation["Cch"] for id, installation in dpe['installations'].items() if (('chauffage' in id) or ('pac' in id))])
+        dpe['Cch_primaire'] = np.sum([installation["Cch_primaire"] for id, installation in dpe['installations'].items() if (('chauffage' in id) or ('pac' in id))])
+        dpe['emission_ch'] = np.sum([installation["emission_ch"] for id, installation in dpe['installations'].items() if (('chauffage' in id) or ('pac' in id))])
         return dpe
 
     def _calc_consommation_froids(self, dpe):
@@ -645,13 +679,12 @@ class DPE(BaseProcessor):
                 dpe["installations"][installation] = self.clim_processor.forward(
                     dpe, clim_input
                 )
-
                 n_clim+=1
 
-        if n_clim==0:
-            dpe["Cfr"] = 0
-        else:
-            dpe["Cfr"] = np.array([dpe["installations"][installation]["Cfr"] for installation in dpe["installations"] if 'clim' in installation]).sum()
+
+        dpe['Cfr'] = np.sum([installation["Cfr"] for id, installation in dpe["installations"].items() if 'clim' in id])
+        dpe['Cfr_primaire'] = np.sum([installation["Cfr_primaire"] for id, installation in dpe["installations"].items() if 'clim' in id])
+        dpe['emission_fr'] = np.sum([installation["emission_fr"] for id, installation in dpe["installations"].items() if 'clim' in id])
         return dpe
 
     def _calc_consommation_eclairage(self, dpe):
@@ -667,8 +700,8 @@ class DPE(BaseProcessor):
         dpe["Cecl"] = dpe["Cecl_j"].sum() / 1000
         dpe['coef_emission_ecl']=0.079
 
-        dpe['Cecl_totale'] = dpe['Cecl'] * 2.3
-        dpe['emission_ecl'] = dpe['Cecl_totale'] * dpe['coef_emission_ecl']
+        dpe['Cecl_primaire'] = dpe['Cecl'] * 2.3
+        dpe['emission_ecl'] = dpe['Cecl'] * dpe['coef_emission_ecl']
         return dpe
 
     def _calc_consommation_ecs(self, dpe):
@@ -716,31 +749,18 @@ class DPE(BaseProcessor):
         else:
             dpe["fecs"] = 0
 
-        Iecs = []
-        Qgw = []
-        C_primaire=[]
-        C_totale=[]
-        emissions=[]
         for installation in dpe["installations"]:
             if "ecs" in installation:
                 ecs_input = EcsInput(**dpe["installations"][installation])
                 dpe["installations"][installation] = self.ecs_processor.forward(
                     dpe, ecs_input
                 )
-                dpe["installations"][installation]['C_primaire'] = dpe["Becs"] * dpe["Iecs"] * (1 - dpe["fecs"]) / 1000
-                dpe["installations"][installation]['C_totale'] = dpe["installations"][installation]['C_primaire'] * dpe["installations"][installation]['ratio_finale_primaire']
-                dpe['installations'][installation]['emission'] = dpe["installations"][installation]['C_totale'] * dpe["installations"][installation]['taux_conversion']
-                Iecs.append(dpe["installations"][installation]["Iecs"])
-                Qgw.append(dpe["installations"][installation]["Qgw"])
-                C_primaire.append(dpe["installations"][installation]['C_primaire'])
-                C_totale.append(dpe["installations"][installation]['C_totale'])
-                emissions.append(dpe["installations"][installation]['emission'])
-
-        dpe["Iecs"] = np.mean(Iecs)
-        dpe["Qgw"] = np.sum(Qgw)
-        dpe["Cecs"] = np.sum(C_primaire)
-        dpe["Cecs_totale"] = np.sum(C_totale)
-        dpe["emission_ecs"] = np.sum(emissions)
+                
+        dpe["Iecs"] = np.mean([installation['Iecs'] for id, installation in dpe["installations"].items() if "ecs" in id])
+        dpe["Qgw"] = np.mean([installation['Qgw'] for id, installation in dpe["installations"].items() if "ecs" in id])
+        dpe["Cecs"] = np.mean([installation['Cecs'] for id, installation in dpe["installations"].items() if "ecs" in id])
+        dpe["Cecs_primaire"] = np.mean([installation['Cecs_primaire'] for id, installation in dpe["installations"].items() if "ecs" in id])
+        dpe["emission_ecs"] = np.mean([installation['emission_ecs'] for id, installation in dpe["installations"].items() if "ecs" in id])
         return dpe
 
 

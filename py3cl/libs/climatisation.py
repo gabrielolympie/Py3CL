@@ -166,10 +166,10 @@ class Climatisation(BaseProcessor):
 
 
         if "Electricité" in clim["type_energie"]:
-            clim["ratio_finale_primaire"] = 2.3
+            clim["ratio_primaire_finale"] = 2.3
             clim['coef_emission'] = 0.079
         else:
-            clim["ratio_finale_primaire"] = 1
+            clim["ratio_primaire_finale"] = 1
             clim['coef_emission'] = self.abaques["emission_froid"](
                 {
                     "type_energie": clim["type_energie"],
@@ -177,6 +177,6 @@ class Climatisation(BaseProcessor):
                 "taux_conversion",
             )
 
-        clim['Cfr_totale'] = clim['Cfr'] * clim['ratio_finale_primaire']
-        clim['emission_fr'] = clim['Cfr_totale'] * clim['coef_emission']
+        clim['Cfr_primaire'] = clim['Cfr'] * clim['ratio_primaire_finale']
+        clim['emission_fr'] = clim['Cfr'] * clim['coef_emission']
         return clim

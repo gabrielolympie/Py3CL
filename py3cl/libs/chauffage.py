@@ -147,16 +147,23 @@ class Chauffage(BaseProcessor):
 
 
         if "Electricité" in heat["type_energie"]:
-            heat["ratio_finale_primaire"] = 2.3
+            heat["ratio_primaire_finale"] = 2.3
             heat['coef_emission'] = 0.078
         else:
-            heat["ratio_finale_primaire"] = 1
+            heat["ratio_primaire_finale"] = 1
             heat['coef_emission'] = self.abaques["emission_chauffage"](
                 {
                     "type_energie": heat["type_energie"],
                 },
                 "taux_conversion",
             )
+
+        heat['Cchj']=dpe['Bch_j'] * heat['Ich'] * heat['%_surface'] * heat['INT']
+        heat['Cch']=np.sum(heat['Cchj'])
+
+        heat['Cch_primaire'] = heat['Cch'] * heat['ratio_primaire_finale']
+        heat['emission_ch'] = heat['Cch'] * heat['coef_emission']
+
         return heat
 
     def _calculate_surface_percentage(self, heat, dpe):

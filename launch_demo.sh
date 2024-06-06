@@ -3,5 +3,5 @@ streamlit run demo/app.py \
 --theme.backgroundColor='#F0F2F5' \
 --theme.secondaryBackgroundColor='#FFFFFF' \
 --theme.textColor='#519351' \
---theme.font='Inter, sans-serif' \
+--theme.font='sans serif' \
 --server.port=8501

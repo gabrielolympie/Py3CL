@@ -1,0 +1,9 @@
+# Description: Configuration file
+# Order of the operations: rename -> filter -> refs -> mapping -> reduce
+data_path: ../data/raw
+file: tv0xx_ges.csv
+keys:
+- key_name: conso_per_square_meter
+  key_type: num
+values:
+- ges

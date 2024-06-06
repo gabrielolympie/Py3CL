@@ -168,16 +168,20 @@ class ECS(BaseProcessor):
 
 
         if "Electricité" in ecs["type_energie"]:
-            ecs["ratio_finale_primaire"] = 2.3
+            ecs["ratio_primaire_finale"] = 2.3
             ecs['coef_emission'] = 0.079
         else:
-            ecs["ratio_finale_primaire"] = 1
+            ecs["ratio_primaire_finale"] = 1
             ecs['coef_emission'] = self.abaques["emission_ecs"](
                 {
                     "type_energie": ecs["type_energie"],
                 },
                 "taux_conversion",
             )
+
+        ecs['Cecs'] = dpe['Becs'] * ecs['Iecs'] * (1 - dpe["fecs"]) / 1000
+        ecs['Cecs_primaire'] = ecs['Cecs'] * ecs['ratio_primaire_finale']
+        ecs['emission_ecs'] = ecs['Cecs'] * ecs['coef_emission']
         return ecs
 
     def calculate_distribution_efficiency(self, ecs: Dict[str, Any]) -> float:
