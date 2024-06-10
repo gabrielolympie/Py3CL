@@ -72,6 +72,12 @@ class ParoiInput(BaseModel):
     epaisseur_isolant: Optional[float] = None
     effet_joule: Optional[bool] = None
 
+    # Coefficient d'attenuation
+    exterior_type_or_local_non_chauffe: Optional[str] = None
+    surface_paroi_contact: Optional[float] = None
+    surface_paroi_local_non_chauffe: Optional[float] = None
+    local_non_chauffe_isole: Optional[bool] = None
+
     # Specifique aux murs
     enduit: Optional[bool] = None
     doublage_with_lame_below_15mm: Optional[bool] = None
@@ -83,12 +89,6 @@ class ParoiInput(BaseModel):
     is_terre_plain: Optional[bool] = None
     surface_immeuble: Optional[float] = None
     perimeter_immeuble: Optional[float] = None
-
-    # Coefficient d'attenuation
-    exterior_type_or_local_non_chauffe: Optional[str] = None
-    surface_paroi_contact: Optional[float] = None
-    surface_paroi_local_non_chauffe: Optional[float] = None
-    local_non_chauffe_isole: Optional[bool] = None
 
     # Specifique aux verandas
     orientation: Optional[str] = None  # ['Nord', 'Sud', 'Est', 'Ouest']
@@ -239,8 +239,8 @@ class Paroi(BaseProcessor):
             paroi["b"] = self.abaques["coef_reduction_deperdition_local"](
                 {
                     "aiu_aue_max": paroi["aiu_aue"],
-                    "aue_isole": paroi["isolation"],
-                    "aiu_isole": paroi["local_non_chauffe_isole"],
+                    "aue_isole": paroi["local_non_chauffe_isole"],
+                    "aiu_isole": paroi["isolation"],
                     "uv_ue": paroi["uvue"],
                 },
                 "valeur",

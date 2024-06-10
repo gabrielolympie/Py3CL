@@ -2,19 +2,20 @@
 FROM python:3.11-slim
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /usr/src/app
 
-# Copy the current directory contents into the container at /app
-COPY . /app
+# Copy the requirements file into the container
+COPY requirements.txt ./
 
 # Install any needed packages specified in requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose streamlit port
-EXPOSE 8501
+# Copy the current directory contents into the container at /usr/src/app
+COPY . .
 
-# Make sure the script is executable
-RUN chmod +x launch_demo.sh
+# Make port 8080 available to the world outside this container
+EXPOSE 8080
+ENV GRADIO_SERVER_NAME="0.0.0.0"
 
-# Run launch_demo.sh when the container launches
-ENTRYPOINT ["sh", "./launch_demo.sh"]
+# Run the application
+CMD ["python", "./demo/app.py"]

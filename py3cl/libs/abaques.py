@@ -4,6 +4,12 @@ import os
 from py3cl.utils import save_config, load_config
 import json
 from itertools import product
+import numpy as np
+import pandas as pd
+import os
+from py3cl.utils import save_config, load_config
+import json
+from itertools import product
 
 class Abaque:
     """
@@ -64,7 +70,7 @@ class Abaque:
 
         self.valid_cat_combinations = {}
         self.config = load_config(config)
-        self.config['data_path']=data_path
+        self.config['data_path'] = data_path
         self.load_abaques(**self.config)
         print(self.__str__())
 
@@ -110,17 +116,16 @@ Values: {self.values()}
         return out[value]
 
     def forward(self, keys):
-        processed_input = {}
+        processed_input = self.standardize_missing_values(keys)
 
-        for key, val in keys.items():
-            if val is None:
-                processed_input[key] = "NULL"
-            elif key in self.upper_thresholds:
+        for key, val in processed_input.items():
+            if key in self.upper_thresholds:
                 thresholds = self.upper_thresholds[key]
                 idx = np.searchsorted(thresholds, val, side="right") - 1
                 processed_input[key] = thresholds[max(0, idx)]
             else:
                 processed_input[key] = val
+
         try:
             inputs = tuple(processed_input[k] for k in self.abaque.index.names)
             if len(inputs) == 1:
@@ -145,6 +150,27 @@ Values: {self.values()}
             inputs = tuple(processed_input[k] for k in self.abaque.index.names)
             result = self.abaque_dict[inputs]
         return result
+
+    def standardize_missing_values(self, keys):
+        """
+        Standardizes missing values in the input keys.
+
+        Parameters:
+        -----------
+        keys : dict
+            Dictionary of keys to be standardized.
+
+        Returns:
+        --------
+        Dictionary with standardized keys.
+        """
+        standardized_keys = {}
+        for key, val in keys.items():
+            if pd.isna(val) or val in [None, "NULL"]:
+                standardized_keys[key] = "Unknown or Empty"
+            else:
+                standardized_keys[key] = val
+        return standardized_keys
 
     def load_abaques(
         self,
@@ -195,7 +221,7 @@ Values: {self.values()}
             if reduce:
                 self.apply_reduction(reduce)
             if keys:
-                self.abaque = self.abaque.fillna("NULL")
+                self.abaque = self.abaque.fillna("Unknown or Empty")
                 self.get_key_characteristics(keys)
                 self.initialize_valid_cat_combinations()
                 self.initialize_upper_tresholds()

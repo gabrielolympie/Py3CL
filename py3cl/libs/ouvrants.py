@@ -58,16 +58,22 @@ class VitrageInput(BaseModel):
     hauteur_vitrage: float
     largeur_vitrage: float
     type_vitrage: str
+    type_pose: Optional[str] = None
+    type_materiaux: Optional[str] = None
+    type_menuiserie: Optional[str] = None
+    type_baie: Optional[str] = None
     orientation: Optional[str] = None
     inclinaison: Optional[str] = None
     remplissage: Optional[str] = None
     traitement_vitrage: Optional[str] = None
     epaisseur_lame: Optional[float] = None
-    type_pose: Optional[str] = None
-    type_materiaux: Optional[str] = None
-    type_menuiserie: Optional[str] = None
-    type_baie: Optional[str] = None
     fermetures: Optional[str] = None
+    exterior_type_or_local_non_chauffe: Optional[str] = None
+    surface_paroi_contact: Optional[float] = None
+    surface_paroi_local_non_chauffe: Optional[float] = None
+    isolation: Optional[bool] = None
+    local_non_chauffe_isole: Optional[bool] = None
+    orientation_veranda: Optional[str] = None
     masque_proche_type_masque: Optional[str] = None
     masque_proche_avance: Optional[str] = None
     masque_proche_orientation: Optional[str] = None
@@ -79,10 +85,7 @@ class VitrageInput(BaseModel):
     ombrage_lointain_hauteur: Optional[str] = None
     ombrage_lointain_orientation: Optional[str] = None
     ombrage_lointain_secteur: Optional[str] = None
-    exterior_type_or_local_non_chauffe: Optional[str] = None
-    surface_paroi_contact: Optional[float] = None
-    surface_paroi_local_non_chauffe: Optional[float] = None
-    local_non_chauffe_isole: Optional[bool] = None
+
 
 
 class Vitrage(BaseProcessor):
@@ -149,6 +152,8 @@ class Vitrage(BaseProcessor):
             "type_menuiserie",
             "type_baie",
             "fermetures",
+            "isolation",
+            "local_non_chauffe_isole",
             "masque_proche_type_masque",
             "masque_proche_orientation",
             "masque_lointain_orientation",
@@ -161,6 +166,7 @@ class Vitrage(BaseProcessor):
             "masque_proche_angle_superieur_30",
             "masque_lointain_hauteur_alpha",
             "ombrage_lointain_hauteur",
+            "orientation_veranda",
         ]
 
     def define_numerical(self):
@@ -180,7 +186,7 @@ class Vitrage(BaseProcessor):
             },
             "coef_reduction_veranda": {
                 "zone_hiver": "zone_hiver",
-                "orientation_veranda": "orientation",
+                "orientation_veranda": "orientation_veranda",
                 "isolation_paroi": "local_non_chauffe_isole"
             },
             "coef_reduction_deperdition_local": {
@@ -191,7 +197,7 @@ class Vitrage(BaseProcessor):
             },
             "ug_vitrage": {
                 "type_vitrage": "type_vitrage",
-                "orientation": "orientation",
+                "orientation": "calc_orientation",
                 "remplissage": "remplissage",
                 "traitement_vitrage": "traitement_vitrage",
                 "epaisseur_lame": "epaisseur_lame"
@@ -294,7 +300,7 @@ class Vitrage(BaseProcessor):
             return self.abaques["coef_reduction_veranda"](
                 {
                     "zone_hiver": vitrage["zone_hiver"],
-                    "orientation_veranda": vitrage["orientation"],
+                    "orientation_veranda": vitrage["orientation_veranda"],
                     "isolation_paroi": vitrage["isolation"],
                 },
                 "bver",
@@ -309,8 +315,8 @@ class Vitrage(BaseProcessor):
             return self.abaques["coef_reduction_deperdition_local"](
                 {
                     "aiu_aue_max": vitrage["aiu_aue"],
-                    "aue_isole": vitrage["isolation"],
-                    "aiu_isole": vitrage["local_non_chauffe_isole"],
+                    "aue_isole": vitrage["local_non_chauffe_isole"],
+                    "aiu_isole": vitrage["isolation"],
                     "uv_ue": vitrage["uvue"],
                 },
                 "valeur",
@@ -421,7 +427,7 @@ class Vitrage(BaseProcessor):
             np.ndarray: An array of orientation factors for each month.
         """
         orientation = "Horizontal" if vitrage["orientation"] == "Horizontal" else vitrage["orientation"]
-        inclinaison = "NULL" if vitrage["orientation"] == "Horizontal" else vitrage["inclinaison"]
+        inclinaison = "Unknown or Empty" if vitrage["orientation"] == "Horizontal" else vitrage["inclinaison"]
         return np.array(
             [
                 self.abaques["coefficient_orientation"](

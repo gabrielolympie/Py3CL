@@ -1,13 +1,3 @@
-# from libs.base import BaseProcessor
-# from libs.abaques import Abaque
-# from libs.parois import ParoiInput, Paroi
-# from libs.ouvrants import VitrageInput, Vitrage
-# from libs.ponts_thermiques import PontThermiqueInput, PontThermique
-# from libs.ecs import EcsInput, ECS
-# from libs.climatisation import ClimatisationInput, Climatisation
-# from libs.chauffage import ChauffageInput, Chauffage
-# from libs.utils import safe_divide, vectorized_safe_divide
-
 from py3cl.libs import (
     BaseProcessor,
     Abaque,
