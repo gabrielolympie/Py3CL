@@ -1153,7 +1153,7 @@ class DPE(BaseProcessor):
             dpe (dict): Dictionary containing DPE related data.
         """
 
-        if dpe["q4paconv"] is None:
+        if dpe["q4paconv"] is None or dpe["q4paconv"] == "Unknown or Empty":
             q4paconv = self.abaques["permeabilite_batiment"](
                 {
                     "type_batiment": dpe["type_batiment"],

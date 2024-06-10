@@ -489,7 +489,7 @@ def create_processor(processor, identifiants=None, identifiants_adjacents=None, 
                     else:
                         input_field = gr.Textbox(label=input_descriptors[key]['name'], info=input_descriptors[key]['description'], placeholder="Enter text", key=key_id)
             elif type(characteristic) == str and characteristic == "float":
-                input_field = gr.Number(label=input_descriptors[key]['name'], info=input_descriptors[key]['description'], key=key_id, value="")
+                input_field = gr.Number(label=input_descriptors[key]['name'], info=input_descriptors[key]['description'], key=key_id, value=' ')
             elif isinstance(characteristic, dict) and 'min' in characteristic and 'max' in characteristic:
                 input_field = gr.Slider(minimum=0, maximum=characteristic['max'], value=0, label=input_descriptors[key]['name'], info=input_descriptors[key]['description'], key=key_id)
             elif isinstance(characteristic, list) or isinstance(characteristic, np.ndarray):
@@ -540,9 +540,13 @@ def get_demo(dpe):
             dico=dict(zip(list(base_inputs.keys()), inputs))
 
             for k, val in dico.items():
-                if pd.isna(val) or val in [None, "NULL", ""]:
+                if val in ["NULL", "", None]:
                     dico[k]="Unknown or Empty"
-            dico['parois'], dico['vitrages'], dico['ponts_thermiques'], dico['installations'] = {}, {}, {}, {}
+                elif val == " ":
+                    dico[k]=None
+                    
+
+            
 
             list_parois=list(set([elt.split('-')[0] for elt in dico.keys() if "paroi_" in elt]))
             list_vitrages=list(set([elt.split('-')[0] for elt in dico.keys() if "vitrage_" in elt]))
@@ -554,8 +558,12 @@ def get_demo(dpe):
 
             
             special = list_parois + list_vitrages + list_ponts_thermiques + list_installations
+            for elt in special:
+                print(elt, dico[elt + '-identifiant'])
             used_special = [elt for elt in special if dico[elt + '-identifiant'] != "Unknown or Empty"]
             base = {k:v for k, v in dico.items() if not any([elt in k for elt in special])}
+
+            base['parois'], base['vitrages'], base['ponts_thermiques'], base['installations'] = {}, {}, {}, {}
 
             for s in used_special:
                 special_dico = {k.split('-')[-1]:v for k, v in dico.items() if s in k}
@@ -567,10 +575,10 @@ def get_demo(dpe):
                     base['ponts_thermiques'].update({dico[s + '-identifiant']:special_dico})
                 else:
                     base['installations'].update({dico[s + '-identifiant']:special_dico})
-
             try:
                 dpe_input = DPEInput(**base)
                 result = dpe.forward(dpe_input)
+                
                 return result
             except Exception as e:
                 base['error']=str(e)
