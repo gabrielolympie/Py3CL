@@ -3,7 +3,7 @@ from py3cl.libs.base import BaseProcessor
 from pydantic import BaseModel
 import os
 import numpy as np
-from typing import Optional, Dict, List, Tuple, Any
+from typing import Optional, Dict, List, Tuple, Any, Union
 
 # Constants for fixed strings
 ORIENTATION_HORIZONTAL = "Horizontal"
@@ -18,6 +18,28 @@ VALID_SUB_TYPE_FENETRES = [
     "Portes-fenêtres battantes avec soubassement",
     "Portes-fenêtres battantes sans soubassement",
 ]
+
+menuiserie2baie = {
+    "Porte opaque pleine": None,
+    "Porte avec moins de 30% de vitrage simple": None,
+    "Porte avec 30 à 60% de vitrage simple": None,
+    "Porte avec double vitrage": None,
+    "Porte opaque pleine isolée": None,
+    "Porte précédée d'un sas": None,
+    "Brique de verre pleine": None,
+    "Brique de verre creuse": None,
+    "Fenêtres battantes": "Fenêtres battantes",
+    "Portes-fenêtres battantes": "Portes-fenêtres battantes",
+    "Fenêtres coulissantes": "Fenêtres coulissantes",
+    "Portes-fenêtres coulissantes": "Portes-fenêtres coulissantes",
+    "Portes-fenêtres battantes sans soubassement": "Portes-fenêtres battantes sans soubassement",
+    "Fenêtres battantes ou coulissantes": "Fenêtres battantes ou coulissantes",
+    "Portes-fenêtres battantes sans soubassement ou coulissantes": "Portes-fenêtres battantes ou coulissantes sans soubassement",
+    "Portes-fenêtres battantes avec soubassement": "Portes-fenêtres battantes avec soubassement",
+    "Parois en polycarbonnate": None,
+    "Porte avec vitrage simple": None
+}
+
 
 
 class VitrageInput(BaseModel):
@@ -71,8 +93,8 @@ class VitrageInput(BaseModel):
     exterior_type_or_local_non_chauffe: Optional[str] = None
     surface_paroi_contact: Optional[float] = None
     surface_paroi_local_non_chauffe: Optional[float] = None
-    isolation: Optional[bool] = None
-    local_non_chauffe_isole: Optional[bool] = None
+    isolation: Optional[Union[bool, str]] = None
+    local_non_chauffe_isole: Optional[Union[bool, str]] = None
     orientation_veranda: Optional[str] = None
     masque_proche_type_masque: Optional[str] = None
     masque_proche_avance: Optional[str] = None
@@ -85,7 +107,6 @@ class VitrageInput(BaseModel):
     ombrage_lointain_hauteur: Optional[str] = None
     ombrage_lointain_orientation: Optional[str] = None
     ombrage_lointain_secteur: Optional[str] = None
-
 
 
 class Vitrage(BaseProcessor):
@@ -174,9 +195,9 @@ class Vitrage(BaseProcessor):
             "surface_vitrage",
             "hauteur_vitrage",
             "largeur_vitrage",
-            "epaisseur_lame",            
+            "epaisseur_lame",
             "surface_paroi_contact",
-            "surface_paroi_local_non_chauffe"
+            "surface_paroi_local_non_chauffe",
         ]
 
     def define_abaques(self):
@@ -187,45 +208,40 @@ class Vitrage(BaseProcessor):
             "coef_reduction_veranda": {
                 "zone_hiver": "zone_hiver",
                 "orientation_veranda": "orientation_veranda",
-                "isolation_paroi": "local_non_chauffe_isole"
+                "isolation_paroi": "local_non_chauffe_isole",
             },
             "coef_reduction_deperdition_local": {
                 "aiu_aue_max": "aiu_aue",
                 "aue_isole": "local_non_chauffe_isole",
                 "aiu_isole": "isolation",
-                "uv_ue": "uvue"
+                "uv_ue": "uvue",
             },
             "ug_vitrage": {
                 "type_vitrage": "type_vitrage",
                 "orientation": "calc_orientation",
                 "remplissage": "remplissage",
                 "traitement_vitrage": "traitement_vitrage",
-                "epaisseur_lame": "epaisseur_lame"
+                "epaisseur_lame": "epaisseur_lame",
             },
             "uw_vitrage": {
+                "type_baie": "type_baie",
                 "type_materiaux": "type_materiaux",
                 "type_menuiserie": "type_menuiserie",
-                "type_baie": "type_baie",
-                "ug": "Ug"
+                "ug": "Ug",
             },
-            "resistance_additionnelle_vitrage": {
-                "fermetures": "fermetures"
-            },
-            "transmission_thermique_baie": {
-                "uw": "Uw",
-                "deltar": "DeltaR"
-            },
+            "resistance_additionnelle_vitrage": {"fermetures": "fermetures"},
+            "transmission_thermique_baie": {"uw": "Uw", "deltar": "DeltaR"},
             "facteur_solaire": {
                 "type_pose": "type_pose",
-                "materiaux": "type_materiaux",
-                "type_baie": "type_baie",
-                "type_vitrage": "calc_type_vitrage_fs"
+                "materiaux": "calc_type_materiaux",
+                "type_baie": "calc_type_baie",
+                "type_vitrage": "calc_type_vitrage_fs",
             },
             "coefficient_orientation": {
                 "zone_climatique": "zone_climatique",
                 "month": "month",
                 "orientation": "orientation",
-                "inclination": "inclinaison"
+                "inclination": "inclinaison",
             },
             "coef_masques_proches": {
                 "type_masque": "masque_proche_type_masque",
@@ -233,19 +249,18 @@ class Vitrage(BaseProcessor):
                 "orientation": "masque_proche_orientation",
                 "rapport_l1_l2": "masque_proche_rapport_l1_l2",
                 "beta_gama": "masque_proche_beta_gama",
-                "angle_superieur_30": "masque_proche_angle_superieur_30"
+                "angle_superieur_30": "masque_proche_angle_superieur_30",
             },
             "coef_masques_lointain_homogene": {
                 "hauteur_alpha": "masque_lointain_hauteur_alpha",
-                "orientation": "masque_lointain_orientation"
+                "orientation": "masque_lointain_orientation",
             },
             "coef_ombrage_lointain": {
                 "hauteur": "ombrage_lointain_hauteur",
                 "orientation": "ombrage_lointain_orientation",
-                "secteur": "ombrage_lointain_secteur"
-            }
+                "secteur": "ombrage_lointain_secteur",
+            },
         }
-
 
     def forward(self, dpe: Dict[str, Any], kwargs: VitrageInput) -> Dict[str, Any]:
         """
@@ -294,8 +309,15 @@ class Vitrage(BaseProcessor):
             float: The coefficient of reduction of loss (b).
         """
         exterior_type = vitrage["exterior_type_or_local_non_chauffe"]
-        if exterior_type in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics["aiu_aue"]:
-            return self.abaques["coef_reduction_deperdition_exterieur"]({"aiu_aue": exterior_type}, "valeur")
+        if (
+            exterior_type
+            in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics[
+                "aiu_aue"
+            ]
+        ):
+            return self.abaques["coef_reduction_deperdition_exterieur"](
+                {"aiu_aue": exterior_type}, "valeur"
+            )
         elif exterior_type == "Véranda":
             return self.abaques["coef_reduction_veranda"](
                 {
@@ -307,10 +329,15 @@ class Vitrage(BaseProcessor):
             )
         else:
             vitrage["aiu_aue"] = safe_divide(
-                vitrage["surface_paroi_contact"], vitrage["surface_paroi_local_non_chauffe"]
+                vitrage["surface_paroi_contact"],
+                vitrage["surface_paroi_local_non_chauffe"],
             )
             vitrage["uvue"] = self.abaques["local_non_chauffe"](
-                {"type_batiment": dpe["type_batiment"], "local_non_chauffe": exterior_type}, "uvue"
+                {
+                    "type_batiment": dpe["type_batiment"],
+                    "local_non_chauffe": exterior_type,
+                },
+                "uvue",
             )
             return self.abaques["coef_reduction_deperdition_local"](
                 {
@@ -334,7 +361,9 @@ class Vitrage(BaseProcessor):
         """
         if vitrage["type_vitrage"] == "Simple Vitrage":
             return 5.8
-        orientation = "Horizontale" if vitrage["orientation"] == "Horizontal" else "Verticale"
+        orientation = (
+            "Horizontale" if vitrage["orientation"] == "Horizontal" else "Verticale"
+        )
         return self.abaques["ug_vitrage"](
             {
                 "type_vitrage": vitrage["type_vitrage"],
@@ -381,7 +410,7 @@ class Vitrage(BaseProcessor):
         Returns:
             float: The overall U-value (U) of the vitrage.
         """
-        if vitrage["fermetures"]:
+        if vitrage["fermetures"] and vitrage["fermetures"] != "Unknown or Empty":
             vitrage["DeltaR"] = self.abaques["resistance_additionnelle_vitrage"](
                 {"fermetures": vitrage["fermetures"]}, "resistance_additionnelle"
             )
@@ -403,14 +432,19 @@ class Vitrage(BaseProcessor):
         """
         vitrage["type_vitrage_fs"] = vitrage["type_vitrage"]
         if vitrage["traitement_vitrage"] != "Non Traités":
-            if "Double" in vitrage["type_vitrage"] or "Triple" in vitrage["type_vitrage"]:
+            if (
+                "Double" in vitrage["type_vitrage"]
+                or "Triple" in vitrage["type_vitrage"]
+            ):
                 vitrage["type_vitrage_fs"] = vitrage["type_vitrage"] + " V.I.R"
-        
+
+        vitrage['type_baie_fs'] = menuiserie2baie[vitrage['type_menuiserie']]
+
         return self.abaques["facteur_solaire"](
             {
                 "type_pose": vitrage["type_pose"],
                 "materiaux": vitrage["type_materiaux"],
-                "type_baie": vitrage["type_baie"],
+                "type_baie": vitrage["type_baie_fs"],
                 "type_vitrage": vitrage["type_vitrage_fs"],
             },
             "fts",
@@ -426,8 +460,16 @@ class Vitrage(BaseProcessor):
         Returns:
             np.ndarray: An array of orientation factors for each month.
         """
-        orientation = "Horizontal" if vitrage["orientation"] == "Horizontal" else vitrage["orientation"]
-        inclinaison = "Unknown or Empty" if vitrage["orientation"] == "Horizontal" else vitrage["inclinaison"]
+        orientation = (
+            "Horizontal"
+            if vitrage["orientation"] == "Horizontal"
+            else vitrage["orientation"]
+        )
+        inclinaison = (
+            "Unknown or Empty"
+            if vitrage["orientation"] == "Horizontal"
+            else vitrage["inclinaison"]
+        )
         return np.array(
             [
                 self.abaques["coefficient_orientation"](
@@ -454,7 +496,11 @@ class Vitrage(BaseProcessor):
             tuple: A tuple containing the overall shading coefficient (Fe) and its components (Fe1, Fe2).
         """
         Fe1 = 1.0
-        if vitrage["masque_proche_type_masque"] and vitrage["masque_proche_type_masque"] != "Absence de masque proche":
+        if (
+            vitrage["masque_proche_type_masque"]
+            and vitrage["masque_proche_type_masque"] != "Absence de masque proche"
+            and vitrage["masque_proche_type_masque"] != "Unknown or Empty"
+        ):
             Fe1 = self.abaques["coef_masques_proches"](
                 {
                     "type_masque": vitrage["masque_proche_type_masque"],
@@ -468,7 +514,11 @@ class Vitrage(BaseProcessor):
             )
 
         Fe2_1 = 1.0
-        if vitrage["masque_lointain_hauteur_alpha"] and vitrage["masque_lointain_orientation"]:
+        if (
+            vitrage["masque_lointain_hauteur_alpha"]
+            and vitrage["masque_lointain_orientation"]
+            and vitrage["masque_lointain_orientation"] != "Unknown or Empty"
+        ):
             Fe2_1 = self.abaques["coef_masques_lointain_homogene"](
                 {
                     "hauteur_alpha": vitrage["masque_lointain_hauteur_alpha"],
@@ -482,6 +532,9 @@ class Vitrage(BaseProcessor):
             vitrage["ombrage_lointain_hauteur"]
             and vitrage["ombrage_lointain_orientation"]
             and vitrage["ombrage_lointain_secteur"]
+            and vitrage["ombrage_lointain_hauteur"] != "Unknown or Empty"
+            and vitrage["ombrage_lointain_orientation"] != "Unknown or Empty"
+            and vitrage["ombrage_lointain_secteur"] != "Unknown or Empty"
         ):
             Fe2_2 = 1 - 0.01 * self.abaques["coef_ombrage_lointain"](
                 {
@@ -506,4 +559,9 @@ class Vitrage(BaseProcessor):
         Returns:
             np.ndarray: An array of solar heat gains for each month.
         """
-        return vitrage["surface_vitrage"] * vitrage["facteur_solaire"] * vitrage["Fe"] * vitrage["c1j"]
+        return (
+            vitrage["surface_vitrage"]
+            * vitrage["facteur_solaire"]
+            * vitrage["Fe"]
+            * vitrage["c1j"]
+        )

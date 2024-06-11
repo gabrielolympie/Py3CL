@@ -15,7 +15,7 @@ generator_types = [
     "A combustion Mixte chaudière gaz, fioul ou bois",
     "A combustion Accumulateur gaz",
     "Thermodynamique à accumulation avec appoint",
-    "Thermodynamique à accumulation sans appoint"
+    "Thermodynamique à accumulation sans appoint",
 ]
 
 
@@ -79,12 +79,16 @@ class ECS(BaseProcessor):
         Args:
             abaques (dict): Dictionary containing the lookup tables for efficiency calculations.
         """
-        self.characteristics_corrections={
+        self.characteristics_corrections = {
             "type_generateur": generator_types,
             "pieces_alimentees_contigues": [True, False],
         }
 
-        super().__init__(abaques, EcsInput, characteristics_corrections=self.characteristics_corrections)
+        super().__init__(
+            abaques,
+            EcsInput,
+            characteristics_corrections=self.characteristics_corrections,
+        )
 
     def define_categorical(self):
         """
@@ -165,23 +169,21 @@ class ECS(BaseProcessor):
         ecs["Recs"] = ecs["Rg"] * ecs["Rs"] * ecs["Rd"]
         ecs["Iecs"] = safe_divide(1, ecs["Recs"])
 
-
-
         if "Electricité" in ecs["type_energie"]:
             ecs["ratio_primaire_finale"] = 2.3
-            ecs['coef_emission'] = 0.079
+            ecs["coef_emission"] = 0.079
         else:
             ecs["ratio_primaire_finale"] = 1
-            ecs['coef_emission'] = self.abaques["emission_ecs"](
+            ecs["coef_emission"] = self.abaques["emission_ecs"](
                 {
                     "type_energie": ecs["type_energie"],
                 },
                 "taux_conversion",
             )
 
-        ecs['Cecs'] = dpe['Becs'] * ecs['Iecs'] * (1 - dpe["fecs"]) / 1000
-        ecs['Cecs_primaire'] = ecs['Cecs'] * ecs['ratio_primaire_finale']
-        ecs['emission_ecs'] = ecs['Cecs'] * ecs['coef_emission']
+        ecs["Cecs"] = dpe["Becs"] * ecs["Iecs"] * (1 - dpe["fecs"]) / 1000
+        ecs["Cecs_primaire"] = ecs["Cecs"] * ecs["ratio_primaire_finale"]
+        ecs["emission_ecs"] = ecs["Cecs"] * ecs["coef_emission"]
         return ecs
 
     def calculate_distribution_efficiency(self, ecs: Dict[str, Any]) -> float:
@@ -204,7 +206,9 @@ class ECS(BaseProcessor):
             "rd",
         )
 
-    def calculate_storage_efficiency(self, ecs: Dict[str, Any], dpe: Dict[str, Any]) -> (float, float):
+    def calculate_storage_efficiency(
+        self, ecs: Dict[str, Any], dpe: Dict[str, Any]
+    ) -> (float, float):
         """
         Calculate the storage efficiency (Rs) and storage heat loss (Qgw).
 
@@ -231,7 +235,9 @@ class ECS(BaseProcessor):
 
         return Rs, Qgw
 
-    def calculate_generator_efficiency(self, ecs: Dict[str, Any], dpe: Dict[str, Any]) -> float:
+    def calculate_generator_efficiency(
+        self, ecs: Dict[str, Any], dpe: Dict[str, Any]
+    ) -> float:
         """
         Calculate the generator efficiency (Rg) for the ECS system.
 
@@ -244,10 +250,19 @@ class ECS(BaseProcessor):
         """
         type_generateur = ecs["type_generateur"]
 
-        if type_generateur == "A combustion Chauffe-bain au gaz à production instantannée":
-            type_generateur = "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
+        if (
+            type_generateur
+            == "A combustion Chauffe-bain au gaz à production instantannée"
+        ):
+            type_generateur = (
+                "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
+            )
 
-        if type_generateur in ["Electrique", "Electrique classique", "Electrique thermodinamyque"]:
+        if type_generateur in [
+            "Electrique",
+            "Electrique classique",
+            "Electrique thermodinamyque",
+        ]:
             return 1
 
         if type_generateur == "Réseau de chaleur isolé":
@@ -262,18 +277,31 @@ class ECS(BaseProcessor):
             "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz",
             "A combustion Mixte chaudière gaz, fioul ou bois",
         ]:
-            return self._calculate_combustion_generator_efficiency(ecs, dpe, type_generateur)
+            return self._calculate_combustion_generator_efficiency(
+                ecs, dpe, type_generateur
+            )
 
         if type_generateur == "A combustion Accumulateur gaz":
             Qp0 = 1.5 * ecs["Pnom"] / 100
             Rpn = self.abaques["Rg_ecs"](
-                {"annee_generateur": ecs["annee_generateur"], "puissance_nominale": "Accumulateur"}, "Rpn"
+                {
+                    "annee_generateur": ecs["annee_generateur"],
+                    "puissance_nominale": "Accumulateur",
+                },
+                "Rpn",
             )
             Pveilleuse = self.abaques["Rg_ecs"](
-                {"annee_generateur": ecs["annee_generateur"], "puissance_nominale": "Accumulateur"}, "Pveilleuse"
+                {
+                    "annee_generateur": ecs["annee_generateur"],
+                    "puissance_nominale": "Accumulateur",
+                },
+                "Pveilleuse",
             )
             return safe_divide(
-                1, (1 / Rpn) + ((8592 * Qp0 + ecs["Qgw"]) / dpe["Becs"]) + (6970 * Pveilleuse / dpe["Becs"])
+                1,
+                (1 / Rpn)
+                + ((8592 * Qp0 + ecs["Qgw"]) / dpe["Becs"])
+                + (6970 * Pveilleuse / dpe["Becs"]),
             )
 
         if type_generateur in [
@@ -312,18 +340,41 @@ class ECS(BaseProcessor):
             else self.DEFAULT_POWER_LIMIT_HIGH
         )
         Rpn = self.abaques["Rg_ecs"](
-            {"annee_generateur": ecs["annee_generateur"], "puissance_nominale": ecs["Pnom"]}, "Rpn"
+            {
+                "annee_generateur": ecs["annee_generateur"],
+                "puissance_nominale": ecs["Pnom"],
+            },
+            "Rpn",
         )
         Qp0 = self.abaques["Rg_ecs"](
-            {"annee_generateur": ecs["annee_generateur"], "puissance_nominale": ecs["Pnom"]}, "Qp0"
+            {
+                "annee_generateur": ecs["annee_generateur"],
+                "puissance_nominale": ecs["Pnom"],
+            },
+            "Qp0",
         )
         Pveilleuse = self.abaques["Rg_ecs"](
-            {"annee_generateur": ecs["annee_generateur"], "puissance_nominale": ecs["Pnom"]}, "Pveilleuse"
+            {
+                "annee_generateur": ecs["annee_generateur"],
+                "puissance_nominale": ecs["Pnom"],
+            },
+            "Pveilleuse",
         )
 
-        if type_generateur == "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz":
-            return safe_divide(1, (1 / Rpn) + (1790 * Qp0 / dpe["Becs"]) + (6970 * Pveilleuse / dpe["Becs"]))
+        if (
+            type_generateur
+            == "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
+        ):
+            return safe_divide(
+                1,
+                (1 / Rpn)
+                + (1790 * Qp0 / dpe["Becs"])
+                + (6970 * Pveilleuse / dpe["Becs"]),
+            )
 
         return safe_divide(
-            1, (1 / Rpn) + ((1790 * Qp0 + ecs["Qgw"]) / dpe["Becs"]) + (6970 * 0.5 * Pveilleuse / dpe["Becs"])
+            1,
+            (1 / Rpn)
+            + ((1790 * Qp0 + ecs["Qgw"]) / dpe["Becs"])
+            + (6970 * 0.5 * Pveilleuse / dpe["Becs"]),
         )

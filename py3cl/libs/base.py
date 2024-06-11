@@ -5,11 +5,12 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
+
 class BaseProcessor:
     """
     A processor class that handles the initialization and configuration of processing parameters based on input schemes,
     defines categorical and numerical fields, manages abaque configurations, and establishes inverse mappings.
-    
+
     Attributes:
         abaque (dict): A dictionary containing abaque configurations.
         input (Any): An input object expected to have type annotations defining its structure.
@@ -19,6 +20,7 @@ class BaseProcessor:
         used_abaques (dict): Mapping of field usage to abaque specifications.
         field_usage (dict): Tracks the usage of fields across different abaques.
     """
+
     def __init__(self, abaques, input, characteristics_corrections=None):
         self.abaques = abaques
         self.input = input
@@ -56,12 +58,15 @@ class BaseProcessor:
 
     def get_renamed_cat_combination(self, name_abaque):
         try:
-            cat_combinations = pd.DataFrame(self.abaques[name_abaque].valid_cat_combinations)
+            cat_combinations = pd.DataFrame(
+                self.abaques[name_abaque].valid_cat_combinations
+            )
             correspondance_dict = self.used_abaques_inv[name_abaque]
             cat_combinations.columns = [
-                correspondance_dict[elt] if elt in correspondance_dict else elt for elt in cat_combinations.columns
+                correspondance_dict[elt] if elt in correspondance_dict else elt
+                for elt in cat_combinations.columns
             ]
-            return cat_combinations.to_dict(orient='records')
+            return cat_combinations.to_dict(orient="records")
         except KeyError as e:
             print(f"KeyError in get_renamed_cat_combination: {e}")
             return {}
@@ -81,7 +86,9 @@ class BaseProcessor:
                     if len(abaques) > 1:
                         entangled_abaques.append(set(abaques))
             standalone_abaques = [
-                abaques for abaques in self.used_abaques if abaques not in list(set().union(*entangled_abaques))
+                abaques
+                for abaques in self.used_abaques
+                if abaques not in list(set().union(*entangled_abaques))
             ]
             entangled_abaques = [list(elt) for elt in set_community(entangled_abaques)]
 
@@ -93,12 +100,16 @@ class BaseProcessor:
                 # print('1')
                 # print(elt)
                 # print(self.used_abaques[elt].keys())
-                k = [key for key in self.used_abaques[elt].keys() if key in self.categorical_fields]
+                k = [
+                    key
+                    for key in self.used_abaques[elt].keys()
+                    if key in self.categorical_fields
+                ]
                 # print(k)
                 if len(k) > 0:
                     valid_cat_combinations[f"group_{n}"] = {
-                        'keys': k,
-                        'combinations': self.get_renamed_cat_combination(elt)
+                        "keys": k,
+                        "combinations": self.get_renamed_cat_combination(elt),
                     }
                     n += 1
 
@@ -109,8 +120,8 @@ class BaseProcessor:
                     keys = list(set().union(*[list(c.keys()) for c in combined]))
                     keys = [key for key in keys if key in self.categorical_fields]
                     valid_cat_combinations[f"group_{n}"] = {
-                        'keys': keys,
-                        'combinations': combined
+                        "keys": keys,
+                        "combinations": combined,
                     }
                     n += 1
 
@@ -126,7 +137,8 @@ class BaseProcessor:
             for field in self.input_scheme:
                 if field in self.field_usage:
                     candidates = [
-                        self.abaques[a].key_characteristics[self.used_abaques[a][field]] for a in self.field_usage[field]
+                        self.abaques[a].key_characteristics[self.used_abaques[a][field]]
+                        for a in self.field_usage[field]
                     ]
                     if field in self.categorical_fields:
                         if len(candidates) > 1:
@@ -137,9 +149,9 @@ class BaseProcessor:
                         candidates = np.unique([str(elt) for elt in candidates])
                         key_characteristics[field] = candidates
                     elif field in self.numerical_fields:
-                        m = min([candidate['min'] for candidate in candidates])
-                        M = max([candidate['max'] for candidate in candidates])
-                        key_characteristics[field] = {'min': m, 'max': M}
+                        m = min([candidate["min"] for candidate in candidates])
+                        M = max([candidate["max"] for candidate in candidates])
+                        key_characteristics[field] = {"min": m, "max": M}
                     else:
                         key_characteristics[field] = "any"
                 elif field in self.numerical_fields:
@@ -184,10 +196,10 @@ class BaseProcessor:
                     index = index[0]
                 base = base.set_index(index, drop=True)
                 new = new.set_index(index, drop=True)
-                base = base.join(new, how='outer')
+                base = base.join(new, how="outer")
                 base = base.reset_index(drop=False)
-                base=base.fillna("Unknown or Empty")
-            return base.to_dict(orient='records')
+                base = base.fillna("Unknown or Empty")
+            return base.to_dict(orient="records")
         except Exception as e:
             print(f"Error in iterative_merge: {e}")
             return []

@@ -21,7 +21,6 @@ class ClimatisationInput(BaseModel):
     type_energie: Optional[str] = None  # Electricité, Gaz, Fioul...
     annee_installation: Optional[float] = None
     surface_refroidie: Optional[float] = None
-    
 
 
 class Climatisation(BaseProcessor):
@@ -87,7 +86,11 @@ class Climatisation(BaseProcessor):
             np.ndarray: Array of Rbth_j values.
         """
         Rbth_j_num = dpe["Ai_frj"] + dpe["Asj"] * (dpe["Ai_frj"] > 0)
-        Rbth_j_den = dpe["GV"] * (dpe["Textmoy_clim_j"] - dpe["Tint_froids"]) * dpe["Nref_froids_j"]
+        Rbth_j_den = (
+            dpe["GV"]
+            * (dpe["Textmoy_clim_j"] - dpe["Tint_froids"])
+            * dpe["Nref_froids_j"]
+        )
         Rbth_j = vectorized_safe_divide(Rbth_j_num, Rbth_j_den)
         Rbth_j[Rbth_j < 0.5] = 0
         return Rbth_j
@@ -124,7 +127,14 @@ class Climatisation(BaseProcessor):
         """
         a = 1 + c_in / (dpe["GV"] * 3600 * 15)
         futj = np.array(
-            [safe_divide(a, 1 + a) if elt == 1 else safe_divide(1 - elt ** (-a), 1 - elt ** (-a - 1)) for elt in rbth_j]
+            [
+                (
+                    safe_divide(a, 1 + a)
+                    if elt == 1
+                    else safe_divide(1 - elt ** (-a), 1 - elt ** (-a - 1))
+                )
+                for elt in rbth_j
+            ]
         )
         futj[rbth_j == 0] = 0
         return futj
@@ -152,31 +162,41 @@ class Climatisation(BaseProcessor):
         clim["futj"] = futj
 
         bfroids_term1 = (dpe["Ai_frj"] + dpe["Asj"] * (dpe["Ai_frj"] > 0)) / 1000
-        bfroids_term2 = (futj * dpe["GV"] * (dpe["Tint_froids"] - dpe["Textmoy_clim_j"]) * dpe["Nref_froids_j"]) / 1000
+        bfroids_term2 = (
+            futj
+            * dpe["GV"]
+            * (dpe["Tint_froids"] - dpe["Textmoy_clim_j"])
+            * dpe["Nref_froids_j"]
+        ) / 1000
         clim["Bfrj"] = bfroids_term1 - bfroids_term2
 
         clim["EER"] = self.abaques["seer_clim"](
-            {"zone_hiver": dpe["zone_hiver"], "annee_climatisation": clim["annee_installation"]}, "SEER"
+            {
+                "zone_hiver": dpe["zone_hiver"],
+                "annee_climatisation": clim["annee_installation"],
+            },
+            "SEER",
         )
 
         clim["SEER"] = 0.95 * clim["EER"]
 
         clim["Cfr"] = 0.9 * clim["Bfrj"] / clim["SEER"]
-        clim["Cfr"] = clim["Cfr"] * safe_divide(clim["surface_refroidie"], dpe["surface_habitable"])
-
+        clim["Cfr"] = clim["Cfr"] * safe_divide(
+            clim["surface_refroidie"], dpe["surface_habitable"]
+        )
 
         if "Electricité" in clim["type_energie"]:
             clim["ratio_primaire_finale"] = 2.3
-            clim['coef_emission'] = 0.079
+            clim["coef_emission"] = 0.079
         else:
             clim["ratio_primaire_finale"] = 1
-            clim['coef_emission'] = self.abaques["emission_froid"](
+            clim["coef_emission"] = self.abaques["emission_froid"](
                 {
                     "type_energie": clim["type_energie"],
                 },
                 "taux_conversion",
             )
 
-        clim['Cfr_primaire'] = clim['Cfr'] * clim['ratio_primaire_finale']
-        clim['emission_fr'] = clim['Cfr'] * clim['coef_emission']
+        clim["Cfr_primaire"] = clim["Cfr"] * clim["ratio_primaire_finale"]
+        clim["emission_fr"] = clim["Cfr"] * clim["coef_emission"]
         return clim

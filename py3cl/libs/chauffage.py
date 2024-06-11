@@ -1,9 +1,15 @@
-from py3cl.libs.utils import safe_divide, vectorized_safe_divide, set_community, iterative_merge
+from py3cl.libs.utils import (
+    safe_divide,
+    vectorized_safe_divide,
+    set_community,
+    iterative_merge,
+)
 from py3cl.libs.base import BaseProcessor
 from pydantic import BaseModel
 import os
 from typing import Optional
 import numpy as np
+
 
 class ChauffageInput(BaseModel):
     """
@@ -26,6 +32,7 @@ class ChauffageInput(BaseModel):
         type_regulation_intermittence (str, optional): Type of intermittent regulation.
         type_chauffage (str, optional): General type of heating, e.g., 'Central', 'Divisé'.
     """
+
     identifiant: str
     type_energie: Optional[str] = None
     surface_chauffee: Optional[float] = None
@@ -56,9 +63,10 @@ class Chauffage(BaseProcessor):
         used_abaques (dict): Mapping of field usage to abaque specifications.
         field_usage (dict): Tracks the usage of fields across different abaques.
     """
+
     def __init__(self, abaques):
         super().__init__(abaques, ChauffageInput)
-    
+
     def define_categorical(self):
         self.categorical_fields = [
             "type_energie",
@@ -114,9 +122,8 @@ class Chauffage(BaseProcessor):
             },
             "emission_chauffage": {
                 "type_energie": "type_energie",
-            }
+            },
         }
-
 
     def forward(self, dpe, kwargs: ChauffageInput):
         """
@@ -144,25 +151,23 @@ class Chauffage(BaseProcessor):
 
         heat["Ich"] = self._calculate_ich(heat)
 
-
-
         if "Electricité" in heat["type_energie"]:
             heat["ratio_primaire_finale"] = 2.3
-            heat['coef_emission'] = 0.078
+            heat["coef_emission"] = 0.078
         else:
             heat["ratio_primaire_finale"] = 1
-            heat['coef_emission'] = self.abaques["emission_chauffage"](
+            heat["coef_emission"] = self.abaques["emission_chauffage"](
                 {
                     "type_energie": heat["type_energie"],
                 },
                 "taux_conversion",
             )
 
-        heat['Cchj']=dpe['Bch_j'] * heat['Ich'] * heat['%_surface'] * heat['INT']
-        heat['Cch']=np.sum(heat['Cchj'])
+        heat["Cchj"] = dpe["Bch_j"] * heat["Ich"] * heat["%_surface"] * heat["INT"]
+        heat["Cch"] = np.sum(heat["Cchj"])
 
-        heat['Cch_primaire'] = heat['Cch'] * heat['ratio_primaire_finale']
-        heat['emission_ch'] = heat['Cch'] * heat['coef_emission']
+        heat["Cch_primaire"] = heat["Cch"] * heat["ratio_primaire_finale"]
+        heat["emission_ch"] = heat["Cch"] * heat["coef_emission"]
 
         return heat
 
@@ -305,7 +310,9 @@ class Chauffage(BaseProcessor):
         Returns:
             float: G coefficient.
         """
-        return safe_divide(dpe["GV"], (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"]))
+        return safe_divide(
+            dpe["GV"], (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"])
+        )
 
     def _calculate_intermittence(self, heat, dpe, type_emission_1):
         """

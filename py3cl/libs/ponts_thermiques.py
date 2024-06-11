@@ -2,7 +2,7 @@ from py3cl.libs.utils import safe_divide
 from py3cl.libs.base import BaseProcessor
 from pydantic import BaseModel, Field
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 import logging
 
 # kpth
@@ -28,13 +28,13 @@ class PontThermiqueInput(BaseModel):
     """
 
     identifiant: str
-    longueur_pont: float = Field(..., gt=0, description="Length of the bridge in meters.")
-    type_liaison: Optional[str] = Field(None, description="Type of connection between structural elements.")
-    isolation_mur: Optional[str] = Field(None, description="Type of wall insulation.")
-    isolation_plancher_bas: Optional[str] = Field(None, description="Type of lower floor insulation.")
-    type_pose: Optional[str] = Field(None, description="Installation type of the window frame or similar structure.")
-    retour_isolation: Optional[str] = Field(None, description="Specifies if there is a return on the insulation.")
-    largeur_dormant: Optional[float] = Field(None, gt=0, description="Width of the frame in meters.")
+    longueur_pont: float = None
+    type_liaison: Optional[str] = None
+    isolation_mur: Optional[str] = None
+    isolation_plancher_bas: Optional[str] =None
+    type_pose: Optional[str] = None
+    retour_isolation: Optional[str] = None
+    largeur_dormant: Optional[Union[str, int]] = None
 
 
 class PontThermique(BaseProcessor):
@@ -66,7 +66,7 @@ class PontThermique(BaseProcessor):
             "isolation_plancher_bas",
             "type_pose",
             "retour_isolation",
-            "largeur_dormant"
+            "largeur_dormant",
         ]
 
     def define_numerical(self):
@@ -74,7 +74,7 @@ class PontThermique(BaseProcessor):
         self.numerical_fields = [
             "longueur_pont",
         ]
-    
+
     def define_abaques(self):
         """Defines the usage of different abaques for calculating the k values."""
         self.used_abaques = {
@@ -84,10 +84,9 @@ class PontThermique(BaseProcessor):
                 "isolation_plancher_bas": "isolation_plancher_bas",
                 "type_pose": "type_pose",
                 "retour_isolation": "retour_isolation",
-                "largeur_dormant": "largeur_dormant"
+                "largeur_dormant": "largeur_dormant",
             }
         }
-
 
     def lookup_k_value(self, pont_thermique: Dict[str, Any]) -> float:
         """Look up the k value from the abaque tables based on the input parameters.
@@ -103,6 +102,15 @@ class PontThermique(BaseProcessor):
             ValueError: If the k value is not found.
         """
         try:
+            largeur_dormant = pont_thermique["largeur_dormant"]
+            if "10" in largeur_dormant:
+                largeur_dormant = 10.0
+            elif "5" in largeur_dormant:
+                largeur_dormant = 5.0
+            else:
+                largeur_dormant = "Unknown or Empty"
+
+
             k_value = self.abaques["kpth"](
                 {
                     "type_liaison": pont_thermique["type_liaison"],
@@ -110,7 +118,7 @@ class PontThermique(BaseProcessor):
                     "isolation_plancher_bas": pont_thermique["isolation_plancher_bas"],
                     "type_pose": pont_thermique["type_pose"],
                     "retour_isolation": pont_thermique["retour_isolation"],
-                    "largeur_dormant": pont_thermique["largeur_dormant"],
+                    "largeur_dormant": largeur_dormant,
                 },
             )
             if k_value is None:
@@ -120,10 +128,13 @@ class PontThermique(BaseProcessor):
             logger.error(f"Key error during k value lookup: {e}")
             raise
         except ValueError as e:
+            
             logger.error(e)
             raise
 
-    def forward(self, dpe: Dict[str, Any], kwargs: PontThermiqueInput) -> Dict[str, Any]:
+    def forward(
+        self, dpe: Dict[str, Any], kwargs: PontThermiqueInput
+    ) -> Dict[str, Any]:
         """Calculates the thermal bridge based on input parameters and climatic zone.
 
         Args:
@@ -134,7 +145,7 @@ class PontThermique(BaseProcessor):
             dict: Updated dictionary of pont_thermique with calculated thermal bridge values.
         """
         pont_thermique = kwargs.dict()
-
+        
         # Retrieve and log the climatic zone if needed
         # zone_climatique = self.abaques['department'].get(dpe['department'], {}).get('zone_climatique')
         # logger.info(f"Climatic zone for department {dpe['department']}: {zone_climatique}")

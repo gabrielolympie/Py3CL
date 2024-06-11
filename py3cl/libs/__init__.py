@@ -6,4 +6,9 @@ from py3cl.libs.ecs import ECS, EcsInput
 from py3cl.libs.ouvrants import Vitrage, VitrageInput
 from py3cl.libs.parois import Paroi, ParoiInput
 from py3cl.libs.ponts_thermiques import PontThermique, PontThermiqueInput
-from py3cl.libs.utils import safe_divide, vectorized_safe_divide, set_community, iterative_merge
+from py3cl.libs.utils import (
+    safe_divide,
+    vectorized_safe_divide,
+    set_community,
+    iterative_merge,
+)
