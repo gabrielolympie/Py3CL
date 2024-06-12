@@ -1,6 +1,7 @@
 import yaml
 import dill
 import base64
+import os
 
 
 def serialize_function(func):
@@ -19,6 +20,12 @@ def deserialize_function(encoded_func):
 
 def save_config(config, filename):
     """Save a configuration dictionary containing lambda functions to a YAML file."""
+
+    directory = os.path.dirname(filename)
+    if not os.path.exists(directory):
+        # If it does not exist, create it
+        os.makedirs(directory)
+
     serialized_funcs = {k: serialize_function(v) for k, v in config.items()}
     with open(filename, "w") as file:
         yaml.dump(config, file)

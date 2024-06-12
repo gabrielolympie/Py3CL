@@ -1177,6 +1177,6 @@ class DPE(BaseProcessor):
         dpe["q4paenv"] = q4paenv
         dpe["q4pa"] = q4pa
 
-        dpe["Hvent"] = 0.34 * q4paconv * dpe["surface_habitable"]
+        dpe["Hvent"] = 0.34 * qvarepconv * dpe["surface_habitable"]
         dpe["Hperm"] = safe_divide(Hperm_num, Hperm_den)
         return dpe
