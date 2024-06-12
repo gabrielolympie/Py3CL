@@ -310,9 +310,7 @@ class Chauffage(BaseProcessor):
         Returns:
             float: G coefficient.
         """
-        return safe_divide(
-            dpe["GV"], (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"])
-        )
+        return safe_divide(dpe["GV"], (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"]))
 
     def _calculate_intermittence(self, heat, dpe, type_emission_1):
         """

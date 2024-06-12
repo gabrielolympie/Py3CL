@@ -206,9 +206,7 @@ class ECS(BaseProcessor):
             "rd",
         )
 
-    def calculate_storage_efficiency(
-        self, ecs: Dict[str, Any], dpe: Dict[str, Any]
-    ) -> (float, float):
+    def calculate_storage_efficiency(self, ecs: Dict[str, Any], dpe: Dict[str, Any]) -> (float, float):
         """
         Calculate the storage efficiency (Rs) and storage heat loss (Qgw).
 
@@ -235,9 +233,7 @@ class ECS(BaseProcessor):
 
         return Rs, Qgw
 
-    def calculate_generator_efficiency(
-        self, ecs: Dict[str, Any], dpe: Dict[str, Any]
-    ) -> float:
+    def calculate_generator_efficiency(self, ecs: Dict[str, Any], dpe: Dict[str, Any]) -> float:
         """
         Calculate the generator efficiency (Rg) for the ECS system.
 
@@ -250,13 +246,8 @@ class ECS(BaseProcessor):
         """
         type_generateur = ecs["type_generateur"]
 
-        if (
-            type_generateur
-            == "A combustion Chauffe-bain au gaz à production instantannée"
-        ):
-            type_generateur = (
-                "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
-            )
+        if type_generateur == "A combustion Chauffe-bain au gaz à production instantannée":
+            type_generateur = "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
 
         if type_generateur in [
             "Electrique",
@@ -277,9 +268,7 @@ class ECS(BaseProcessor):
             "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz",
             "A combustion Mixte chaudière gaz, fioul ou bois",
         ]:
-            return self._calculate_combustion_generator_efficiency(
-                ecs, dpe, type_generateur
-            )
+            return self._calculate_combustion_generator_efficiency(ecs, dpe, type_generateur)
 
         if type_generateur == "A combustion Accumulateur gaz":
             Qp0 = 1.5 * ecs["Pnom"] / 100
@@ -299,9 +288,7 @@ class ECS(BaseProcessor):
             )
             return safe_divide(
                 1,
-                (1 / Rpn)
-                + ((8592 * Qp0 + ecs["Qgw"]) / dpe["Becs"])
-                + (6970 * Pveilleuse / dpe["Becs"]),
+                (1 / Rpn) + ((8592 * Qp0 + ecs["Qgw"]) / dpe["Becs"]) + (6970 * Pveilleuse / dpe["Becs"]),
             )
 
         if type_generateur in [
@@ -361,20 +348,13 @@ class ECS(BaseProcessor):
             "Pveilleuse",
         )
 
-        if (
-            type_generateur
-            == "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz"
-        ):
+        if type_generateur == "A combustion ECS seule par chaudière gaz, fioul ou chauffe-eau gaz":
             return safe_divide(
                 1,
-                (1 / Rpn)
-                + (1790 * Qp0 / dpe["Becs"])
-                + (6970 * Pveilleuse / dpe["Becs"]),
+                (1 / Rpn) + (1790 * Qp0 / dpe["Becs"]) + (6970 * Pveilleuse / dpe["Becs"]),
             )
 
         return safe_divide(
             1,
-            (1 / Rpn)
-            + ((1790 * Qp0 + ecs["Qgw"]) / dpe["Becs"])
-            + (6970 * 0.5 * Pveilleuse / dpe["Becs"]),
+            (1 / Rpn) + ((1790 * Qp0 + ecs["Qgw"]) / dpe["Becs"]) + (6970 * 0.5 * Pveilleuse / dpe["Becs"]),
         )

@@ -403,12 +403,7 @@ def entangled_dropdown(valid_combinations, input_scheme, prefix=""):
     keys = [elt for elt in valid_combinations[0].keys() if elt in input_scheme]
 
     def reset_dropdown():
-        out = [
-            gr.update(
-                choices=list(set([elt[key] for elt in valid_combinations])), value=None
-            )
-            for key in keys
-        ]
+        out = [gr.update(choices=list(set([elt[key] for elt in valid_combinations])), value=None) for key in keys]
         return out
 
     def update_dropdown(*args):
@@ -416,9 +411,7 @@ def entangled_dropdown(valid_combinations, input_scheme, prefix=""):
         for key, arg in zip(keys, args):
             if arg:
                 valid = [elt for elt in valid if elt[key] == arg]
-        out = [
-            gr.update(choices=list(set([elt[key] for elt in valid]))) for key in keys
-        ]
+        out = [gr.update(choices=list(set([elt[key] for elt in valid]))) for key in keys]
         return out
 
     with gr.Group():
@@ -442,16 +435,12 @@ def entangled_dropdown(valid_combinations, input_scheme, prefix=""):
             )
 
         reset_button = gr.Button("Reset Group Selection", update_dropdown)
-        reset_button.click(
-            reset_dropdown, outputs=[dropdowns[prefix + k] for k in keys]
-        )
+        reset_button.click(reset_dropdown, outputs=[dropdowns[prefix + k] for k in keys])
 
     return dropdowns
 
 
-def create_processor(
-    processor, identifiants=None, identifiants_adjacents=None, prefix=""
-):
+def create_processor(processor, identifiants=None, identifiants_adjacents=None, prefix=""):
     valid_combinations = processor.valid_cat_combinations
     key_characteristics = processor.key_characteristics
     input_scheme = processor.input_scheme
@@ -482,9 +471,7 @@ def create_processor(
             key_id = prefix + key
 
             if type(characteristic) == str and characteristic == "any":
-                if not (
-                    key in ["parois", "vitrages", "ponts_thermiques", "installations"]
-                ):
+                if not (key in ["parois", "vitrages", "ponts_thermiques", "installations"]):
                     if key == "identifiant":
                         input_field = gr.Dropdown(
                             choices=identifiants,
@@ -523,11 +510,7 @@ def create_processor(
                     key=key_id,
                     value=" ",
                 )
-            elif (
-                isinstance(characteristic, dict)
-                and "min" in characteristic
-                and "max" in characteristic
-            ):
+            elif isinstance(characteristic, dict) and "min" in characteristic and "max" in characteristic:
                 input_field = gr.Slider(
                     minimum=0,
                     maximum=characteristic["max"],
@@ -536,13 +519,9 @@ def create_processor(
                     info=input_descriptors[key]["description"],
                     key=key_id,
                 )
-            elif isinstance(characteristic, list) or isinstance(
-                characteristic, np.ndarray
-            ):
+            elif isinstance(characteristic, list) or isinstance(characteristic, np.ndarray):
                 char = [
-                    elt
-                    for elt in characteristic
-                    if ((elt is not None) and (elt != "NULL") and (str(elt) != "nan"))
+                    elt for elt in characteristic if ((elt is not None) and (elt != "NULL") and (str(elt) != "nan"))
                 ] + ["Unknown or Empty"]
                 input_field = gr.Dropdown(
                     choices=char,
@@ -602,20 +581,12 @@ def get_demo(dpe):
         with gr.Tab(label="ECS"):
             for i in range(3):
                 with gr.Accordion(label=f"ECS {i}", open=False):
-                    base_inputs.update(
-                        create_processor(
-                            dpe.ecs_processor, identifiants=ecs, prefix=f"ecs_{i}-"
-                        )
-                    )
+                    base_inputs.update(create_processor(dpe.ecs_processor, identifiants=ecs, prefix=f"ecs_{i}-"))
 
         with gr.Tab(label="Climatisation"):
             for i in range(1):
                 with gr.Accordion(label=f"Climatisation {i}", open=False):
-                    base_inputs.update(
-                        create_processor(
-                            dpe.clim_processor, identifiants=clims, prefix=f"clim_{i}-"
-                        )
-                    )
+                    base_inputs.update(create_processor(dpe.clim_processor, identifiants=clims, prefix=f"clim_{i}-"))
 
         with gr.Tab(label="Chauffage"):
             for i in range(3):
@@ -637,45 +608,19 @@ def get_demo(dpe):
                 elif val == " ":
                     dico[k] = None
 
-            list_parois = list(
-                set([elt.split("-")[0] for elt in dico.keys() if "paroi_" in elt])
-            )
-            list_vitrages = list(
-                set([elt.split("-")[0] for elt in dico.keys() if "vitrage_" in elt])
-            )
-            list_ponts_thermiques = list(
-                set(
-                    [
-                        elt.split("-")[0]
-                        for elt in dico.keys()
-                        if "pont_thermique_" in elt
-                    ]
-                )
-            )
-            list_ecs = list(
-                set([elt.split("-")[0] for elt in dico.keys() if "ecs_" in elt])
-            )
-            list_clims = list(
-                set([elt.split("-")[0] for elt in dico.keys() if "clim_" in elt])
-            )
-            list_chauffages = list(
-                set([elt.split("-")[0] for elt in dico.keys() if "chauffage_" in elt])
-            )
+            list_parois = list(set([elt.split("-")[0] for elt in dico.keys() if "paroi_" in elt]))
+            list_vitrages = list(set([elt.split("-")[0] for elt in dico.keys() if "vitrage_" in elt]))
+            list_ponts_thermiques = list(set([elt.split("-")[0] for elt in dico.keys() if "pont_thermique_" in elt]))
+            list_ecs = list(set([elt.split("-")[0] for elt in dico.keys() if "ecs_" in elt]))
+            list_clims = list(set([elt.split("-")[0] for elt in dico.keys() if "clim_" in elt]))
+            list_chauffages = list(set([elt.split("-")[0] for elt in dico.keys() if "chauffage_" in elt]))
             list_installations = list_ecs + list_clims + list_chauffages
 
-            special = (
-                list_parois + list_vitrages + list_ponts_thermiques + list_installations
-            )
+            special = list_parois + list_vitrages + list_ponts_thermiques + list_installations
             for elt in special:
                 print(elt, dico[elt + "-identifiant"])
-            used_special = [
-                elt
-                for elt in special
-                if dico[elt + "-identifiant"] != "Unknown or Empty"
-            ]
-            base = {
-                k: v for k, v in dico.items() if not any([elt in k for elt in special])
-            }
+            used_special = [elt for elt in special if dico[elt + "-identifiant"] != "Unknown or Empty"]
+            base = {k: v for k, v in dico.items() if not any([elt in k for elt in special])}
 
             (
                 base["parois"],
@@ -691,13 +636,9 @@ def get_demo(dpe):
                 elif "vitrage" in s:
                     base["vitrages"].update({dico[s + "-identifiant"]: special_dico})
                 elif "pont_thermique" in s:
-                    base["ponts_thermiques"].update(
-                        {dico[s + "-identifiant"]: special_dico}
-                    )
+                    base["ponts_thermiques"].update({dico[s + "-identifiant"]: special_dico})
                 else:
-                    base["installations"].update(
-                        {dico[s + "-identifiant"]: special_dico}
-                    )
+                    base["installations"].update({dico[s + "-identifiant"]: special_dico})
             try:
                 dpe_input = DPEInput(**base)
                 result = dpe.forward(dpe_input)
@@ -724,9 +665,5 @@ if __name__ == "__main__":
 
     ## Queue 20, debug=Fals, share = false, port=8080
     demo.queue(20).launch(
-        debug=False,
-        share=False,
-        server_port=8080,
-        max_threads=40,
-        favicon_path="demo/icon_green.ico"
+        debug=False, share=False, server_port=8080, max_threads=40, favicon_path="demo/icon_green.ico"
     )

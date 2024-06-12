@@ -31,7 +31,7 @@ class PontThermiqueInput(BaseModel):
     longueur_pont: float = None
     type_liaison: Optional[str] = None
     isolation_mur: Optional[str] = None
-    isolation_plancher_bas: Optional[str] =None
+    isolation_plancher_bas: Optional[str] = None
     type_pose: Optional[str] = None
     retour_isolation: Optional[str] = None
     largeur_dormant: Optional[Union[str, int]] = None
@@ -110,7 +110,6 @@ class PontThermique(BaseProcessor):
             else:
                 largeur_dormant = "Unknown or Empty"
 
-
             k_value = self.abaques["kpth"](
                 {
                     "type_liaison": pont_thermique["type_liaison"],
@@ -128,13 +127,11 @@ class PontThermique(BaseProcessor):
             logger.error(f"Key error during k value lookup: {e}")
             raise
         except ValueError as e:
-            
+
             logger.error(e)
             raise
 
-    def forward(
-        self, dpe: Dict[str, Any], kwargs: PontThermiqueInput
-    ) -> Dict[str, Any]:
+    def forward(self, dpe: Dict[str, Any], kwargs: PontThermiqueInput) -> Dict[str, Any]:
         """Calculates the thermal bridge based on input parameters and climatic zone.
 
         Args:
@@ -145,7 +142,7 @@ class PontThermique(BaseProcessor):
             dict: Updated dictionary of pont_thermique with calculated thermal bridge values.
         """
         pont_thermique = kwargs.dict()
-        
+
         # Retrieve and log the climatic zone if needed
         # zone_climatique = self.abaques['department'].get(dpe['department'], {}).get('zone_climatique')
         # logger.info(f"Climatic zone for department {dpe['department']}: {zone_climatique}")
