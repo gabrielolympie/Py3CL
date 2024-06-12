@@ -2,7 +2,7 @@ from py3cl.libs.utils import safe_divide
 from py3cl.libs.base import BaseProcessor
 from pydantic import BaseModel
 import os
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Union
 
 generator_types = [
     "A combustion Chauffe-bain au gaz à production instantannée",
@@ -49,7 +49,7 @@ class EcsInput(BaseModel):
     type_stockage: Optional[str] = None
     category_stockage: Optional[str] = None
     volume_ballon: Optional[float] = None
-    Pnom: Optional[float] = None
+    Pnom: Optional[Union[float, None]] = None
     # is_accumulateur: Optional[bool] = None
     annee_generateur: Optional[int] = None
     type_pac: Optional[str] = None

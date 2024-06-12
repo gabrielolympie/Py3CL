@@ -561,7 +561,7 @@ def create_processor(
 
 
 def get_demo(dpe):
-    with gr.Blocks(theme="freddyaboulton/dracula_revamped") as demo:
+    with gr.Blocks(theme="freddyaboulton/dracula_revamped", title="Py3CL by Renovly") as demo:
         with gr.Tab(label="General Informations"):
             base_inputs = create_processor(dpe)
 
@@ -728,4 +728,5 @@ if __name__ == "__main__":
         share=False,
         server_port=8080,
         max_threads=40,
+        favicon_path="demo/icon_green.ico"
     )

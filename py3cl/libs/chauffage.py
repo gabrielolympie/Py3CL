@@ -247,7 +247,7 @@ class Chauffage(BaseProcessor):
             str: Type of emission system.
         """
         if heat["type_emetteur"] is not None:
-            if "NFC" in heat["type_emetteur"].lower():
+            if "nfc" in heat["type_emetteur"].lower():
                 return "Radiateurs"
             elif "soufflage" in heat["type_emetteur"].lower():
                 return "Air soufflé"

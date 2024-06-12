@@ -436,7 +436,7 @@ class Vitrage(BaseProcessor):
                 "Double" in vitrage["type_vitrage"]
                 or "Triple" in vitrage["type_vitrage"]
             ):
-                vitrage["type_vitrage_fs"] = vitrage["type_vitrage"] + " V.I.R"
+                vitrage["type_vitrage_fs"] = vitrage["type_vitrage"] + " VIR"
 
         vitrage['type_baie_fs'] = menuiserie2baie[vitrage['type_menuiserie']]
 

@@ -100,6 +100,7 @@ abaques_configs = {
     "ges": os.path.join(configs_path, "ges.yaml"),
 }
 
+
 # department
 # Abaque(tv016_departement.csv)
 # Keys: ['id']
