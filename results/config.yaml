@@ -1,0 +1,21 @@
+adress: Unknown or Empty
+altitude: 0
+annee_construction: null
+city: Unknown or Empty
+country: Unknown or Empty
+error: "1 validation error for DPEInput\nnb_logements\n  Input should be a valid integer\
+  \ [type=int_type, input_value=None, input_type=NoneType]\n    For further information\
+  \ visit https://errors.pydantic.dev/2.7/v/int_type"
+hauteur_sous_plafond: null
+installations: {}
+nb_logements: null
+parois: {}
+ponts_thermiques: {}
+postal_code: Unknown or Empty
+q4paconv: null
+surface_habitable: null
+type_batiment: Unknown or Empty
+type_installation_fecs: Unknown or Empty
+type_ventilation: Unknown or Empty
+usage: Unknown or Empty
+vitrages: {}

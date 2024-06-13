@@ -22,7 +22,7 @@ def save_config(config, filename):
     """Save a configuration dictionary containing lambda functions to a YAML file."""
 
     directory = os.path.dirname(filename)
-    if not os.path.exists(directory):
+    if not os.path.exists(directory) and len(directory)>1:
         # If it does not exist, create it
         os.makedirs(directory)
 

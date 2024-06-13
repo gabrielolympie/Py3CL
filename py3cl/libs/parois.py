@@ -119,6 +119,9 @@ class Paroi(BaseProcessor):
         self.characteristics_corrections = {
             "inertie": ["Léger", "Lourd"],
             "effet_joule": [True, False],
+            "enduit": [True, False],
+            "doublage_with_lame_below_15mm": [True, False],
+            "doublage_with_lame_above_15mm": [True, False],
         }
         super().__init__(
             abaques,

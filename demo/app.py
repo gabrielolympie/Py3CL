@@ -2,13 +2,16 @@ import pandas as pd
 import os
 import numpy as np
 import sys
+import json
+from io import StringIO
 from tqdm.auto import tqdm
 import gradio as gr
 import pretty_errors
+import uuid
 
 sys.path.append(".")
 from py3cl import DPE, DPEInput, abaques_configs
-
+from py3cl.utils import save_config
 pd.set_option("display.max_columns", 500)
 
 
@@ -639,23 +642,37 @@ def get_demo(dpe):
                     base["ponts_thermiques"].update({dico[s + "-identifiant"]: special_dico})
                 else:
                     base["installations"].update({dico[s + "-identifiant"]: special_dico})
+            id_run=uuid.uuid4()
             try:
                 dpe_input = DPEInput(**base)
                 result = dpe.forward(dpe_input)
-
+                save_config(result, 'results/config.yaml')
                 return result
             except Exception as e:
                 base["error"] = str(e)
+                save_config(base, 'results/config.yaml')
                 return base
+            
+        # def download_json():
+        #     return data
+
 
         with gr.Tab(label="Results"):
-            button = gr.Button("Compute")
+            with gr.Row():
+                with gr.Column(scale=3):
+                    button = gr.Button("Compute")
+                with gr.Column(scale=1):
+                    download = gr.DownloadButton("Download", value="results/config.yaml")
             output = gr.JSON()
             button.click(
                 get_json,
                 inputs=[base_inputs[key] for key in base_inputs.keys()],
                 outputs=[output],
             )
+            # download.click(
+            #     download_json,
+            #     inputs=[output],
+            # )
     return demo
 
 
@@ -665,5 +682,10 @@ if __name__ == "__main__":
 
     ## Queue 20, debug=Fals, share = false, port=8080
     demo.queue(20).launch(
-        debug=False, share=False, server_port=8080, max_threads=40, favicon_path="demo/icon_green.ico"
+        debug=False,
+        share=False,
+        server_port=8080,
+        max_threads=40,
+        favicon_path="demo/icon_green.ico",
+        # allowed_paths=["file/material/test.txt"]
     )
