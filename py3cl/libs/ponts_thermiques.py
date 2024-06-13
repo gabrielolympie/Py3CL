@@ -131,7 +131,9 @@ class PontThermique(BaseProcessor):
             logger.error(e)
             raise
 
-    def forward(self, dpe: Dict[str, Any], kwargs: PontThermiqueInput) -> Dict[str, Any]:
+    def forward(
+        self, dpe: Dict[str, Any], kwargs: PontThermiqueInput
+    ) -> Dict[str, Any]:
         """Calculates the thermal bridge based on input parameters and climatic zone.
 
         Args:

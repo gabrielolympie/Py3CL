@@ -310,7 +310,9 @@ class Chauffage(BaseProcessor):
         Returns:
             float: G coefficient.
         """
-        return safe_divide(dpe["GV"], (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"]))
+        return safe_divide(
+            dpe["GV"], (dpe["surface_habitable"] * dpe["hauteur_sous_plafond"])
+        )
 
     def _calculate_intermittence(self, heat, dpe, type_emission_1):
         """
@@ -324,6 +326,11 @@ class Chauffage(BaseProcessor):
         Returns:
             float: Intermittence coefficient.
         """
+        inertie = dpe["inertie_globale"]
+
+        if dpe["type_batiment"] == "Logement collectif":
+            inertie = None
+
         return self.abaques["I0_intermittence"](
             {
                 "type_batiment": dpe["type_batiment"],
@@ -331,7 +338,7 @@ class Chauffage(BaseProcessor):
                 "type_chauffage": heat["type_chauffage"],
                 "type_regulation": heat["type_regulation_intermittence"],
                 "type_emetteur": type_emission_1,
-                "inertie": dpe["inertie_globale"],
+                "inertie": inertie,
                 "equipement_intermittence": heat["equipement_intermittence"],
                 "comptage_individuel": heat["comptage_individuel"],
             },

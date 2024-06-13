@@ -86,7 +86,11 @@ class Climatisation(BaseProcessor):
             np.ndarray: Array of Rbth_j values.
         """
         Rbth_j_num = dpe["Ai_frj"] + dpe["Asj"] * (dpe["Ai_frj"] > 0)
-        Rbth_j_den = dpe["GV"] * (dpe["Textmoy_clim_j"] - dpe["Tint_froids"]) * dpe["Nref_froids_j"]
+        Rbth_j_den = (
+            dpe["GV"]
+            * (dpe["Textmoy_clim_j"] - dpe["Tint_froids"])
+            * dpe["Nref_froids_j"]
+        )
         Rbth_j = vectorized_safe_divide(Rbth_j_num, Rbth_j_den)
         Rbth_j[Rbth_j < 0.5] = 0
         return Rbth_j
@@ -124,7 +128,11 @@ class Climatisation(BaseProcessor):
         a = 1 + c_in / (dpe["GV"] * 3600 * 15)
         futj = np.array(
             [
-                (safe_divide(a, 1 + a) if elt == 1 else safe_divide(1 - elt ** (-a), 1 - elt ** (-a - 1)))
+                (
+                    safe_divide(a, 1 + a)
+                    if elt == 1
+                    else safe_divide(1 - elt ** (-a), 1 - elt ** (-a - 1))
+                )
                 for elt in rbth_j
             ]
         )
@@ -154,7 +162,12 @@ class Climatisation(BaseProcessor):
         clim["futj"] = futj
 
         bfroids_term1 = (dpe["Ai_frj"] + dpe["Asj"] * (dpe["Ai_frj"] > 0)) / 1000
-        bfroids_term2 = (futj * dpe["GV"] * (dpe["Tint_froids"] - dpe["Textmoy_clim_j"]) * dpe["Nref_froids_j"]) / 1000
+        bfroids_term2 = (
+            futj
+            * dpe["GV"]
+            * (dpe["Tint_froids"] - dpe["Textmoy_clim_j"])
+            * dpe["Nref_froids_j"]
+        ) / 1000
         clim["Bfrj"] = bfroids_term1 - bfroids_term2
 
         clim["EER"] = self.abaques["seer_clim"](
@@ -168,7 +181,9 @@ class Climatisation(BaseProcessor):
         clim["SEER"] = 0.95 * clim["EER"]
 
         clim["Cfr"] = 0.9 * clim["Bfrj"] / clim["SEER"]
-        clim["Cfr"] = clim["Cfr"] * safe_divide(clim["surface_refroidie"], dpe["surface_habitable"])
+        clim["Cfr"] = clim["Cfr"] * safe_divide(
+            clim["surface_refroidie"], dpe["surface_habitable"]
+        )
 
         if "Electricité" in clim["type_energie"]:
             clim["ratio_primaire_finale"] = 2.3

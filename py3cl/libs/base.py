@@ -58,10 +58,13 @@ class BaseProcessor:
 
     def get_renamed_cat_combination(self, name_abaque):
         try:
-            cat_combinations = pd.DataFrame(self.abaques[name_abaque].valid_cat_combinations)
+            cat_combinations = pd.DataFrame(
+                self.abaques[name_abaque].valid_cat_combinations
+            )
             correspondance_dict = self.used_abaques_inv[name_abaque]
             cat_combinations.columns = [
-                correspondance_dict[elt] if elt in correspondance_dict else elt for elt in cat_combinations.columns
+                correspondance_dict[elt] if elt in correspondance_dict else elt
+                for elt in cat_combinations.columns
             ]
             return cat_combinations.to_dict(orient="records")
         except KeyError as e:
@@ -83,7 +86,9 @@ class BaseProcessor:
                     if len(abaques) > 1:
                         entangled_abaques.append(set(abaques))
             standalone_abaques = [
-                abaques for abaques in self.used_abaques if abaques not in list(set().union(*entangled_abaques))
+                abaques
+                for abaques in self.used_abaques
+                if abaques not in list(set().union(*entangled_abaques))
             ]
             entangled_abaques = [list(elt) for elt in set_community(entangled_abaques)]
 
@@ -95,7 +100,11 @@ class BaseProcessor:
                 # print('1')
                 # print(elt)
                 # print(self.used_abaques[elt].keys())
-                k = [key for key in self.used_abaques[elt].keys() if key in self.categorical_fields]
+                k = [
+                    key
+                    for key in self.used_abaques[elt].keys()
+                    if key in self.categorical_fields
+                ]
                 # print(k)
                 if len(k) > 0:
                     valid_cat_combinations[f"group_{n}"] = {

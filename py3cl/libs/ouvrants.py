@@ -308,8 +308,15 @@ class Vitrage(BaseProcessor):
             float: The coefficient of reduction of loss (b).
         """
         exterior_type = vitrage["exterior_type_or_local_non_chauffe"]
-        if exterior_type in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics["aiu_aue"]:
-            return self.abaques["coef_reduction_deperdition_exterieur"]({"aiu_aue": exterior_type}, "valeur")
+        if (
+            exterior_type
+            in self.abaques["coef_reduction_deperdition_exterieur"].key_characteristics[
+                "aiu_aue"
+            ]
+        ):
+            return self.abaques["coef_reduction_deperdition_exterieur"](
+                {"aiu_aue": exterior_type}, "valeur"
+            )
         elif exterior_type == "Véranda":
             return self.abaques["coef_reduction_veranda"](
                 {
@@ -353,7 +360,9 @@ class Vitrage(BaseProcessor):
         """
         if vitrage["type_vitrage"] == "Simple Vitrage":
             return 5.8
-        orientation = "Horizontale" if vitrage["orientation"] == "Horizontal" else "Verticale"
+        orientation = (
+            "Horizontale" if vitrage["orientation"] == "Horizontal" else "Verticale"
+        )
         return self.abaques["ug_vitrage"](
             {
                 "type_vitrage": vitrage["type_vitrage"],
@@ -422,7 +431,10 @@ class Vitrage(BaseProcessor):
         """
         vitrage["type_vitrage_fs"] = vitrage["type_vitrage"]
         if vitrage["traitement_vitrage"] != "Non Traités":
-            if "Double" in vitrage["type_vitrage"] or "Triple" in vitrage["type_vitrage"]:
+            if (
+                "Double" in vitrage["type_vitrage"]
+                or "Triple" in vitrage["type_vitrage"]
+            ):
                 vitrage["type_vitrage_fs"] = vitrage["type_vitrage"] + " VIR"
 
         vitrage["type_baie_fs"] = menuiserie2baie[vitrage["type_menuiserie"]]
@@ -447,8 +459,16 @@ class Vitrage(BaseProcessor):
         Returns:
             np.ndarray: An array of orientation factors for each month.
         """
-        orientation = "Horizontal" if vitrage["orientation"] == "Horizontal" else vitrage["orientation"]
-        inclinaison = "Unknown or Empty" if vitrage["orientation"] == "Horizontal" else vitrage["inclinaison"]
+        orientation = (
+            "Horizontal"
+            if vitrage["orientation"] == "Horizontal"
+            else vitrage["orientation"]
+        )
+        inclinaison = (
+            "Unknown or Empty"
+            if vitrage["orientation"] == "Horizontal"
+            else vitrage["inclinaison"]
+        )
         return np.array(
             [
                 self.abaques["coefficient_orientation"](
@@ -538,4 +558,9 @@ class Vitrage(BaseProcessor):
         Returns:
             np.ndarray: An array of solar heat gains for each month.
         """
-        return vitrage["surface_vitrage"] * vitrage["facteur_solaire"] * vitrage["Fe"] * vitrage["c1j"]
+        return (
+            vitrage["surface_vitrage"]
+            * vitrage["facteur_solaire"]
+            * vitrage["Fe"]
+            * vitrage["c1j"]
+        )

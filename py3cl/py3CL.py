@@ -32,8 +32,12 @@ data_path = os.path.join(dir_path, "data")
 abaques_configs = {
     "department": os.path.join(configs_path, "departments.yaml"),
     "local_non_chauffe": os.path.join(configs_path, "local_non_chauffe.yaml"),
-    "coef_reduction_deperdition_local": os.path.join(configs_path, "coef_reduction_deperdition_local.yaml"),
-    "coef_reduction_deperdition_exterieur": os.path.join(configs_path, "coef_reduction_deperdition_exterieur.yaml"),
+    "coef_reduction_deperdition_local": os.path.join(
+        configs_path, "coef_reduction_deperdition_local.yaml"
+    ),
+    "coef_reduction_deperdition_exterieur": os.path.join(
+        configs_path, "coef_reduction_deperdition_exterieur.yaml"
+    ),
     "coef_reduction_veranda": os.path.join(configs_path, "coef_reduction_veranda.yaml"),
     "umur0": os.path.join(configs_path, "umur0.yaml"),
     "umur": os.path.join(configs_path, "umur.yaml"),
@@ -44,16 +48,24 @@ abaques_configs = {
     "uph0": os.path.join(configs_path, "uph0.yaml"),
     "ug_vitrage": os.path.join(configs_path, "ug_vitrage.yaml"),
     "uw_vitrage": os.path.join(configs_path, "uw_vitrage.yaml"),
-    "resistance_additionnelle_vitrage": os.path.join(configs_path, "resistance_additionnelle_vitrage.yaml"),
-    "transmission_thermique_baie": os.path.join(configs_path, "transmission_thermique_baie.yaml"),
+    "resistance_additionnelle_vitrage": os.path.join(
+        configs_path, "resistance_additionnelle_vitrage.yaml"
+    ),
+    "transmission_thermique_baie": os.path.join(
+        configs_path, "transmission_thermique_baie.yaml"
+    ),
     "kpth": os.path.join(configs_path, "kpth.yaml"),
     "permeabilite_fenetre": os.path.join(configs_path, "permeabilite_fenetre.yaml"),
     "permeabilite_batiment": os.path.join(configs_path, "permeabilite_batiment.yaml"),
     "renouvellement_air": os.path.join(configs_path, "renouvellement_air.yaml"),
-    "coefficient_orientation": os.path.join(configs_path, "coefficient_orientation.yaml"),
+    "coefficient_orientation": os.path.join(
+        configs_path, "coefficient_orientation.yaml"
+    ),
     "facteur_solaire": os.path.join(configs_path, "facteur_solaire.yaml"),
     "coef_masques_proches": os.path.join(configs_path, "coef_masques_proches.yaml"),
-    "coef_masques_lointain_homogene": os.path.join(configs_path, "coef_masques_lointain_homogene.yaml"),
+    "coef_masques_lointain_homogene": os.path.join(
+        configs_path, "coef_masques_lointain_homogene.yaml"
+    ),
     "coef_ombrage_lointain": os.path.join(configs_path, "coef_ombrage_lointain.yaml"),
     "I0_intermittence": os.path.join(configs_path, "I0_intermittence.yaml"),
     "inertie_batiment": os.path.join(configs_path, "inertie_batiment.yaml"),
@@ -62,9 +74,13 @@ abaques_configs = {
     "Rd_systeme_chauffage": os.path.join(configs_path, "Rd_systeme_chauffage.yaml"),
     "Rr_systeme_chauffage": os.path.join(configs_path, "Rr_systeme_chauffage.yaml"),
     "Rg": os.path.join(configs_path, "Rg.yaml"),
-    "coef_correction_regulation": os.path.join(configs_path, "coef_correction_regulation.yaml"),
+    "coef_correction_regulation": os.path.join(
+        configs_path, "coef_correction_regulation.yaml"
+    ),
     "Rd_ecs": os.path.join(configs_path, "Rd_ecs.yaml"),
-    "coef_emplacement_fonctionnement": os.path.join(configs_path, "coef_emplacement_fonctionnement.yaml"),
+    "coef_emplacement_fonctionnement": os.path.join(
+        configs_path, "coef_emplacement_fonctionnement.yaml"
+    ),
     "conversion_kwh_co2": os.path.join(configs_path, "conversion_kwh_co2.yaml"),
     "convertion_energie_phi": os.path.join(configs_path, "convertion_energie_phi.yaml"),
     "zone_info": os.path.join(configs_path, "zone_info.yaml"),
@@ -373,7 +389,9 @@ class DPEInput(BaseModel):
     adress: Optional[str] = None
     city: Optional[str] = None
     country: Optional[str] = None
-    type_batiment: Optional[str] = None  # ['Maison individuelle', 'Logement collectif', 'Tous bâtiments']
+    type_batiment: Optional[str] = (
+        None  # ['Maison individuelle', 'Logement collectif', 'Tous bâtiments']
+    )
     usage: str = "Conventionnel"  # ['Conventionnel', 'Dépensier']
     altitude: Optional[float] = None
     surface_habitable: Optional[float] = None
@@ -388,7 +406,9 @@ class DPEInput(BaseModel):
 
     type_ventilation: Optional[str] = None
     # type_energie_ventilation: Optional[str] = None
-    q4paconv: Optional[float] = None  # permeabilite de l'enveloppe, si isolation faite récemment
+    q4paconv: Optional[float] = (
+        None  # permeabilite de l'enveloppe, si isolation faite récemment
+    )
 
     ## Installations
 
@@ -562,29 +582,49 @@ class DPE(BaseProcessor):
         dpe["Bch_hp_j"] = dpe["BVj"] * dpe["Dh_chauffe_j"] / 1000
         ### Pertes recuperes
         #### Distribution Ecs
-        Qrec_chauffe_j = 0.48 * dpe["Nref_chauffe_j"] * (Q_dw_col_vc_j + Q_dw_ind_vc_j) / 8760
+        Qrec_chauffe_j = (
+            0.48 * dpe["Nref_chauffe_j"] * (Q_dw_col_vc_j + Q_dw_ind_vc_j) / 8760
+        )
         #### Stockage Ecs
         Qgw_rec_j = 0.48 * dpe["Nref_chauffe_j"] * dpe["Qgw"] / 8760
         ### Generation Chauffage + Ecs
         Qgen_rec_j = 0  # ToDo
 
-        dpe["Bch_j"] = dpe["Bch_hp_j"] - (Qrec_chauffe_j + Qgw_rec_j + Qgen_rec_j) / 1000
+        dpe["Bch_j"] = (
+            dpe["Bch_hp_j"] - (Qrec_chauffe_j + Qgw_rec_j + Qgen_rec_j) / 1000
+        )
 
         dpe = self._calc_consommation_chauffage(dpe)
 
         ## Emission primaire
         dpe["C_finale"] = dpe["Cch"] + dpe["Cfr"] + dpe["Cecl"] + dpe["Cecs"]
-        dpe["C_primaire"] = dpe["Cch_primaire"] + dpe["Cfr_primaire"] + dpe["Cecl_primaire"] + dpe["Cecs_primaire"]
-        dpe["emission_totale"] = dpe["emission_ch"] + dpe["emission_fr"] + dpe["emission_ecl"] + dpe["emission_ecs"]
+        dpe["C_primaire"] = (
+            dpe["Cch_primaire"]
+            + dpe["Cfr_primaire"]
+            + dpe["Cecl_primaire"]
+            + dpe["Cecs_primaire"]
+        )
+        dpe["emission_totale"] = (
+            dpe["emission_ch"]
+            + dpe["emission_fr"]
+            + dpe["emission_ecl"]
+            + dpe["emission_ecs"]
+        )
 
         ## Per square meter
         dpe["C_finale_m2"] = safe_divide(dpe["C_finale"], dpe["surface_habitable"])
         dpe["C_primaire_m2"] = safe_divide(dpe["C_primaire"], dpe["surface_habitable"])
-        dpe["emission_totale_m2"] = safe_divide(dpe["emission_totale"], dpe["surface_habitable"])
+        dpe["emission_totale_m2"] = safe_divide(
+            dpe["emission_totale"], dpe["surface_habitable"]
+        )
 
         ## Compute DPE and GES
-        dpe["dpe"] = self.abaques["dpe"]({"conso_per_square_meter": dpe["C_primaire_m2"]}, "dpe")
-        dpe["ges"] = self.abaques["ges"]({"conso_per_square_meter": dpe["emission_totale_m2"]}, "ges")
+        dpe["dpe"] = self.abaques["dpe"](
+            {"conso_per_square_meter": dpe["C_primaire_m2"]}, "dpe"
+        )
+        dpe["ges"] = self.abaques["ges"](
+            {"conso_per_square_meter": dpe["emission_totale_m2"]}, "ges"
+        )
         return dpe
 
     def __call__(self, kwargs: DPEInput):
@@ -622,7 +662,9 @@ class DPE(BaseProcessor):
         for installation in dpe["installations"]:
             if "chauffage" in installation or "pac" in installation:
                 chauffage_input = ChauffageInput(**dpe["installations"][installation])
-                dpe["installations"][installation] = self.chauffage_processor.forward(dpe, chauffage_input)
+                dpe["installations"][installation] = self.chauffage_processor.forward(
+                    dpe, chauffage_input
+                )
                 # total_power+=dpe["installations"][installation]["power"]
                 chauffages.append(dpe["installations"][installation])
 
@@ -661,15 +703,31 @@ class DPE(BaseProcessor):
         for installation in dpe["installations"]:
             if "clim" in installation:
                 clim_input = ClimatisationInput(**dpe["installations"][installation])
-                dpe["installations"][installation] = self.clim_processor.forward(dpe, clim_input)
+                dpe["installations"][installation] = self.clim_processor.forward(
+                    dpe, clim_input
+                )
                 n_clim += 1
 
-        dpe["Cfr"] = np.sum([installation["Cfr"] for id, installation in dpe["installations"].items() if "clim" in id])
+        dpe["Cfr"] = np.sum(
+            [
+                installation["Cfr"]
+                for id, installation in dpe["installations"].items()
+                if "clim" in id
+            ]
+        )
         dpe["Cfr_primaire"] = np.sum(
-            [installation["Cfr_primaire"] for id, installation in dpe["installations"].items() if "clim" in id]
+            [
+                installation["Cfr_primaire"]
+                for id, installation in dpe["installations"].items()
+                if "clim" in id
+            ]
         )
         dpe["emission_fr"] = np.sum(
-            [installation["emission_fr"] for id, installation in dpe["installations"].items() if "clim" in id]
+            [
+                installation["emission_fr"]
+                for id, installation in dpe["installations"].items()
+                if "clim" in id
+            ]
         )
         return dpe
 
@@ -718,11 +776,16 @@ class DPE(BaseProcessor):
             dpe["Nlmoy"] = 79
 
         dpe["nj"] = np.array(list(map(lambda x: months_days[x], self.months)))
-        dpe["Becsj"] = 1.163 * dpe["Nadeq"] * dpe["Nlmoy"] * (40 - dpe["Tefsj"]) * dpe["nj"]
+        dpe["Becsj"] = (
+            1.163 * dpe["Nadeq"] * dpe["Nlmoy"] * (40 - dpe["Tefsj"]) * dpe["nj"]
+        )
         dpe["Becs"] = dpe["Becsj"].sum()
 
         calc_type_batiment = dpe["type_batiment"]
-        if dpe["type_installation_fecs"] and dpe["type_installation_fecs"] != "Unknown or Empty":
+        if (
+            dpe["type_installation_fecs"]
+            and dpe["type_installation_fecs"] != "Unknown or Empty"
+        ):
             dpe["fecs"] = self.abaques["fecs"](
                 {
                     "type_batiment": calc_type_batiment,
@@ -737,20 +800,44 @@ class DPE(BaseProcessor):
         for installation in dpe["installations"]:
             if "ecs" in installation:
                 ecs_input = EcsInput(**dpe["installations"][installation])
-                dpe["installations"][installation] = self.ecs_processor.forward(dpe, ecs_input)
+                dpe["installations"][installation] = self.ecs_processor.forward(
+                    dpe, ecs_input
+                )
 
         dpe["Iecs"] = np.mean(
-            [installation["Iecs"] for id, installation in dpe["installations"].items() if "ecs" in id]
+            [
+                installation["Iecs"]
+                for id, installation in dpe["installations"].items()
+                if "ecs" in id
+            ]
         )
-        dpe["Qgw"] = np.mean([installation["Qgw"] for id, installation in dpe["installations"].items() if "ecs" in id])
+        dpe["Qgw"] = np.mean(
+            [
+                installation["Qgw"]
+                for id, installation in dpe["installations"].items()
+                if "ecs" in id
+            ]
+        )
         dpe["Cecs"] = np.mean(
-            [installation["Cecs"] for id, installation in dpe["installations"].items() if "ecs" in id]
+            [
+                installation["Cecs"]
+                for id, installation in dpe["installations"].items()
+                if "ecs" in id
+            ]
         )
         dpe["Cecs_primaire"] = np.mean(
-            [installation["Cecs_primaire"] for id, installation in dpe["installations"].items() if "ecs" in id]
+            [
+                installation["Cecs_primaire"]
+                for id, installation in dpe["installations"].items()
+                if "ecs" in id
+            ]
         )
         dpe["emission_ecs"] = np.mean(
-            [installation["emission_ecs"] for id, installation in dpe["installations"].items() if "ecs" in id]
+            [
+                installation["emission_ecs"]
+                for id, installation in dpe["installations"].items()
+                if "ecs" in id
+            ]
         )
         return dpe
 
@@ -762,17 +849,21 @@ class DPE(BaseProcessor):
             dpe (dict): Dictionary containing DPE related data.
         """
 
-        dpe["ssej"] = np.array([vitre["ssej"] for id, vitre in dpe["vitrages"].items()]).sum(axis=0)
+        dpe["ssej"] = np.array(
+            [vitre["ssej"] for id, vitre in dpe["vitrages"].items()]
+        ).sum(axis=0)
         dpe["Asj"] = dpe["ssej"] * dpe["Ej"] * 1000  ## todo : add veranda
 
-        dpe["Ai_chj"] = ((3.18 + 0.34) * dpe["surface_habitable"] + 90 * (132 / 168) * dpe["Nadeq"]) * dpe[
-            "Nref_chauffe_j"
-        ]
-        dpe["Ai_frj"] = ((3.18 + 0.34) * dpe["surface_habitable"] + 90 * (132 / 168) * dpe["Nadeq"]) * dpe[
-            "Nref_froids_j"
-        ]
+        dpe["Ai_chj"] = (
+            (3.18 + 0.34) * dpe["surface_habitable"] + 90 * (132 / 168) * dpe["Nadeq"]
+        ) * dpe["Nref_chauffe_j"]
+        dpe["Ai_frj"] = (
+            (3.18 + 0.34) * dpe["surface_habitable"] + 90 * (132 / 168) * dpe["Nadeq"]
+        ) * dpe["Nref_froids_j"]
         dpe["Aij"] = dpe["Ai_chj"] + dpe["Ai_frj"]
-        dpe["Xj"] = vectorized_safe_divide(dpe["Asj"] + dpe["Aij"], dpe["GV"] * dpe["DHj"])
+        dpe["Xj"] = vectorized_safe_divide(
+            dpe["Asj"] + dpe["Aij"], dpe["GV"] * dpe["DHj"]
+        )
         dpe["Fj"] = vectorized_safe_divide(
             dpe["Xj"] - dpe["Xj"] ** dpe["coef_inertie"],
             1 - dpe["Xj"] ** dpe["coef_inertie"],
@@ -786,7 +877,9 @@ class DPE(BaseProcessor):
         Args:
             dpe (dict): Dictionary containing DPE related data.
         """
-        dpe["surface_habitable_moyenne"] = dpe["surface_habitable"] / dpe["nb_logements"]
+        dpe["surface_habitable_moyenne"] = (
+            dpe["surface_habitable"] / dpe["nb_logements"]
+        )
         if dpe["type_batiment"] == "Maison individuelle":
             t1, t2, c = 30, 70, 0.025
         else:
@@ -814,9 +907,15 @@ class DPE(BaseProcessor):
         """
         parois = [paroi for id, paroi in dpe["parois"].items()]
         vitrages = [vitrage for id, vitrage in dpe["vitrages"].items()]
-        ponts_thermiques = [pont_thermique for id, pont_thermique in dpe["ponts_thermiques"].items()]
+        ponts_thermiques = [
+            pont_thermique for id, pont_thermique in dpe["ponts_thermiques"].items()
+        ]
         dpe["DP_mur"] = sum(
-            [paroi["U"] * paroi["surface_paroi"] * paroi["b"] for paroi in parois if "mur" in paroi["identifiant"]]
+            [
+                paroi["U"] * paroi["surface_paroi"] * paroi["b"]
+                for paroi in parois
+                if "mur" in paroi["identifiant"]
+            ]
         )
         dpe["DP_pb"] = sum(
             [
@@ -832,10 +931,24 @@ class DPE(BaseProcessor):
                 if "planche_haut" in paroi["identifiant"]
             ]
         )
-        dpe["DP_vitrage"] = sum([vitrage["U"] * vitrage["surface_vitrage"] * vitrage["b"] for vitrage in vitrages])
-        dpe["PT"] = sum([pont_thermique["d_pont"] for pont_thermique in ponts_thermiques])
+        dpe["DP_vitrage"] = sum(
+            [
+                vitrage["U"] * vitrage["surface_vitrage"] * vitrage["b"]
+                for vitrage in vitrages
+            ]
+        )
+        dpe["PT"] = sum(
+            [pont_thermique["d_pont"] for pont_thermique in ponts_thermiques]
+        )
         dpe["DR"] = dpe["Hvent"] + dpe["Hperm"]
-        dpe["GV"] = dpe["DP_mur"] + dpe["DP_pb"] + dpe["DP_ph"] + dpe["DP_vitrage"] + dpe["PT"] + dpe["DR"]
+        dpe["GV"] = (
+            dpe["DP_mur"]
+            + dpe["DP_pb"]
+            + dpe["DP_ph"]
+            + dpe["DP_vitrage"]
+            + dpe["PT"]
+            + dpe["DR"]
+        )
         return dpe
 
     def _calc_inertie(self, dpe):
@@ -846,7 +959,11 @@ class DPE(BaseProcessor):
             dpe (dict): Dictionary containing DPE related data.
         """
         parois = [paroi for id, paroi in dpe["parois"].items()]
-        inerties_mur = [(paroi["inertie"], paroi["surface_paroi"]) for paroi in parois if "mur" in paroi["identifiant"]]
+        inerties_mur = [
+            (paroi["inertie"], paroi["surface_paroi"])
+            for paroi in parois
+            if "mur" in paroi["identifiant"]
+        ]
         inerties_mur = sorted(inerties_mur, key=lambda x: x[1], reverse=True)[0][0]
         if inerties_mur == "Léger":
             inerties_mur = "Légère"
@@ -854,18 +971,26 @@ class DPE(BaseProcessor):
             inerties_mur = "Lourde"
 
         inerties_plancher_bas = [
-            (paroi["inertie"], paroi["surface_paroi"]) for paroi in parois if "plancher_bas" in paroi["identifiant"]
+            (paroi["inertie"], paroi["surface_paroi"])
+            for paroi in parois
+            if "plancher_bas" in paroi["identifiant"]
         ]
         if len(inerties_plancher_bas) > 0:
-            inerties_plancher_bas = sorted(inerties_plancher_bas, key=lambda x: x[1], reverse=True)[0][0]
+            inerties_plancher_bas = sorted(
+                inerties_plancher_bas, key=lambda x: x[1], reverse=True
+            )[0][0]
         else:
             inerties_plancher_bas = "Léger"
 
         inerties_plancher_haut = [
-            (paroi["inertie"], paroi["surface_paroi"]) for paroi in parois if "plancher_haut" in paroi["identifiant"]
+            (paroi["inertie"], paroi["surface_paroi"])
+            for paroi in parois
+            if "plancher_haut" in paroi["identifiant"]
         ]
         if len(inerties_plancher_haut) > 0:
-            inerties_plancher_haut = sorted(inerties_plancher_haut, key=lambda x: x[1], reverse=True)[0][0]
+            inerties_plancher_haut = sorted(
+                inerties_plancher_haut, key=lambda x: x[1], reverse=True
+            )[0][0]
         else:
             inerties_plancher_haut = "Léger"
 
@@ -926,7 +1051,9 @@ class DPE(BaseProcessor):
 
             pont_thermique_input = PontThermiqueInput(**pont_thermique)
 
-            dpe["ponts_thermiques"][id] = self.pont_thermique_processor.forward(dpe, pont_thermique_input)
+            dpe["ponts_thermiques"][id] = self.pont_thermique_processor.forward(
+                dpe, pont_thermique_input
+            )
         return dpe
 
     def _calc_geographics(self, dpe):
@@ -956,8 +1083,12 @@ class DPE(BaseProcessor):
             dpe["E_fr"] = "E_fr(kWh/m²)Tcons=26°C"
 
         dpe["department"] = int(dpe["postal_code"][:2])
-        dpe["coef_co2_elec_dpt"] = self.abaques["kwh_to_co2"]({"departement": dpe["department"]}, "co2")
-        dpe["zone_climatique"] = self.abaques["department"]({"id": dpe["department"]}, "zone_climatique")
+        dpe["coef_co2_elec_dpt"] = self.abaques["kwh_to_co2"](
+            {"departement": dpe["department"]}, "co2"
+        )
+        dpe["zone_climatique"] = self.abaques["department"](
+            {"id": dpe["department"]}, "zone_climatique"
+        )
         if dpe["zone_climatique"][:2] == "H3":
             dpe["zone_climatique"] = "H3"
         dpe["zone_hiver"] = dpe["zone_climatique"][:2]
@@ -984,7 +1115,9 @@ class DPE(BaseProcessor):
         else:
             dpe["altitude_1"] = 8000
 
-        dpe["t_ext_basse"] = self.abaques["department"]({"id": dpe["department"]}, "t_ext_basse")
+        dpe["t_ext_basse"] = self.abaques["department"](
+            {"id": dpe["department"]}, "t_ext_basse"
+        )
 
         dpe["Dh_chauffe_j"] = np.array(
             [
@@ -1081,7 +1214,9 @@ class DPE(BaseProcessor):
 
         dpe["Nhj"] = np.array(
             [
-                self.abaques["heure_eclairage"]({"month": elt, "zone_climatique": dpe["zone_climatique"]}, "Nh")
+                self.abaques["heure_eclairage"](
+                    {"month": elt, "zone_climatique": dpe["zone_climatique"]}, "Nh"
+                )
                 for elt in self.months
             ]
         )
@@ -1140,16 +1275,28 @@ class DPE(BaseProcessor):
         sh = dpe["surface_habitable"]
         hsp = dpe["hauteur_sous_plafond"]
 
-        nb_facade_exposee = len([paroi for id, paroi in dpe["parois"].items() if "mur" in paroi["identifiant"]])
+        nb_facade_exposee = len(
+            [
+                paroi
+                for id, paroi in dpe["parois"].items()
+                if "mur" in paroi["identifiant"]
+            ]
+        )
         if nb_facade_exposee > 1:
             e, f = 0.07, 15
         else:
             e, f = 0.02, 20
 
         type_ventilation = dpe["type_ventilation"]
-        qvarepconv = self.abaques["renouvellement_air"]({"type_ventilation": type_ventilation}, "Qvarepconv")
-        qvasoufconv = self.abaques["renouvellement_air"]({"type_ventilation": type_ventilation}, "Qvasoufconv")
-        smeaconv = self.abaques["renouvellement_air"]({"type_ventilation": type_ventilation}, "Smeaconv")
+        qvarepconv = self.abaques["renouvellement_air"](
+            {"type_ventilation": type_ventilation}, "Qvarepconv"
+        )
+        qvasoufconv = self.abaques["renouvellement_air"](
+            {"type_ventilation": type_ventilation}, "Qvasoufconv"
+        )
+        smeaconv = self.abaques["renouvellement_air"](
+            {"type_ventilation": type_ventilation}, "Smeaconv"
+        )
 
         ## Somme des surfaces hors plancher bas
         sdep = sum(
@@ -1168,7 +1315,9 @@ class DPE(BaseProcessor):
         nu_50 = safe_divide(nu_50_num, nu_50_den)
 
         Hperm_num = 0.34 * hsp * sh * nu_50 * e
-        Hperm_den = 1 + (f / e) * safe_divide(qvasoufconv - qvarepconv, hsp * nu_50) ** 2
+        Hperm_den = (
+            1 + (f / e) * safe_divide(qvasoufconv - qvarepconv, hsp * nu_50) ** 2
+        )
 
         dpe["nu_50"] = nu_50
         dpe["nb_facade_exposee"] = nb_facade_exposee

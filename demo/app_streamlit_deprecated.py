@@ -31,7 +31,9 @@ clims = [f"clim_{i}" for i in range(1)]
 chauffages = [f"chauffage_{i}" for i in range(3)]
 
 
-def recursive_selectbox(valid, keys, select={}, prefix="", cols=None, col_count=0, container=None):
+def recursive_selectbox(
+    valid, keys, select={}, prefix="", cols=None, col_count=0, container=None
+):
     if not keys:
         return select, col_count
     k = keys[0]
@@ -63,7 +65,9 @@ def recursive_selectbox(valid, keys, select={}, prefix="", cols=None, col_count=
     return select, col_count
 
 
-def nested_selectbox(valid_cat_combinations, prefix="", cols=None, col_count=0, container=None):
+def nested_selectbox(
+    valid_cat_combinations, prefix="", cols=None, col_count=0, container=None
+):
     keys = valid_cat_combinations["keys"]
     return recursive_selectbox(
         valid_cat_combinations["combinations"],
@@ -75,12 +79,16 @@ def nested_selectbox(valid_cat_combinations, prefix="", cols=None, col_count=0, 
     )
 
 
-def build_processor(processor, identifiants=None, identifiants_adjacents=None, prefix="", col=4):
+def build_processor(
+    processor, identifiants=None, identifiants_adjacents=None, prefix="", col=4
+):
     input_scheme = processor.input_scheme
     key_characteristics = processor.key_characteristics
     valid_cat_combinations = processor.valid_cat_combinations
 
-    combinations_keys = {k for cat_comb in valid_cat_combinations.values() for k in cat_comb["keys"]}
+    combinations_keys = {
+        k for cat_comb in valid_cat_combinations.values() for k in cat_comb["keys"]
+    }
     inputs = {}
 
     cols = st.columns(col)
@@ -93,28 +101,42 @@ def build_processor(processor, identifiants=None, identifiants_adjacents=None, p
                 with cols[col_count % col]:
                     if characteristic == "any":
                         if key == "identifiant":
-                            input_field = st.selectbox(label=key, options=identifiants, index=None, key=key_id)
+                            input_field = st.selectbox(
+                                label=key, options=identifiants, index=None, key=key_id
+                            )
                         elif key == "identifiant_adjacents":
-                            input_field = st.multiselect(label=key, options=identifiants_adjacents, key=key_id)
+                            input_field = st.multiselect(
+                                label=key, options=identifiants_adjacents, key=key_id
+                            )
                         elif "is_" in key:
-                            input_field = st.selectbox(label=key, options=[True, False], index=1, key=key_id)
+                            input_field = st.selectbox(
+                                label=key, options=[True, False], index=1, key=key_id
+                            )
                         else:
                             input_field = st.text_input(label=key, value="", key=key_id)
                     elif characteristic == "float":
                         input_field = st.number_input(label=key, key=key_id, value=None)
-                    elif isinstance(characteristic, dict) and "min" in characteristic and "max" in characteristic:
+                    elif (
+                        isinstance(characteristic, dict)
+                        and "min" in characteristic
+                        and "max" in characteristic
+                    ):
                         input_field = st.number_input(
                             label=key + f" ({0}, {int(characteristic['max'])})",
                             key=key_id,
                             value=None,
                         )
                     elif isinstance(characteristic, (list, np.ndarray)):
-                        char = [elt for elt in characteristic if elt and elt != "Unknown or Empty"] + [
-                            "Unknown or Empty"
-                        ]
+                        char = [
+                            elt
+                            for elt in characteristic
+                            if elt and elt != "Unknown or Empty"
+                        ] + ["Unknown or Empty"]
                         input_field = st.selectbox(label=key, options=char, key=key_id)
                     else:
-                        input_field = st.text(label="Unsupported type for " + key, key=key_id)
+                        input_field = st.text(
+                            label="Unsupported type for " + key, key=key_id
+                        )
                     inputs[key] = input_field
                     col_count += 1
 
@@ -139,13 +161,25 @@ def build_json(
     inputs = {}
     inputs.update(inputs_general)
 
-    inputs["parois"] = {elt["identifiant"]: elt for elt in inputs_parois if elt["identifiant"]}
-    inputs["vitrages"] = {elt["identifiant"]: elt for elt in inputs_vitrages if elt["identifiant"]}
-    inputs["ponts_thermiques"] = {elt["identifiant"]: elt for elt in inputs_ponts_thermiques if elt["identifiant"]}
+    inputs["parois"] = {
+        elt["identifiant"]: elt for elt in inputs_parois if elt["identifiant"]
+    }
+    inputs["vitrages"] = {
+        elt["identifiant"]: elt for elt in inputs_vitrages if elt["identifiant"]
+    }
+    inputs["ponts_thermiques"] = {
+        elt["identifiant"]: elt for elt in inputs_ponts_thermiques if elt["identifiant"]
+    }
 
-    installations = {elt["identifiant"]: elt for elt in inputs_ecs if elt["identifiant"]}
-    installations.update({elt["identifiant"]: elt for elt in inputs_clims if elt["identifiant"]})
-    installations.update({elt["identifiant"]: elt for elt in inputs_chauffages if elt["identifiant"]})
+    installations = {
+        elt["identifiant"]: elt for elt in inputs_ecs if elt["identifiant"]
+    }
+    installations.update(
+        {elt["identifiant"]: elt for elt in inputs_clims if elt["identifiant"]}
+    )
+    installations.update(
+        {elt["identifiant"]: elt for elt in inputs_chauffages if elt["identifiant"]}
+    )
     inputs["installations"] = installations
     return inputs
 
@@ -166,7 +200,9 @@ if __name__ == "__main__":
     ]
     tabs = st.tabs(tab_names)
 
-    inputs_general = build_processor(st.session_state.processor) if "Général" in tab_names else {}
+    inputs_general = (
+        build_processor(st.session_state.processor) if "Général" in tab_names else {}
+    )
 
     inputs_parois = []
     with tabs[1]:
